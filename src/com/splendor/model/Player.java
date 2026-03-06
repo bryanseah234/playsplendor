@@ -7,42 +7,31 @@
  */
 package com.splendor.model;
 
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
-import java.util.ArrayList;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Represents a player in the game, tracking their resources and progress.
  * Maintains token inventory, purchased cards, reserved cards, and score.
  */
-public class Player {
-    
-    private final String name;
-    private final Map<Gem, Integer> tokens;
-    private final List<Card> purchasedCards;
-    private final List<Card> reservedCards;
-    private final List<Noble> nobles;
-    private int totalPoints;
-    
-    /**
-     * Creates a new player with the specified name.
-     * 
-     * @param name Player name
-     */
-    public Player(final String name) {
-        this.name = name;
-        this.tokens = new HashMap<>();
-        this.purchasedCards = new ArrayList<>();
-        this.reservedCards = new ArrayList<>();
-        this.nobles = new ArrayList<>();
-        this.totalPoints = 0;
-        
-        // Initialize token counts to zero for all gem types
+public record Player(String name, Map<Gem, Integer> tokens, List<Card> purchasedCards, List<Card> reservedCards, List<Noble> nobles) {
+    public Player {
+        Objects.requireNonNull(name, "name");
+        Objects.requireNonNull(tokens, "tokens");
+        Objects.requireNonNull(purchasedCards, "purchasedCards");
+        Objects.requireNonNull(reservedCards, "reservedCards");
+        Objects.requireNonNull(nobles, "nobles");
         for (final Gem gem : Gem.values()) {
-            tokens.put(gem, 0);
+            tokens.putIfAbsent(gem, 0);
         }
+    }
+
+    public Player(final String name) {
+        this(name, new HashMap<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
     }
     
     /**
@@ -115,7 +104,9 @@ public class Player {
      * @return Total points from cards and nobles
      */
     public int getTotalPoints() {
-        return totalPoints;
+        final int cardPoints = purchasedCards.stream().mapToInt(Card::getPoints).sum();
+        final int noblePoints = nobles.stream().mapToInt(Noble::getPoints).sum();
+        return cardPoints + noblePoints;
     }
     
     /**
@@ -147,8 +138,7 @@ public class Player {
      * @param quantity Number of tokens to add
      */
     public void addTokens(final Gem gem, final int quantity) {
-        final int currentCount = tokens.get(gem);
-        tokens.put(gem, currentCount + quantity);
+        tokens.merge(gem, quantity, Integer::sum);
     }
     
     /**
@@ -159,7 +149,7 @@ public class Player {
      * @throws IllegalArgumentException if player doesn't have enough tokens
      */
     public void removeTokens(final Gem gem, final int quantity) {
-        final int currentCount = tokens.get(gem);
+        final int currentCount = tokens.getOrDefault(gem, 0);
         if (currentCount < quantity) {
             throw new IllegalArgumentException("Insufficient " + gem + " tokens");
         }
@@ -173,7 +163,6 @@ public class Player {
      */
     public void addPurchasedCard(final Card card) {
         purchasedCards.add(card);
-        totalPoints += card.getPoints();
     }
     
     /**
@@ -202,7 +191,6 @@ public class Player {
      */
     public void addNoble(final Noble noble) {
         nobles.add(noble);
-        totalPoints += noble.getPoints();
     }
     
     /**
@@ -231,7 +219,7 @@ public class Player {
     @Override
     public String toString() {
         return String.format("Player: %s (Points: %d, Tokens: %d, Cards: %d, Reserved: %d, Nobles: %d)",
-                           name, totalPoints, getTotalTokenCount(), purchasedCards.size(),
+                           name, getTotalPoints(), getTotalTokenCount(), purchasedCards.size(),
                            reservedCards.size(), nobles.size());
     }
 }

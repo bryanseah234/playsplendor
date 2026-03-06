@@ -9,29 +9,14 @@ package com.splendor.model;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.HashMap;
 
 /**
  * Represents a noble tile that provides victory points.
  * Nobles are awarded automatically when a player's tableau meets their requirements.
  */
-public class Noble {
-    
-    private final int id;
-    private final int points;
-    private final Map<Gem, Integer> requirements;
-    
-    /**
-     * Creates a new noble tile.
-     * 
-     * @param id Unique noble identifier
-     * @param points Victory points provided by the noble
-     * @param requirements Map of gem types and quantities required
-     */
-    public Noble(final int id, final int points, final Map<Gem, Integer> requirements) {
-        this.id = id;
-        this.points = points;
-        this.requirements = new HashMap<>(requirements);
+public record Noble(int id, int points, Map<Gem, Integer> requirements) {
+    public Noble {
+        requirements = Map.copyOf(requirements);
     }
     
     /**

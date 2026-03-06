@@ -53,6 +53,13 @@ public class RemoteView implements IGameView {
     public void displayError(final String errorMessage) {
         messageHandler.sendToClient(clientId, NetworkProtocol.createErrorResponse(errorMessage));
     }
+
+    @Override
+    public String promptForCommand(final Player player, final Game game) {
+        messageHandler.sendToClient(clientId, NetworkProtocol.createMessage("PROMPT_COMMAND", player.getName()));
+        final String response = messageHandler.waitForClientResponse(clientId, 30000);
+        return response == null ? "" : response.trim();
+    }
     
     @Override
     public Move promptForMove(final Player player, final Game game) {

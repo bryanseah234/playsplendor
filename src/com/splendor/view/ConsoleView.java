@@ -20,7 +20,6 @@ public class ConsoleView implements IGameView {
     
     private final Scanner scanner;
     private final InputResolver inputResolver;
-    private final Map<Integer, Integer> visibleCardMap; 
     private final GameRenderer renderer;
     
     /**
@@ -29,17 +28,12 @@ public class ConsoleView implements IGameView {
     public ConsoleView() {
         this.scanner = new Scanner(System.in);
         this.inputResolver = new InputResolver();
-        this.visibleCardMap = new HashMap<>();
-        this.renderer = new GameRenderer(this.visibleCardMap);
+        this.renderer = new GameRenderer();
     }
     
     @Override
     public void displayGameState(final Game game) {
-        renderer.clearDisplay();
-        renderer.displayHeader();
-        renderer.displayBoard(game.getBoard(), game.getCurrentPlayer());
-        renderer.displayPlayers(game.getPlayers());
-        renderer.displayStatus(game.getCurrentPlayer());
+        renderer.displayGameState(game);
     }
     
     @Override
@@ -55,63 +49,42 @@ public class ConsoleView implements IGameView {
     @Override
     public void displayError(final String errorMessage) {
         System.err.println(Colors.colorize("ERROR: " + errorMessage, Colors.RED));
-        // Small pause so user can see the error
-        try { Thread.sleep(1500); } catch (InterruptedException e) {}
+        System.out.println("Press Enter to continue...");
+        scanner.nextLine();
     }
     
     @Override
+    public String promptForCommand(final Player player, final Game game) {
+        displayAvailableMoves(player, game);
+        return inputResolver.promptForString("Command > ", 1, 60);
+    }
+
+    @Override
     public Move promptForMove(final Player player, final Game game) {
-        // Pre-calculate availability
-        boolean canTake3 = false;
-        boolean canTake2 = false;
-        boolean canReserve = false;
-        boolean canBuy = false;
-        boolean canBuyReserved = false;
-
-        if (game != null) {
-            Board b = game.getBoard();
-            long pilesWithGems = b.getGemBank().entrySet().stream()
-                .filter(e -> e.getKey() != Gem.GOLD && e.getValue() > 0).count();
-            
-            // Rule: Cannot take tokens if already at 10 (though game allows taking then discarding, 
-            // usually UI restricts taking if it's futile, but let's stick to standard rules: 
-            // you CAN take and then discard. However, user requested: "If a player has 10 tokens, the 'Take Tokens' option should be grayed out")
-            boolean tokenLimitReached = player.getTotalTokenCount() >= 10;
-            
-            canTake3 = !tokenLimitReached && pilesWithGems >= 3;
-            canTake2 = !tokenLimitReached && b.getGemBank().values().stream().anyMatch(count -> count >= 4);
-            canReserve = player.getReservedCards().size() < 3;
-            canBuy = true; // Always show, validated later
-            canBuyReserved = !player.getReservedCards().isEmpty();
-        }
-
-        displayAvailableMoves(canTake3, canTake2, canReserve, canBuy, canBuyReserved, player);
-        
         while (true) {
-            int choice = inputResolver.promptForInt("\nEnter your move (number): ", 1, 6);
-            
+            final String command = promptForCommand(player, game).trim();
+            if (command.isEmpty()) {
+                displayError("Command cannot be empty");
+                continue;
+            }
+            final String[] parts = command.split("\\s+");
+            final String action = parts[0].toLowerCase();
+
             try {
-                switch (choice) {
-                    case 1:
-                        if (!canTake3) throw new IllegalArgumentException("Move unavailable.");
-                        return promptForTake3Different();
-                    case 2:
-                        if (!canTake2) throw new IllegalArgumentException("Move unavailable.");
-                        return promptForTake2Same();
-                    case 3:
-                        if (!canReserve) throw new IllegalArgumentException("Move unavailable.");
-                        return promptForReserveCard();
-                    case 4:
-                        if (!canBuy) throw new IllegalArgumentException("Move unavailable.");
-                        return promptForBuyCard(false, player);
-                    case 5:
-                        if (!canBuyReserved) throw new IllegalArgumentException("Move unavailable.");
-                        return promptForBuyCard(true, player);
-                    case 6:
-                        // Only useful if over limit, but usually triggered automatically
-                        return new Move(MoveType.DISCARD_TOKENS);
+                switch (action) {
+                    case "help":
+                        displayAvailableMoves(player, game);
+                        continue;
+                    case "take":
+                        return parseTakeMove(parts);
+                    case "buy":
+                        return parseBuyMove(parts);
+                    case "reserve":
+                        return parseReserveMove(parts);
+                    default:
+                        displayError("Unknown command: " + action);
                 }
-            } catch (IllegalArgumentException e) {
+            } catch (final IllegalArgumentException e) {
                 displayError(e.getMessage());
             }
         }
@@ -175,28 +148,10 @@ public class ConsoleView implements IGameView {
     
     @Override
     public void displayAvailableMoves(Player player, Game game) {
-        // Not used directly, replaced by overloaded method
-    }
-    
-    private void displayAvailableMoves(boolean canTake3, boolean canTake2, boolean canReserve, boolean canBuy, boolean canBuyReserved, Player player) {
-        System.out.println("\n" + Colors.colorize("--- AVAILABLE ACTIONS ---", Colors.WHITE));
-        printOption(1, "Take 3 different gems", canTake3);
-        printOption(2, "Take 2 same gems", canTake2);
-        printOption(3, "Reserve a card", canReserve);
-        printOption(4, "Buy a card", canBuy);
-        printOption(5, "Buy a reserved card", canBuyReserved);
-        
-        if (player.getTotalTokenCount() > 10) {
-            System.out.println(Colors.colorize("6. Discard tokens (REQUIRED)", Colors.RED));
-        }
-    }
-
-    private void printOption(int num, String text, boolean enabled) {
-        if (enabled) {
-            System.out.println(Colors.colorize(num + ". " + text, Colors.WHITE));
-        } else {
-            System.out.println(Colors.colorize(num + ". " + text + " (Unavailable)", Colors.GRAY));
-        }
+        System.out.println("\n" + Colors.colorize("--- COMMANDS ---", Colors.WHITE));
+        System.out.println(Colors.colorize("take R G B", Colors.WHITE) + " | " + Colors.colorize("take 2 R", Colors.WHITE));
+        System.out.println(Colors.colorize("buy 12", Colors.WHITE) + " | " + Colors.colorize("reserve 12", Colors.WHITE));
+        System.out.println(Colors.colorize("buy reserved 12", Colors.WHITE) + " | " + Colors.colorize("help", Colors.WHITE));
     }
     
     @Override
@@ -219,94 +174,55 @@ public class ConsoleView implements IGameView {
         inputResolver.close();
         scanner.close();
     }
-    
-    private Move promptForTake3Different() {
-        System.out.println("Select 3 different gems (e.g. RED GREEN BLUE):");
-        String input = inputResolver.promptForString("> ", 5, 50);
-        String[] parts = input.split("\\s+");
-        
-        if (parts.length != 3) {
-            throw new IllegalArgumentException("You must select exactly 3 gems.");
-        }
-        
-        Map<Gem, Integer> gems = new HashMap<>();
-        for (String p : parts) {
-            Gem g = parseGemType(p);
-            if (g == Gem.GOLD) throw new IllegalArgumentException("Cannot take GOLD tokens directly.");
-            if (gems.containsKey(g)) throw new IllegalArgumentException("Gems must be different.");
-            gems.put(g, 1);
-        }
-        return new Move(MoveType.TAKE_THREE_DIFFERENT, gems);
-    }
 
-    private Move promptForTake2Same() {
-        System.out.println("Select gem color (e.g. RED):");
-        String input = inputResolver.promptForString("> ", 3, 10);
-        Gem g = parseGemType(input);
-        if (g == Gem.GOLD) throw new IllegalArgumentException("Cannot take GOLD tokens directly.");
-        
-        Map<Gem, Integer> gems = new HashMap<>();
-        gems.put(g, 2);
-        return new Move(MoveType.TAKE_TWO_SAME, gems);
-    }
-
-    private Move promptForReserveCard() {
-        int displayIndex = inputResolver.promptForInt("Enter the Card Number to reserve: ", 1, 20); // Arbitrary max
-        if (!visibleCardMap.containsKey(displayIndex)) {
-            throw new IllegalArgumentException("Invalid card number.");
+    private Move parseTakeMove(final String[] parts) {
+        if (parts.length == 3 && parts[1].equals("2")) {
+            final Gem gem = parseGem(parts[2]);
+            final Map<Gem, Integer> selected = new HashMap<>();
+            selected.put(gem, 2);
+            return new Move(MoveType.TAKE_TWO_SAME, selected);
         }
-        return new Move(MoveType.RESERVE_CARD, visibleCardMap.get(displayIndex), false);
-    }
-
-    private Move promptForBuyCard(boolean isReserved, Player player) {
-         if (isReserved) {
-              System.out.println("Select a reserved card to buy:");
-              List<Card> reserved = player.getReservedCards();
-              for (int i = 0; i < reserved.size(); i++) {
-                  boolean canAfford = canPlayerAfford(player, reserved.get(i));
-                  System.out.println(renderer.formatCardAscii(reserved.get(i), i + 1, canAfford));
-              }
-              int index = inputResolver.promptForInt("Enter Index (1-" + reserved.size() + "): ", 1, reserved.size());
-              return new Move(MoveType.BUY_CARD, index - 1, true);
-         } else {
-              int displayIndex = inputResolver.promptForInt("Enter the Card Number to buy: ", 1, 20);
-              if (!visibleCardMap.containsKey(displayIndex)) {
-                  throw new IllegalArgumentException("Invalid card number.");
-              }
-              return new Move(MoveType.BUY_CARD, visibleCardMap.get(displayIndex), false);
-         }
-    }
-    
-    private boolean canPlayerAfford(Player player, Card card) {
-        Map<Gem, Integer> discounts = player.getGemDiscounts();
-        Map<Gem, Integer> tokens = player.getTokens();
-        int goldTokens = tokens.getOrDefault(Gem.GOLD, 0);
-        
-        for (Map.Entry<Gem, Integer> costEntry : card.getCost().entrySet()) {
-            Gem gem = costEntry.getKey();
-            int cost = costEntry.getValue();
-            int discount = discounts.getOrDefault(gem, 0);
-            int available = tokens.getOrDefault(gem, 0);
-            
-            int needed = Math.max(0, cost - discount);
-            int remaining = Math.max(0, needed - available);
-            
-            if (remaining > 0) {
-                if (goldTokens >= remaining) {
-                    goldTokens -= remaining;
-                } else {
-                    return false;
-                }
+        if (parts.length == 4) {
+            final Map<Gem, Integer> selected = new HashMap<>();
+            for (int i = 1; i <= 3; i++) {
+                final Gem gem = parseGem(parts[i]);
+                selected.merge(gem, 1, Integer::sum);
             }
+            return new Move(MoveType.TAKE_THREE_DIFFERENT, selected);
         }
-        return true;
+        throw new IllegalArgumentException("Invalid take command format");
     }
 
-    private Gem parseGemType(final String gemString) {
-        try {
-            return Gem.valueOf(gemString.toUpperCase());
-        } catch (final IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid gem type: " + gemString);
+    private Move parseBuyMove(final String[] parts) {
+        if (parts.length == 2) {
+            final int cardId = Integer.parseInt(parts[1]);
+            return new Move(MoveType.BUY_CARD, cardId, false);
         }
+        if (parts.length == 3 && parts[1].equals("reserved")) {
+            final int cardId = Integer.parseInt(parts[2]);
+            return new Move(MoveType.BUY_CARD, cardId, true);
+        }
+        throw new IllegalArgumentException("Invalid buy command format");
+    }
+
+    private Move parseReserveMove(final String[] parts) {
+        if (parts.length == 2) {
+            final int cardId = Integer.parseInt(parts[1]);
+            return new Move(MoveType.RESERVE_CARD, cardId, false);
+        }
+        throw new IllegalArgumentException("Invalid reserve command format");
+    }
+
+    private Gem parseGem(final String token) {
+        final String normalized = token.trim().toUpperCase();
+        return switch (normalized) {
+            case "W", "WHITE" -> Gem.WHITE;
+            case "B", "BLUE" -> Gem.BLUE;
+            case "G", "GREEN" -> Gem.GREEN;
+            case "R", "RED" -> Gem.RED;
+            case "K", "BLACK" -> Gem.BLACK;
+            case "AU", "GOLD" -> Gem.GOLD;
+            default -> throw new IllegalArgumentException("Unknown gem: " + token);
+        };
     }
 }

@@ -127,7 +127,7 @@ public class Game {
      * @return true if game is finished, false otherwise
      */
     public boolean isGameFinished() {
-        return currentState == GameState.FINISHED;
+        return currentState.isFinished();
     }
     
     /**
@@ -135,7 +135,7 @@ public class Game {
      * Handles final round logic and game state transitions.
      */
     public void advanceToNextPlayer() {
-        if (currentState == GameState.FINISHED) {
+        if (currentState.isFinished()) {
             return;
         }
         

@@ -10,11 +10,10 @@ package com.splendor.controller;
 import com.splendor.exception.*;
 import com.splendor.model.*;
 import com.splendor.model.validator.GameRuleValidator;
-
-import java.util.Map;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.ArrayList;
+import java.util.Map;
 
 /**
  * Manages game flow and state transitions.
@@ -43,7 +42,7 @@ public class GameFlowController {
      */
     public boolean shouldStartFinalRound() {
         // Guard clause: Already in final round or finished
-        if (game.getCurrentState() != GameState.ONGOING) {
+        if (!game.getCurrentState().isOngoing()) {
             return false;
         }
         
@@ -74,7 +73,7 @@ public class GameFlowController {
      * @return true if final round is complete, false otherwise
      */
     public boolean isFinalRoundComplete() {
-        if (game.getCurrentState() != GameState.FINAL_ROUND) {
+        if (!game.getCurrentState().isFinalRound()) {
             return false;
         }
         
@@ -90,11 +89,11 @@ public class GameFlowController {
      */
     public Player completeGame() throws GameStateException {
         // Guard clause: Check if game can be completed
-        if (game.getCurrentState() == GameState.FINISHED) {
+        if (game.getCurrentState().isFinished()) {
             throw new GameStateException("Game is already finished");
         }
         
-        if (game.getCurrentState() != GameState.FINAL_ROUND && !hasPlayerReachedWinningScore()) {
+        if (!game.getCurrentState().isFinalRound() && !hasPlayerReachedWinningScore()) {
             throw new GameStateException("Cannot complete game - no player has reached winning score");
         }
         

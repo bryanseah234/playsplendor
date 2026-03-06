@@ -9,35 +9,14 @@ package com.splendor.model;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.HashMap;
 
 /**
  * Represents a development card that players can purchase.
  * Cards provide points, gem discounts, and contribute to noble requirements.
  */
-public class Card {
-    
-    private final int id;
-    private final int tier;
-    private final int points;
-    private final Gem bonusGem;
-    private final Map<Gem, Integer> cost;
-    
-    /**
-     * Creates a new development card.
-     * 
-     * @param id Unique card identifier
-     * @param tier Card tier (1, 2, or 3)
-     * @param points Victory points provided by the card
-     * @param bonusGem Gem type that this card provides as a discount
-     * @param cost Map of gems and quantities required to purchase
-     */
-    public Card(final int id, final int tier, final int points, final Gem bonusGem, final Map<Gem, Integer> cost) {
-        this.id = id;
-        this.tier = tier;
-        this.points = points;
-        this.bonusGem = bonusGem;
-        this.cost = new HashMap<>(cost);
+public record Card(int id, int tier, int points, Gem bonusGem, Map<Gem, Integer> cost) {
+    public Card {
+        cost = Map.copyOf(cost);
     }
     
     /**

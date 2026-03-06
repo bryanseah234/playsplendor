@@ -35,14 +35,13 @@ public class Colors {
      * @return ANSI color code string
      */
     public static String getGemColor(Gem gem) {
-        switch (gem) {
-            case RED: return RED;
-            case GREEN: return GREEN;
-            case BLUE: return BLUE;
-            case WHITE: return WHITE;
-            case BLACK: return BLACK;
-            case GOLD: return GOLD;
-            default: return RESET;
-        }
+        return switch (gem) {
+            case RED -> RED;
+            case GREEN -> GREEN;
+            case BLUE -> BLUE;
+            case WHITE -> WHITE;
+            case BLACK -> BLACK;
+            case GOLD -> GOLD;
+        };
     }
 }

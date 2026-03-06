@@ -47,12 +47,14 @@ public interface IGameView {
     void displayError(String errorMessage);
     
     /**
-     * Prompts the current player for their move.
+     * Prompts the current player for their command.
      * 
      * @param player Current player
      * @param game Current game state (for validation/context)
-     * @return Move selected by the player
+     * @return Command string entered by the player
      */
+    String promptForCommand(Player player, Game game);
+
     Move promptForMove(Player player, Game game);
     
     /**

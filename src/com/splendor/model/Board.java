@@ -83,6 +83,11 @@ public class Board {
     public List<Card> getAvailableCards(final int tier) {
         return Collections.unmodifiableList(availableCards.getOrDefault(tier, new ArrayList<>()));
     }
+
+    public int getDeckSize(final int tier) {
+        final Queue<Card> deck = cardDecks.get(tier);
+        return deck == null ? 0 : deck.size();
+    }
     
     /**
      * Gets the available nobles.
