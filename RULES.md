@@ -56,3 +56,6 @@ The game ends when a player reaches **15 or more prestige points**.
 
 ## Token Limit
 At the end of your turn, if you have more than **10 tokens** (including Gold), you must discard down to 10.
+
+## Undo Move
+At the end of your action, when the game confirms your move is executed, you may type `Z` or `UNDO` (and press Enter) to revert your turn and try a different action. This undoes any gem collection, card purchases, reservations, and noble visits that occurred during that turn.

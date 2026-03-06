@@ -18,20 +18,53 @@ import java.util.Objects;
  * Represents a player in the game, tracking their resources and progress.
  * Maintains token inventory, purchased cards, reserved cards, and score.
  */
-public record Player(String name, Map<Gem, Integer> tokens, List<Card> purchasedCards, List<Card> reservedCards, List<Noble> nobles) {
-    public Player {
+public class Player {
+    private String name;
+    private Map<Gem, Integer> tokens;
+    private List<Card> purchasedCards;
+    private List<Card> reservedCards;
+    private List<Noble> nobles;
+
+    /**
+     * Creates a player with default values.
+     */
+    public Player() {
+        this("Player", new HashMap<Gem, Integer>(), new ArrayList<Card>(), new ArrayList<Card>(), new ArrayList<Noble>());
+    }
+
+    /**
+     * Creates a player with the specified name.
+     *
+     * @param name Player name
+     */
+    public Player(final String name) {
+        this(name, new HashMap<Gem, Integer>(), new ArrayList<Card>(), new ArrayList<Card>(), new ArrayList<Noble>());
+    }
+
+    /**
+     * Creates a player with the specified properties.
+     *
+     * @param name Player name
+     * @param tokens Token inventory
+     * @param purchasedCards Purchased cards list
+     * @param reservedCards Reserved cards list
+     * @param nobles Nobles list
+     */
+    public Player(final String name, final Map<Gem, Integer> tokens, final List<Card> purchasedCards,
+                  final List<Card> reservedCards, final List<Noble> nobles) {
         Objects.requireNonNull(name, "name");
-        Objects.requireNonNull(tokens, "tokens");
-        Objects.requireNonNull(purchasedCards, "purchasedCards");
-        Objects.requireNonNull(reservedCards, "reservedCards");
-        Objects.requireNonNull(nobles, "nobles");
+        this.name = name;
+        this.tokens = tokens == null ? new HashMap<Gem, Integer>() : new HashMap<Gem, Integer>(tokens);
+        this.purchasedCards = purchasedCards == null ? new ArrayList<Card>() : new ArrayList<Card>(purchasedCards);
+        this.reservedCards = reservedCards == null ? new ArrayList<Card>() : new ArrayList<Card>(reservedCards);
+        this.nobles = nobles == null ? new ArrayList<Noble>() : new ArrayList<Noble>(nobles);
+        ensureTokenEntries();
+    }
+
+    private void ensureTokenEntries() {
         for (final Gem gem : Gem.values()) {
             tokens.putIfAbsent(gem, 0);
         }
-    }
-
-    public Player(final String name) {
-        this(name, new HashMap<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
     }
     
     /**
@@ -42,6 +75,15 @@ public record Player(String name, Map<Gem, Integer> tokens, List<Card> purchased
     public String getName() {
         return name;
     }
+
+    /**
+     * Sets the player's name.
+     *
+     * @param name Player name
+     */
+    public void setName(final String name) {
+        this.name = name == null ? "" : name;
+    }
     
     /**
      * Gets the player's token inventory.
@@ -50,6 +92,19 @@ public record Player(String name, Map<Gem, Integer> tokens, List<Card> purchased
      */
     public Map<Gem, Integer> getTokens() {
         return Collections.unmodifiableMap(tokens);
+    }
+
+    /**
+     * Sets the player's token inventory.
+     *
+     * @param tokens Token inventory
+     */
+    public void setTokens(final Map<Gem, Integer> tokens) {
+        this.tokens.clear();
+        if (tokens != null) {
+            this.tokens.putAll(tokens);
+        }
+        ensureTokenEntries();
     }
     
     /**
@@ -79,6 +134,18 @@ public record Player(String name, Map<Gem, Integer> tokens, List<Card> purchased
     public List<Card> getPurchasedCards() {
         return Collections.unmodifiableList(purchasedCards);
     }
+
+    /**
+     * Sets the player's purchased cards list.
+     *
+     * @param cards Purchased cards list
+     */
+    public void setPurchasedCards(final List<Card> cards) {
+        this.purchasedCards.clear();
+        if (cards != null) {
+            this.purchasedCards.addAll(cards);
+        }
+    }
     
     /**
      * Gets the player's reserved cards.
@@ -88,6 +155,18 @@ public record Player(String name, Map<Gem, Integer> tokens, List<Card> purchased
     public List<Card> getReservedCards() {
         return Collections.unmodifiableList(reservedCards);
     }
+
+    /**
+     * Sets the player's reserved cards list.
+     *
+     * @param cards Reserved cards list
+     */
+    public void setReservedCards(final List<Card> cards) {
+        this.reservedCards.clear();
+        if (cards != null) {
+            this.reservedCards.addAll(cards);
+        }
+    }
     
     /**
      * Gets the nobles awarded to the player.
@@ -96,6 +175,18 @@ public record Player(String name, Map<Gem, Integer> tokens, List<Card> purchased
      */
     public List<Noble> getNobles() {
         return Collections.unmodifiableList(nobles);
+    }
+
+    /**
+     * Sets the player's nobles list.
+     *
+     * @param nobles Nobles list
+     */
+    public void setNobles(final List<Noble> nobles) {
+        this.nobles.clear();
+        if (nobles != null) {
+            this.nobles.addAll(nobles);
+        }
     }
     
     /**

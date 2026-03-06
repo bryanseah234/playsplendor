@@ -41,7 +41,7 @@ Root Directory:
     │   ├── FileConfigProvider.java # Implementation loading from properties.
     │   └── ConfigKeys.java       # Constants (e.g., "game.tokens.4p").
     ├── model/
-    │   ├── Game.java             # Holds List<Player>, Board, TurnState.
+    │   ├── Game.java             # Holds List<Player>, Board, TurnState, and Undo History (GameSnapshot).
     │   ├── Board.java            # Holds GemBank, CardDecks (L1,L2,L3), Nobles.
     │   ├── Player.java           # Inventory, Hand (Reserved), Tableau (Purchased).
     │   ├── Card.java             # Data Class (Points, Cost, Tier).
@@ -212,6 +212,10 @@ Check win condition (≥15 points)
 
 Trigger final round if needed
 
+🔹 undoTurn()
+Handles:
+Restoring the `GameSnapshot` from the beginning of a turn.
+Rollback of player token changes, reservations, noble assignments, and board updates.
 
 
 🔹 checkTokenLimit(Player p)

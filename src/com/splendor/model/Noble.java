@@ -8,15 +8,36 @@
 package com.splendor.model;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Represents a noble tile that provides victory points.
  * Nobles are awarded automatically when a player's tableau meets their requirements.
  */
-public record Noble(int id, int points, Map<Gem, Integer> requirements) {
-    public Noble {
-        requirements = Map.copyOf(requirements);
+public class Noble {
+    private int id;
+    private int points;
+    private Map<Gem, Integer> requirements;
+
+    /**
+     * Creates an empty noble with default values.
+     */
+    public Noble() {
+        this(0, 0, new HashMap<Gem, Integer>());
+    }
+
+    /**
+     * Creates a noble with the specified properties.
+     *
+     * @param id Noble ID
+     * @param points Victory points
+     * @param requirements Required gems map
+     */
+    public Noble(final int id, final int points, final Map<Gem, Integer> requirements) {
+        this.id = id;
+        this.points = points;
+        this.requirements = requirements == null ? new HashMap<Gem, Integer>() : new HashMap<Gem, Integer>(requirements);
     }
     
     /**
@@ -27,6 +48,15 @@ public record Noble(int id, int points, Map<Gem, Integer> requirements) {
     public int getId() {
         return id;
     }
+
+    /**
+     * Sets the noble identifier.
+     *
+     * @param id Noble ID
+     */
+    public void setId(final int id) {
+        this.id = id;
+    }
     
     /**
      * Gets the victory points provided by this noble.
@@ -36,6 +66,15 @@ public record Noble(int id, int points, Map<Gem, Integer> requirements) {
     public int getPoints() {
         return points;
     }
+
+    /**
+     * Sets the victory points for this noble.
+     *
+     * @param points Victory points
+     */
+    public void setPoints(final int points) {
+        this.points = points;
+    }
     
     /**
      * Gets the gem requirements for this noble.
@@ -44,6 +83,15 @@ public record Noble(int id, int points, Map<Gem, Integer> requirements) {
      */
     public Map<Gem, Integer> getRequirements() {
         return Collections.unmodifiableMap(requirements);
+    }
+
+    /**
+     * Sets the requirements map for this noble.
+     *
+     * @param requirements Required gems map
+     */
+    public void setRequirements(final Map<Gem, Integer> requirements) {
+        this.requirements = requirements == null ? new HashMap<Gem, Integer>() : new HashMap<Gem, Integer>(requirements);
     }
     
     /**

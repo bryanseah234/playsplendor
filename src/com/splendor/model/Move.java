@@ -21,6 +21,7 @@ public class Move {
     private final Map<Gem, Integer> selectedGems;
     private final Integer cardId;
     private final boolean isReservedCard;
+    private final Integer deckTier;
     
     /**
      * Creates a new move with just the type (for simple moves).
@@ -28,7 +29,7 @@ public class Move {
      * @param moveType Type of move
      */
     public Move(final MoveType moveType) {
-        this(moveType, new HashMap<>(), null, false);
+        this(moveType, new HashMap<>(), null, false, null);
     }
     
     /**
@@ -38,7 +39,7 @@ public class Move {
      * @param selectedGems Map of selected gems and quantities
      */
     public Move(final MoveType moveType, final Map<Gem, Integer> selectedGems) {
-        this(moveType, selectedGems, null, false);
+        this(moveType, selectedGems, null, false, null);
     }
     
     /**
@@ -49,7 +50,7 @@ public class Move {
      * @param isReservedCard Whether the card is from reserved cards
      */
     public Move(final MoveType moveType, final Integer cardId, final boolean isReservedCard) {
-        this(moveType, new HashMap<>(), cardId, isReservedCard);
+        this(moveType, new HashMap<>(), cardId, isReservedCard, null);
     }
     
     /**
@@ -61,11 +62,16 @@ public class Move {
      * @param isReservedCard Whether the card is from reserved cards
      */
     public Move(final MoveType moveType, final Map<Gem, Integer> selectedGems, 
-                final Integer cardId, final boolean isReservedCard) {
+                final Integer cardId, final boolean isReservedCard, final Integer deckTier) {
         this.moveType = moveType;
         this.selectedGems = new HashMap<>(selectedGems);
         this.cardId = cardId;
         this.isReservedCard = isReservedCard;
+        this.deckTier = deckTier;
+    }
+
+    public static Move reserveFromDeck(final int tier) {
+        return new Move(MoveType.RESERVE_CARD, new HashMap<>(), null, false, tier);
     }
     
     /**
@@ -103,6 +109,10 @@ public class Move {
     public boolean isReservedCard() {
         return isReservedCard;
     }
+
+    public Integer getDeckTier() {
+        return deckTier;
+    }
     
     /**
      * Checks if this move involves card selection.
@@ -111,6 +121,10 @@ public class Move {
      */
     public boolean hasCardSelection() {
         return cardId != null;
+    }
+
+    public boolean hasDeckSelection() {
+        return deckTier != null;
     }
     
     /**
@@ -141,6 +155,9 @@ public class Move {
             if (isReservedCard) {
                 sb.append(" (Reserved)");
             }
+        }
+        if (hasDeckSelection()) {
+            sb.append(" Deck: ").append(deckTier);
         }
         
         return sb.toString();

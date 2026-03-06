@@ -58,14 +58,21 @@ public class GameRuleValidator {
             throws GameStateException {
         
         // Guard clause: Same state transition
-        if (currentState.phase() == targetState.phase()) {
+        if (currentState.getPhase() == targetState.getPhase()) {
             return; // Same state is always valid
         }
 
-        switch (currentState.phase()) {
-            case ONGOING -> validateFromOngoing(targetState);
-            case FINAL_ROUND -> validateFromFinalRound(targetState);
-            case FINISHED -> throw new GameStateException("Cannot transition from FINISHED state");
+        switch (currentState.getPhase()) {
+            case ONGOING:
+                validateFromOngoing(targetState);
+                break;
+            case FINAL_ROUND:
+                validateFromFinalRound(targetState);
+                break;
+            case FINISHED:
+                throw new GameStateException("Cannot transition from FINISHED state");
+            default:
+                throw new GameStateException("Unknown game state: " + currentState);
         }
     }
     
@@ -77,7 +84,7 @@ public class GameRuleValidator {
      */
     private void validateFromOngoing(final GameState targetState) throws GameStateException {
         // From ONGOING, can only go to FINAL_ROUND or FINISHED
-        if (targetState.phase() != GameState.Phase.FINAL_ROUND && targetState.phase() != GameState.Phase.FINISHED) {
+        if (targetState.getPhase() != GameState.Phase.FINAL_ROUND && targetState.getPhase() != GameState.Phase.FINISHED) {
             throw new GameStateException("Cannot transition from ONGOING to %s", targetState);
         }
     }
@@ -90,7 +97,7 @@ public class GameRuleValidator {
      */
     private void validateFromFinalRound(final GameState targetState) throws GameStateException {
         // From FINAL_ROUND, can only go to FINISHED
-        if (targetState.phase() != GameState.Phase.FINISHED) {
+        if (targetState.getPhase() != GameState.Phase.FINISHED) {
             throw new GameStateException("Cannot transition from FINAL_ROUND to %s", targetState);
         }
     }

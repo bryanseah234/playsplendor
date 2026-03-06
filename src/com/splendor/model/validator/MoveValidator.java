@@ -169,13 +169,26 @@ public class MoveValidator {
             throw new InvalidMoveException("Cannot reserve more than %d cards", MAX_RESERVED_CARDS);
         }
         
-        // Guard clause: Check card selection
-        if (!move.hasCardSelection()) {
-            throw new InvalidMoveException("Must select a card to reserve");
+        if (move.hasCardSelection() == move.hasDeckSelection()) {
+            throw new InvalidMoveException("Must select exactly one reserve source");
         }
         
-        // Additional card-specific validation would go here
-        // (e.g., checking if card exists, is available, etc.)
+        if (move.hasDeckSelection()) {
+            final int tier = move.getDeckTier();
+            if (tier < 1 || tier > 3) {
+                throw new InvalidMoveException("Deck tier must be between 1 and 3");
+            }
+            final int deckSize = game.getBoard().getDeckSize(tier);
+            if (deckSize <= 0) {
+                throw new InvalidMoveException("Selected deck is empty");
+            }
+            return;
+        }
+        
+        final Card availableCard = findAvailableCardById(game.getBoard(), move.getCardId());
+        if (availableCard == null) {
+            throw new InvalidMoveException("Selected card not available");
+        }
     }
     
     /**
@@ -194,9 +207,15 @@ public class MoveValidator {
         if (!move.hasCardSelection()) {
             throw new InvalidMoveException("Must select a card to buy");
         }
-        
-        // Additional purchase validation would go here
-        // (e.g., checking if player can afford the card)
+        final Card cardToBuy = move.isReservedCard()
+            ? findReservedCardById(player, move.getCardId())
+            : findAvailableCardById(game.getBoard(), move.getCardId());
+        if (cardToBuy == null) {
+            throw new InvalidMoveException("Selected card not available");
+        }
+        if (!canPlayerAffordCard(player, cardToBuy)) {
+            throw new InsufficientTokensException("Insufficient tokens to buy selected card");
+        }
     }
     
     /**
@@ -270,5 +289,25 @@ public class MoveValidator {
         }
         
         return true;
+    }
+
+    private Card findAvailableCardById(final Board board, final int cardId) {
+        for (int tier = 1; tier <= 3; tier++) {
+            for (final Card card : board.getAvailableCards(tier)) {
+                if (card.getId() == cardId) {
+                    return card;
+                }
+            }
+        }
+        return null;
+    }
+
+    private Card findReservedCardById(final Player player, final int cardId) {
+        for (final Card card : player.getReservedCards()) {
+            if (card.getId() == cardId) {
+                return card;
+            }
+        }
+        return null;
     }
 }

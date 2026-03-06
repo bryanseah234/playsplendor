@@ -8,15 +8,42 @@
 package com.splendor.model;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Represents a development card that players can purchase.
  * Cards provide points, gem discounts, and contribute to noble requirements.
  */
-public record Card(int id, int tier, int points, Gem bonusGem, Map<Gem, Integer> cost) {
-    public Card {
-        cost = Map.copyOf(cost);
+public class Card {
+    private int id;
+    private int tier;
+    private int points;
+    private Gem bonusGem;
+    private Map<Gem, Integer> cost;
+
+    /**
+     * Creates an empty card with default values.
+     */
+    public Card() {
+        this(0, 0, 0, null, new HashMap<Gem, Integer>());
+    }
+
+    /**
+     * Creates a card with the specified properties.
+     *
+     * @param id Card ID
+     * @param tier Card tier
+     * @param points Victory points
+     * @param bonusGem Bonus gem type
+     * @param cost Cost map by gem
+     */
+    public Card(final int id, final int tier, final int points, final Gem bonusGem, final Map<Gem, Integer> cost) {
+        this.id = id;
+        this.tier = tier;
+        this.points = points;
+        this.bonusGem = bonusGem;
+        this.cost = cost == null ? new HashMap<Gem, Integer>() : new HashMap<Gem, Integer>(cost);
     }
     
     /**
@@ -27,6 +54,15 @@ public record Card(int id, int tier, int points, Gem bonusGem, Map<Gem, Integer>
     public int getId() {
         return id;
     }
+
+    /**
+     * Sets the unique card identifier.
+     *
+     * @param id Card ID
+     */
+    public void setId(final int id) {
+        this.id = id;
+    }
     
     /**
      * Gets the card tier (1, 2, or 3).
@@ -35,6 +71,15 @@ public record Card(int id, int tier, int points, Gem bonusGem, Map<Gem, Integer>
      */
     public int getTier() {
         return tier;
+    }
+
+    /**
+     * Sets the card tier.
+     *
+     * @param tier Card tier
+     */
+    public void setTier(final int tier) {
+        this.tier = tier;
     }
     
     /**
@@ -45,6 +90,15 @@ public record Card(int id, int tier, int points, Gem bonusGem, Map<Gem, Integer>
     public int getPoints() {
         return points;
     }
+
+    /**
+     * Sets the victory points for this card.
+     *
+     * @param points Victory points
+     */
+    public void setPoints(final int points) {
+        this.points = points;
+    }
     
     /**
      * Gets the gem type that this card provides as a discount.
@@ -54,6 +108,15 @@ public record Card(int id, int tier, int points, Gem bonusGem, Map<Gem, Integer>
     public Gem getBonusGem() {
         return bonusGem;
     }
+
+    /**
+     * Sets the bonus gem type for this card.
+     *
+     * @param bonusGem Bonus gem type
+     */
+    public void setBonusGem(final Gem bonusGem) {
+        this.bonusGem = bonusGem;
+    }
     
     /**
      * Gets the cost to purchase this card.
@@ -62,6 +125,15 @@ public record Card(int id, int tier, int points, Gem bonusGem, Map<Gem, Integer>
      */
     public Map<Gem, Integer> getCost() {
         return Collections.unmodifiableMap(cost);
+    }
+
+    /**
+     * Sets the cost map for this card.
+     *
+     * @param cost Cost map by gem
+     */
+    public void setCost(final Map<Gem, Integer> cost) {
+        this.cost = cost == null ? new HashMap<Gem, Integer>() : new HashMap<Gem, Integer>(cost);
     }
     
     /**

@@ -12,8 +12,10 @@ import com.splendor.model.*;
 import com.splendor.model.validator.GameRuleValidator;
 import com.splendor.view.IGameView;
 
-import java.util.Map;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Manages player-specific operations and state updates.
@@ -52,21 +54,21 @@ public class PlayerController {
         
         // Get player's gem discounts (from purchased cards)
         final Map<Gem, Integer> playerDiscounts = player.getGemDiscounts();
-        
-        // Check each available noble
-        final Map<Noble, Boolean> qualifyingNobles = new HashMap<>();
+        final List<Noble> qualifyingNobles = new ArrayList<>();
         for (final Noble noble : game.getBoard().getAvailableNobles()) {
             if (noble.requirementsMet(playerDiscounts)) {
-                qualifyingNobles.put(noble, true);
+                qualifyingNobles.add(noble);
             }
         }
         
-        // Assign nobles in order (first come, first served)
-        for (final Map.Entry<Noble, Boolean> entry : qualifyingNobles.entrySet()) {
-            if (entry.getValue()) {
-                assignNobleToPlayer(player, entry.getKey());
-            }
+        if (qualifyingNobles.isEmpty()) {
+            return;
         }
+        
+        final Noble selectedNoble = qualifyingNobles.size() == 1
+            ? qualifyingNobles.get(0)
+            : gameView.promptForNobleChoice(player, qualifyingNobles);
+        assignNobleToPlayer(player, selectedNoble);
     }
     
     /**
@@ -91,7 +93,7 @@ public class PlayerController {
             player.addNoble(noble);
             
             // Notify player
-            gameView.displayMessage(String.format("%s has been visited by Noble %d and gained %d points!",
+            gameView.displayNotification(String.format("%s has been visited by Noble %d and gained %d points!",
                 player.getName(), noble.getId(), noble.getPoints()));
             
         } catch (final GameStateException e) {
@@ -125,7 +127,7 @@ public class PlayerController {
             board.addGems(tokensToDiscard);
             
             // Notify player
-            gameView.displayMessage(String.format("%s discarded tokens: %s",
+            gameView.displayNotification(String.format("%s discarded tokens: %s",
                 player.getName(), tokensToDiscard));
             
         } catch (final Exception e) {

@@ -3,10 +3,8 @@ package com.splendor.util;
 import com.splendor.model.Card;
 import com.splendor.model.Gem;
 import com.splendor.model.Noble;
-
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -90,6 +88,32 @@ public class CardLoader {
                 break;
         }
 
+        final int targetCount;
+        switch (tier) {
+            case 1:
+                targetCount = 40;
+                break;
+            case 2:
+                targetCount = 30;
+                break;
+            case 3:
+                targetCount = 20;
+                break;
+            default:
+                targetCount = cards.size();
+                break;
+        }
+        if (cards.size() < targetCount) {
+            final List<Card> baseCards = new ArrayList<>(cards);
+            int id = idStart;
+            int index = 0;
+            while (cards.size() < targetCount) {
+                final Card base = baseCards.get(index % baseCards.size());
+                cards.add(createCard(id++, tier, base.getPoints(), base.getBonusGem(), base.getCost()));
+                index++;
+            }
+        }
+
         Collections.shuffle(cards);
         return cards;
     }
@@ -111,6 +135,8 @@ public class CardLoader {
         nobles.add(new Noble(id++, 3, Map.of(Gem.RED, 3, Gem.GREEN, 3, Gem.BLUE, 3)));
         nobles.add(new Noble(id++, 3, Map.of(Gem.BLACK, 3, Gem.WHITE, 3, Gem.RED, 3)));
         nobles.add(new Noble(id++, 3, Map.of(Gem.BLUE, 3, Gem.GREEN, 3, Gem.WHITE, 3)));
+        nobles.add(new Noble(id++, 3, Map.of(Gem.GREEN, 4, Gem.WHITE, 4)));
+        nobles.add(new Noble(id++, 3, Map.of(Gem.BLUE, 4, Gem.BLACK, 4)));
         
         Collections.shuffle(nobles);
         return nobles;

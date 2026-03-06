@@ -64,6 +64,12 @@ public class Board {
     public int getGemCount(final Gem gem) {
         return gemBank.getOrDefault(gem, 0);
     }
+
+    public void setGemBank(final Map<Gem, Integer> gemBank) {
+        this.gemBank.clear();
+        this.gemBank.putAll(gemBank);
+    }
+    
     
     /**
      * Gets the available cards for each tier.
@@ -73,6 +79,14 @@ public class Board {
     public Map<Integer, List<Card>> getAvailableCards() {
         return Collections.unmodifiableMap(availableCards);
     }
+
+    public void setAvailableCards(final Map<Integer, List<Card>> availableCards) {
+        this.availableCards.clear();
+        for (final Map.Entry<Integer, List<Card>> entry : availableCards.entrySet()) {
+            this.availableCards.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+        }
+    }
+    
     
     /**
      * Gets the available cards for a specific tier.
@@ -97,6 +111,12 @@ public class Board {
     public List<Noble> getAvailableNobles() {
         return Collections.unmodifiableList(availableNobles);
     }
+
+    public void setAvailableNobles(final List<Noble> availableNobles) {
+        this.availableNobles.clear();
+        this.availableNobles.addAll(availableNobles);
+    }
+    
     
     /**
      * Removes gems from the bank.
@@ -157,6 +177,14 @@ public class Board {
         
         return drawnCard;
     }
+
+    public Card drawBlindCard(final int tier) {
+        final Queue<Card> deck = cardDecks.get(tier);
+        if (deck == null || deck.isEmpty()) {
+            return null;
+        }
+        return deck.poll();
+    }
     
     /**
      * Removes a card from the available cards.
@@ -185,6 +213,21 @@ public class Board {
             tierCards.add(card);
         }
     }
+
+    public Map<Integer, List<Card>> copyDecks() {
+        final Map<Integer, List<Card>> copy = new HashMap<>();
+        for (final Map.Entry<Integer, Queue<Card>> entry : cardDecks.entrySet()) {
+            copy.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+        }
+        return copy;
+    }
+
+    public void restoreDecks(final Map<Integer, List<Card>> decks) {
+        for (final Map.Entry<Integer, List<Card>> entry : decks.entrySet()) {
+            cardDecks.put(entry.getKey(), new LinkedList<>(entry.getValue()));
+        }
+    }
+    
     
     /**
      * Removes a noble from the available nobles.

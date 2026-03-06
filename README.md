@@ -11,6 +11,7 @@ A modular, strictly MVC-based implementation of the board game Splendor in Java.
   - **Color Support:** Gems and player info are color-coded (Red, Green, Blue, White, Black, Gold).
   - **Smart Menus:** Options are dynamically enabled/disabled based on game state (e.g., you can't buy if you can't afford).
   - **Interactive Prompts:** Intuitive sub-menus for selecting gems and cards.
+  - **Undo Feature:** Allows players to undo their last turn by typing `Z` or `UNDO`, implemented with the Memento design pattern to perform a full rollback of the game state (including cards, gems, reserves, and board decks).
 - **Network Support (Bonus):** Multiplayer capabilities via TCP sockets.
 
 ## Prerequisites

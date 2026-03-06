@@ -8,8 +8,10 @@
  */
 package com.splendor.model;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +22,9 @@ import java.util.Map;
  */
 public class Game {
     
+    private final Deque<String> recentMoves;
+    private final Deque<GameSnapshot> undoHistory;
+
     private final List<Player> players;
     private final Board board;
     private final int winningPoints;
@@ -29,6 +34,79 @@ public class Game {
     private Player winner;
     private boolean isFinalRound;
     private int finalRoundPlayerIndex;
+    
+    
+    private static class GameSnapshot {
+        final List<PlayerSnapshot> playerSnapshots;
+        final BoardSnapshot boardSnapshot;
+        final int currentPlayerIndex;
+        final GameState currentState;
+        final boolean isFinalRound;
+        final int finalRoundPlayerIndex;
+
+        final List<String> recentMoves;
+
+        GameSnapshot(Game game) {
+            this.playerSnapshots = new ArrayList<>();
+            for (Player p : game.getPlayers()) {
+                this.playerSnapshots.add(new PlayerSnapshot(p));
+            }
+            this.boardSnapshot = new BoardSnapshot(game.getBoard());
+            this.currentPlayerIndex = game.currentPlayerIndex;
+            this.currentState = new GameState(game.currentState.getPhase());
+            this.isFinalRound = game.isFinalRound;
+            this.finalRoundPlayerIndex = game.finalRoundPlayerIndex;
+            this.recentMoves = new ArrayList<>(game.recentMoves);
+        }
+    }
+
+    private static class PlayerSnapshot {
+        final String name;
+        final Map<Gem, Integer> tokens;
+        final List<Card> purchasedCards;
+        final List<Card> reservedCards;
+        final List<Noble> nobles;
+
+        PlayerSnapshot(Player p) {
+            this.name = p.getName();
+            this.tokens = new HashMap<>(p.getTokens());
+            this.purchasedCards = new ArrayList<>(p.getPurchasedCards());
+            this.reservedCards = new ArrayList<>(p.getReservedCards());
+            this.nobles = new ArrayList<>(p.getNobles());
+        }
+
+        void restore(Player p) {
+            p.setName(name);
+            p.setTokens(tokens);
+            p.setPurchasedCards(purchasedCards);
+            p.setReservedCards(reservedCards);
+            p.setNobles(nobles);
+        }
+    }
+
+    private static class BoardSnapshot {
+        final Map<Gem, Integer> gemBank;
+        final Map<Integer, List<Card>> cardDecks;
+        final Map<Integer, List<Card>> availableCards;
+        final List<Noble> availableNobles;
+
+        BoardSnapshot(Board b) {
+            this.gemBank = new HashMap<>(b.getGemBank());
+            this.cardDecks = b.copyDecks(); // Need to add this to Board
+            this.availableCards = new HashMap<>();
+            for (int t = 1; t <= 3; t++) {
+                this.availableCards.put(t, new ArrayList<>(b.getAvailableCards(t)));
+            }
+            this.availableNobles = new ArrayList<>(b.getAvailableNobles());
+        }
+
+        void restore(Board b) {
+            b.setGemBank(gemBank);
+            b.restoreDecks(cardDecks);
+            b.setAvailableCards(availableCards);
+            b.setAvailableNobles(availableNobles);
+        }
+    }
     
     /**
      * Creates a new game with the specified players and configuration.
@@ -47,6 +125,34 @@ public class Game {
         this.winner = null;
         this.isFinalRound = false;
         this.finalRoundPlayerIndex = -1;
+        this.recentMoves = new ArrayDeque<>();
+        this.undoHistory = new ArrayDeque<>();
+    }
+
+    public void saveUndoState() {
+        undoHistory.push(new GameSnapshot(this));
+        if (undoHistory.size() > 10) {
+            undoHistory.removeLast();
+        }
+    }
+
+    public boolean undo() {
+        if (undoHistory.isEmpty()) {
+            return false;
+        }
+        GameSnapshot snapshot = undoHistory.pop();
+        for (int i = 0; i < players.size(); i++) {
+            snapshot.playerSnapshots.get(i).restore(players.get(i));
+        }
+        snapshot.boardSnapshot.restore(board);
+        this.currentPlayerIndex = snapshot.currentPlayerIndex;
+        this.currentState = snapshot.currentState;
+        this.isFinalRound = snapshot.isFinalRound;
+        this.finalRoundPlayerIndex = snapshot.finalRoundPlayerIndex;
+        this.winner = null;
+        this.recentMoves.clear();
+        this.recentMoves.addAll(snapshot.recentMoves);
+        return true;
     }
     
     /**
@@ -102,6 +208,20 @@ public class Game {
     public int getMaxTokens() {
         return maxTokens;
     }
+
+    public void addRecentMove(final String entry) {
+        if (entry == null || entry.isBlank()) {
+            return;
+        }
+        recentMoves.addLast(entry);
+        while (recentMoves.size() > 5) {
+            recentMoves.removeFirst();
+        }
+    }
+
+    public List<String> getRecentMoves() {
+        return new ArrayList<>(recentMoves);
+    }
     
     /**
      * Gets the current winner, if any.
@@ -138,21 +258,19 @@ public class Game {
         if (currentState.isFinished()) {
             return;
         }
-        
-        // Check if we're completing the final round
-        if (isFinalRound && currentPlayerIndex == finalRoundPlayerIndex) {
+
+        if (!isFinalRound && hasPlayerReachedWinningScore()) {
+            startFinalRound();
+        }
+
+        final int nextPlayerIndex = (currentPlayerIndex + 1) % players.size();
+        if (isFinalRound && nextPlayerIndex == finalRoundPlayerIndex) {
             currentState = GameState.FINISHED;
             determineWinner();
             return;
         }
-        
-        // Move to next player
-        currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
-        
-        // Check if we need to start the final round
-        if (!isFinalRound && hasPlayerReachedWinningScore()) {
-            startFinalRound();
-        }
+
+        currentPlayerIndex = nextPlayerIndex;
     }
     
     /**
