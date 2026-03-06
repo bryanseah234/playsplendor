@@ -7,13 +7,14 @@
  */
 package com.splendor.model;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.List;
+import com.splendor.util.CardLoader;
 import java.util.ArrayList;
-import java.util.Queue;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
 
 /**
  * Represents the game board containing all shared resources and cards.
@@ -42,6 +43,7 @@ public class Board {
         initializeGemBank();
         initializeCardDecks();
         initializeAvailableCards();
+        initializeNobles();
     }
     
     /**
@@ -210,7 +212,8 @@ public class Board {
      */
     private void initializeCardDecks() {
         for (int tier = 1; tier <= 3; tier++) {
-            cardDecks.put(tier, new LinkedList<>());
+            final List<Card> cards = CardLoader.loadCards(tier);
+            cardDecks.put(tier, new LinkedList<>(cards));
             availableCards.put(tier, new ArrayList<>());
         }
     }
@@ -219,8 +222,26 @@ public class Board {
      * Initializes the available cards display for each tier.
      */
     private void initializeAvailableCards() {
-        // This would typically load cards from a data source
-        // For now, we'll leave the decks empty to be populated later
+        // Draw initial 4 cards for each tier
+        for (int tier = 1; tier <= 3; tier++) {
+            for (int i = 0; i < 4; i++) {
+                drawCard(tier);
+            }
+        }
+    }
+
+    /**
+     * Initializes the available nobles.
+     */
+    private void initializeNobles() {
+        List<Noble> allNobles = CardLoader.loadNobles();
+        int nobleCount = maxPlayers + 1;
+        // Take the first N nobles
+        if (allNobles.size() > nobleCount) {
+            availableNobles.addAll(allNobles.subList(0, nobleCount));
+        } else {
+            availableNobles.addAll(allNobles);
+        }
     }
     
     /**
