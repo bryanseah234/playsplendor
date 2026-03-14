@@ -84,6 +84,41 @@ public class GameRenderer {
     }
 
     /**
+     * Renders the full game state to a String instead of printing to stdout.
+     * Used by the network layer to send the board to remote clients.
+     *
+     * @param game Current game state
+     * @return The complete board layout as a single String with embedded newlines
+     */
+    public String renderToString(final Game game) {
+        final List<String> leftPanel = renderCardTiers(game.getBoard(), game.getCurrentPlayer());
+        final List<String> rightPanel = new ArrayList<>();
+        rightPanel.addAll(renderTopRow(game.getBoard(), game.getPlayers(), game.getCurrentPlayer()));
+        final List<String> currentPlayerPanel = renderCurrentPlayer(game.getCurrentPlayer(), game.getMaxTokens(),
+                CURRENT_PLAYER_CONTENT_WIDTH);
+        final List<String> recentMoves = renderRecentMoves(game.getRecentMoves(), RECENT_MOVES_CONTENT_WIDTH);
+        rightPanel.addAll(combineHorizontal(List.of(currentPlayerPanel, recentMoves), 2));
+        rightPanel.addAll(renderMenu(menuLines));
+        return sideBySideToString(leftPanel, rightPanel);
+    }
+
+    private String sideBySideToString(final List<String> left, final List<String> right) {
+        int leftWidth = 0;
+        for (final String line : left) {
+            leftWidth = Math.max(leftWidth, stripAnsi(line).length());
+        }
+        final StringBuilder sb = new StringBuilder();
+        final int maxLines = Math.max(left.size(), right.size());
+        for (int i = 0; i < maxLines; i++) {
+            String leftLine = i < left.size() ? left.get(i) : "";
+            String rightLine = i < right.size() ? right.get(i) : "";
+            leftLine = padRightAnsi(leftLine, leftWidth);
+            sb.append(leftLine).append("  ").append(rightLine).append("\n");
+        }
+        return sb.toString();
+    }
+
+    /**
      * Displays the complete game board with a side-by-side layout.
      * Left Panel: Gem Bank, Nobles, Opponents, Status.
      * Right Panel: Card Levels.
@@ -422,6 +457,28 @@ public class GameRenderer {
 
     public void setMenuLines(final List<String> menuLines) {
         this.menuLines = menuLines == null ? List.of() : new ArrayList<>(menuLines);
+    }
+
+    /**
+     * Builds the menu line list from a set of MenuOptions.
+     * Shared by both ConsoleView and RemoteView so the menu always looks the same.
+     *
+     * @param options Available menu options for the current player
+     * @return List of formatted menu lines ready to pass to setMenuLines()
+     */
+    public List<String> buildMenuLines(final List<MenuOption> options) {
+        final List<String> lines = new ArrayList<>();
+        lines.add("Goal: 15 points");
+        lines.add("Pick one action (or 'Z' to Undo)");
+        for (final MenuOption option : options) {
+            final String base = option.getNumber() + ") " + option.getLabel() + ": ";
+            final String detail = option.getDetail();
+            final String reason = option.isAvailable() || option.getReason().isBlank()
+                    ? "" : " (" + option.getReason() + ")";
+            final String line = base + detail + reason;
+            lines.add(option.isAvailable() ? line : Colors.colorize(line, Colors.DIM));
+        }
+        return lines;
     }
 
     private String formatGemCounts(final Map<Gem, Integer> counts, final boolean includeZero) {

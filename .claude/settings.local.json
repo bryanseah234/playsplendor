@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(javac -cp src -d classes src/com/splendor/view/NetworkGameView.java src/com/splendor/Main.java)",
+      "Bash(javap -p classes/com/splendor/model/Board.class)"
+    ]
+  }
+}
