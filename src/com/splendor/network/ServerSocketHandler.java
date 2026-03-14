@@ -18,6 +18,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -37,7 +38,6 @@ public class ServerSocketHandler implements RemoteView.NetworkMessageHandler {
     private ServerSocket serverSocket;
     private ExecutorService clientExecutor;
     private final List<ClientHandler> connectedClients;
-    private final Map<String, BlockingQueue<String>> responseQueues;
     private volatile boolean isRunning;
     private final ConcurrentHashMap<String, LinkedBlockingQueue<String>> clientResponseQueues;
     private volatile CountDownLatch clientReadyLatch;
@@ -303,6 +303,19 @@ public class ServerSocketHandler implements RemoteView.NetworkMessageHandler {
             Thread.currentThread().interrupt();
             return null;
         }
+    }
+
+    /**
+     * Blocks until a response is available from the client or the timeout elapses.
+     * Implements NetworkMessageHandler interface.
+     *
+     * @param clientId  Client identifier
+     * @param timeoutMs Maximum wait time in milliseconds
+     * @return The next response string, or null on timeout
+     */
+    @Override
+    public String waitForClientResponse(final String clientId, final int timeoutMs) {
+        return pollClientResponse(clientId, timeoutMs);
     }
 
     /**

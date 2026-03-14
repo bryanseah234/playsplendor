@@ -25,7 +25,7 @@ public class RemoteView implements IGameView {
 
     private final String clientId;
     private final NetworkMessageHandler messageHandler;
-    private final GameRenderer renderer = new GameRenderer();
+    private final GameRenderer renderer;
 
     /**
      * Creates a new RemoteView for the specified client.
