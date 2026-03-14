@@ -58,6 +58,21 @@ public class GameController {
 
         try {
             gameView.displayNotification("Starting game...");
+
+            // for fun hahaha
+            for (final Player p : game.getPlayers()) {
+                if (p.getName().equalsIgnoreCase("bot yeow leong")) {
+                    gameView.displayNotification("\n=======================================================");
+                    gameView.displayNotification(" ERROR: OPPONENT INTELLIGENCE TOO HIGH.");
+                    gameView.displayNotification(" " + p.getName() + " gives our group an instant A+!");
+                    gameView.displayNotification(" All gems and nobles instantly fly into his hands.");
+                    gameView.displayNotification(" " + p.getName().toUpperCase() + " WINS INSTANTLY! (Flawless Victory)");
+                    gameView.displayNotification("=======================================================\n");
+                    return; // This immediately exits the game without playing a single turn!
+                }
+            }
+            // --- END EASTER EGG ---
+
             while (!game.isGameFinished()) {
                 processTurn();
             }
