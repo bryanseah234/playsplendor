@@ -49,13 +49,43 @@ chmod +x run.sh
 ./run.sh
 ```
 
-### Server Mode (Network Play)
-To start the game server for multiplayer:
+## Network Play
 
-**Windows:**
+Splendor supports multiplayer over a local network. One player acts as the **Host (Server)**, and others connect as **Clients**.
+
+### 1. Start the Server (Host)
+The host runs the game in server mode. By default, it waits for **2 players** to connect.
 ```batch
 java -cp classes com.splendor.Main --server
 ```
+*Note: You can change the number of players in `src/resources/config.properties`.*
+
+### 2. Connect as a Client
+Friends can connect using any TCP utility like `netcat` (nc) or `telnet`.
+
+**Using Netcat (WSL/Linux/macOS):**
+```bash
+nc <host-ip> 8080
+```
+
+**Using Telnet:**
+```bash
+telnet <host-ip> 8080
+```
+
+### 3. Playing the Game
+Once connected, the game will prompt for names. The board is rendered in ASCII and broadcasted to all players.
+
+**Command Protocol:**
+To perform actions, type the following commands into your terminal:
+
+- **Pick Gems:** `MOVE:TAKE_GEMS:R,G,B` (Take 3 different) or `MOVE:TAKE_GEMS:R,R` (Take 2 same)
+- **Purchase Card:** `MOVE:BUY_CARD:<id>` (e.g., `MOVE:BUY_CARD:101`)
+- **Reserve Card:** `MOVE:RESERVE_CARD:<id>` (e.g., `MOVE:RESERVE_CARD:101`)
+- **Discard Token:** `MOVE:DISCARD_GEMS:R` (When over limit)
+- **Undo Turn:** `MOVE:UNDO` or `Z`
+- **Query State:** `QUERY:state`
+- **Disconnect:** `DISCONNECT`
 
 ## Project Structure
 ```
