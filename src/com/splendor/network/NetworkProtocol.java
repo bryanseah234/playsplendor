@@ -24,7 +24,8 @@ public final class NetworkProtocol {
     public static final String STATE_RESPONSE = "STATE";
     
     // Move action types
-    public static final String ACTION_TAKE = "TAKE";
+    public static final String ACTION_TAKE_3 = "TAKE_3";
+    public static final String ACTION_TAKE_2 = "TAKE_2";
     public static final String ACTION_BUY = "BUY";
     public static final String ACTION_RESERVE = "RESERVE";
     public static final String ACTION_DISCARD = "DISCARD";

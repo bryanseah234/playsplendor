@@ -12,7 +12,7 @@ import com.splendor.network.NetworkProtocol;
 import com.splendor.util.GameLogger;
 import com.splendor.model.MenuOption;
 import com.splendor.model.Player;
-import com.splendor.network.ClientHandler;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +25,7 @@ public class RemoteView implements IGameView {
 
     private final String clientId;
     private final NetworkMessageHandler messageHandler;
+    private final GameRenderer renderer = new GameRenderer();
 
     /**
      * Creates a new RemoteView for the specified client.
@@ -39,8 +40,7 @@ public class RemoteView implements IGameView {
 
     @Override
     public void displayGameState(final Game game) {
-        final String gameState = formatGameState(game);
-        messageHandler.sendToClient(clientId, NetworkProtocol.createMessage("STATE", gameState));
+        messageHandler.sendToClient(clientId, renderer.renderToString(game));
     }
 
     @Override
@@ -74,18 +74,138 @@ public class RemoteView implements IGameView {
 
     @Override
     public Move promptForMove(final Player player, final Game game, final List<MenuOption> options) {
-        // Request move from client
-        messageHandler.sendToClient(clientId, NetworkProtocol.createMessage("PROMPT_MOVE", player.getName()));
+        // Show the board with menu, same as local play
+        displayAvailableMoves(options, game);
 
-        // Wait for and parse client response
-        final String response = messageHandler.waitForClientResponse(clientId, 30000); // 30 second timeout
+        final int maxOption = options.stream().mapToInt(MenuOption::getNumber).max().orElse(0);
 
-        if (response == null) {
-            displayError("Timeout waiting for move");
-            return createDefaultMove();
+        while (true) {
+            send("Select option (1-" + maxOption + "): ");
+            final String input = waitForResponse(120000);
+            if (input == null) {
+                displayError("Timeout — no input received.");
+                return createDefaultMove();
+            }
+
+            final int choice;
+            try {
+                choice = Integer.parseInt(input.trim());
+            } catch (final NumberFormatException e) {
+                displayError("Enter a number between 1 and " + maxOption);
+                continue;
+            }
+
+            final MenuOption selected = options.stream()
+                    .filter(o -> o.getNumber() == choice)
+                    .findFirst().orElse(null);
+
+            if (selected == null) {
+                displayError("Invalid selection. Choose 1-" + maxOption);
+                continue;
+            }
+            if (!selected.isAvailable()) {
+                displayError("Option unavailable: " + selected.getReason());
+                continue;
+            }
+
+            try {
+                return buildMoveFromOption(selected);
+            } catch (final IllegalArgumentException e) {
+                displayError(e.getMessage());
+            }
         }
+    }
 
-        return parseMoveFromResponse(response);
+    /** Sends follow-up prompts and builds a Move from the chosen MenuOption. */
+    private Move buildMoveFromOption(final MenuOption option) {
+        switch (option.getAction()) {
+            case TAKE_THREE: {
+                send("Available colors: " + option.getDetail() + "\nEnter 3 colors (e.g. R G B or RGB): ");
+                final List<Gem> gems = parseGems(waitForResponse(60000));
+                if (gems.size() != 3) throw new IllegalArgumentException("Enter exactly 3 colors.");
+                final Map<Gem, Integer> selected = new HashMap<>();
+                for (final Gem g : gems) selected.merge(g, 1, Integer::sum);
+                return new Move(MoveType.TAKE_THREE_DIFFERENT, selected);
+            }
+            case TAKE_TWO: {
+                send("Available colors: " + option.getDetail() + "\nEnter 1 color to take 2 of (e.g. R): ");
+                final List<Gem> gems = parseGems(waitForResponse(60000));
+                if (gems.size() != 1) throw new IllegalArgumentException("Enter exactly 1 color.");
+                final Map<Gem, Integer> selected = new HashMap<>();
+                selected.put(gems.get(0), 2);
+                return new Move(MoveType.TAKE_TWO_SAME, selected);
+            }
+            case RESERVE_VISIBLE: {
+                send("Visible card IDs: " + option.getDetail() + "\nEnter card ID to reserve: ");
+                return new Move(MoveType.RESERVE_CARD, parseId(waitForResponse(60000)), false);
+            }
+            case RESERVE_DECK: {
+                send("Available tiers: " + option.getDetail() + "\nEnter deck tier to reserve from: ");
+                final int tier = parseId(waitForResponse(60000));
+                return Move.reserveFromDeck(tier);
+            }
+            case BUY_VISIBLE: {
+                send("Affordable card IDs: " + option.getDetail() + "\nEnter card ID to buy: ");
+                return new Move(MoveType.BUY_CARD, parseId(waitForResponse(60000)), false);
+            }
+            case BUY_RESERVED: {
+                send("Affordable reserved IDs: " + option.getDetail() + "\nEnter reserved card ID to buy: ");
+                return new Move(MoveType.BUY_CARD, parseId(waitForResponse(60000)), true);
+            }
+            default:
+                throw new IllegalArgumentException("Unknown action: " + option.getAction());
+        }
+    }
+
+    /** Parses gem letters/words from a string the same way ConsoleView does. */
+    private List<Gem> parseGems(final String input) {
+        if (input == null || input.trim().isEmpty()) return List.of();
+        final List<Gem> gems = new ArrayList<>();
+        final String upper = input.trim().toUpperCase().replaceAll("[^A-Z]+", " ").trim();
+        // Split on spaces if present, otherwise treat as compact sequence
+        final String[] parts = upper.contains(" ") ? upper.split("\\s+") : new String[]{upper};
+        for (final String part : parts) {
+            int i = 0;
+            while (i < part.length()) {
+                if (i + 1 < part.length() && part.startsWith("AU", i)) {
+                    gems.add(Gem.GOLD); i += 2;
+                } else {
+                    gems.add(parseGem(String.valueOf(part.charAt(i)))); i++;
+                }
+            }
+        }
+        return gems;
+    }
+
+    private Gem parseGem(final String token) {
+        switch (token.trim().toUpperCase()) {
+            case "W": case "WHITE": return Gem.WHITE;
+            case "B": case "BLUE":  return Gem.BLUE;
+            case "G": case "GREEN": return Gem.GREEN;
+            case "R": case "RED":   return Gem.RED;
+            case "K": case "BLACK": return Gem.BLACK;
+            case "AU": case "GOLD": return Gem.GOLD;
+            default: throw new IllegalArgumentException("Unknown gem: " + token);
+        }
+    }
+
+    private int parseId(final String input) {
+        if (input == null) throw new IllegalArgumentException("No input received.");
+        try {
+            return Integer.parseInt(input.trim());
+        } catch (final NumberFormatException e) {
+            throw new IllegalArgumentException("Enter a valid number.");
+        }
+    }
+
+    /** Sends a plain message line to the client. */
+    private void send(final String message) {
+        messageHandler.sendToClient(clientId, message);
+    }
+
+    /** Waits for the next line from this client. */
+    private String waitForResponse(final int timeoutMs) {
+        return messageHandler.waitForClientResponse(clientId, timeoutMs);
     }
 
     @Override
@@ -119,7 +239,8 @@ public class RemoteView implements IGameView {
 
     @Override
     public void displayAvailableMoves(final List<MenuOption> options, final Game game) {
-        // Handled by client
+        renderer.setMenuLines(renderer.buildMenuLines(options));
+        messageHandler.sendToClient(clientId, renderer.renderToString(game));
     }
 
     @Override
@@ -183,56 +304,6 @@ public class RemoteView implements IGameView {
         GameLogger.info("Remote view closed for client: " + clientId);
     }
 
-    /**
-     * Formats the game state for network transmission.
-     * 
-     * @param game Current game state
-     * @return Formatted game state string
-     */
-    private String formatGameState(final Game game) {
-        final StringBuilder state = new StringBuilder();
-
-        // Add current player
-        state.append("CURRENT_PLAYER:").append(game.getCurrentPlayer().getName()).append(";");
-
-        // Add game state
-        state.append("STATE:").append(game.getCurrentState()).append(";");
-
-        // Add player scores
-        for (final Player player : game.getPlayers()) {
-            state.append("PLAYER:").append(player.getName())
-                    .append(":").append(player.getTotalPoints())
-                    .append(":").append(player.getTotalTokenCount())
-                    .append(";");
-        }
-
-        return state.toString();
-    }
-
-    /**
-     * Formats available moves for the player.
-     * 
-     * @param player Current player
-     * @param game   Current game state
-     * @return Formatted available moves string
-     */
-    private String formatAvailableMoves(final Player player, final Game game) {
-        final StringBuilder moves = new StringBuilder();
-
-        // Basic moves always available
-        moves.append("TAKE_3_DIFFERENT;TAKE_2_SAME;");
-
-        // Conditional moves
-        if (player.canReserveCard()) {
-            moves.append("RESERVE_CARD;");
-        }
-
-        if (player.getTotalTokenCount() > 10) {
-            moves.append("DISCARD_TOKENS;");
-        }
-
-        return moves.toString();
-    }
 
     /**
      * Formats final scores for display.
@@ -296,29 +367,120 @@ public class RemoteView implements IGameView {
      * @return Parsed move
      */
     private Move parseMoveFromResponse(final String response) {
-        // Simple parsing - would be more sophisticated in real implementation
-        if (response.contains("TAKE_3")) {
-            return new Move(MoveType.TAKE_THREE_DIFFERENT);
-        } else if (response.contains("TAKE_2")) {
-            return new Move(MoveType.TAKE_TWO_SAME);
-        } else if (response.contains("RESERVE")) {
-            return new Move(MoveType.RESERVE_CARD);
-        } else if (response.contains("BUY")) {
-            return new Move(MoveType.BUY_CARD);
-        } else {
+        if (response == null) {
+            return createDefaultMove();
+        }
+        final String[] parts = response.split(":");
+        if (parts.length < 3 || !parts[0].equalsIgnoreCase("MOVE")) {
+            return createDefaultMove();
+        }
+        switch (parts[1].toUpperCase()) {
+            case "TAKE_3":  return parseTakeThreeMove(parts[2]);
+            case "TAKE_2":  return parseTakeTwoMove(parts[2]);
+            case "BUY":     return parseBuyMove(parts[2]);
+            case "RESERVE": return parseReserveMove(parts[2]);
+            default:        return createDefaultMove();
+        }
+    }
+
+    /**
+     * Parses a TAKE_3 move: exactly 3 different gem letters (e.g. "RGB").
+     * Gem codes: R=Red, G=Green, B=Blue, W=White, K=blacK
+     */
+    private Move parseTakeThreeMove(final String gemCodes) {
+        final Map<Gem, Integer> gems = new HashMap<>();
+        for (final char c : gemCodes.toUpperCase().toCharArray()) {
+            final Gem gem = parseGemCode(c);
+            if (gem == null) {
+                return createDefaultMove();
+            }
+            gems.merge(gem, 1, Integer::sum);
+        }
+        return new Move(MoveType.TAKE_THREE_DIFFERENT, gems);
+    }
+
+    /**
+     * Parses a TAKE_2 move: exactly 1 gem letter representing the color to take two of (e.g. "R").
+     * Gem codes: R=Red, G=Green, B=Blue, W=White, K=blacK
+     */
+    private Move parseTakeTwoMove(final String gemCode) {
+        if (gemCode.length() != 1) {
+            return createDefaultMove();
+        }
+        final Gem gem = parseGemCode(gemCode.toUpperCase().charAt(0));
+        if (gem == null) {
+            return createDefaultMove();
+        }
+        final Map<Gem, Integer> gems = new HashMap<>();
+        gems.put(gem, 2);
+        return new Move(MoveType.TAKE_TWO_SAME, gems);
+    }
+
+    /**
+     * Parses a BUY move. Prefix 'R' means the card is from the player's reserved hand.
+     * Examples: "42" → board card 42, "R42" → reserved card 42.
+     */
+    private Move parseBuyMove(final String param) {
+        final boolean isReserved = param.length() > 1
+                && param.toUpperCase().charAt(0) == 'R'
+                && Character.isDigit(param.charAt(1));
+        try {
+            final int cardId = Integer.parseInt(isReserved ? param.substring(1) : param);
+            return new Move(MoveType.BUY_CARD, cardId, isReserved);
+        } catch (final NumberFormatException e) {
+            return createDefaultMove();
+        }
+    }
+
+    /**
+     * Parses a RESERVE move. Prefix 'D' means reserve from a face-down deck tier.
+     * Examples: "42" → reserve board card 42, "D2" → reserve top card of deck tier 2.
+     */
+    private Move parseReserveMove(final String param) {
+        if (param.length() > 1 && param.toUpperCase().charAt(0) == 'D') {
+            try {
+                return Move.reserveFromDeck(Integer.parseInt(param.substring(1)));
+            } catch (final NumberFormatException e) {
+                return createDefaultMove();
+            }
+        }
+        try {
+            return new Move(MoveType.RESERVE_CARD, Integer.parseInt(param), false);
+        } catch (final NumberFormatException e) {
             return createDefaultMove();
         }
     }
 
     /**
      * Parses a discard move from client response.
-     * 
+     * Expected format: DISCARD:RRGBW  (gem letters repeated for quantity)
+     *
      * @param response Client response
      * @return Parsed discard move
      */
     private Move parseDiscardMoveFromResponse(final String response) {
-        // Simple parsing for discard move
-        return createDefaultDiscardMove(null, 0); // Would be more sophisticated
+        if (response != null) {
+            final String[] parts = response.split(":");
+            if (parts.length >= 2 && parts[0].equalsIgnoreCase("DISCARD")) {
+                return parseTakeThreeMove(parts[1]);
+            }
+        }
+        return createDefaultDiscardMove(null, 0);
+    }
+
+    /**
+     * Maps a single character to its Gem type.
+     * R=Red, G=Green, B=Blue, W=White, K=blacK
+     */
+    private static Gem parseGemCode(final char code) {
+        switch (code) {
+            case 'R': return Gem.RED;
+            case 'G': return Gem.GREEN;
+            case 'B': return Gem.BLUE;
+            case 'W': return Gem.WHITE;
+            case 'K': return Gem.BLACK;
+            default:  return null;
+        }
     }
 
     /**
