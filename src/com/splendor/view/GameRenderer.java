@@ -58,15 +58,29 @@ public class GameRenderer {
 
     public void displayGameState(final Game game) {
         clearDisplay();
+        System.out.println(getRenderedGameState(game));
+    }
+
+    /**
+     * Returns the full ASCII game state as a String.
+     * Useful for network transmission.
+     * 
+     * @param game The current game state
+     * @return Formatted ASCII board
+     */
+    public String getRenderedGameState(final Game game) {
         final List<String> leftPanel = renderCardTiers(game.getBoard(), game.getCurrentPlayer());
         final List<String> rightPanel = new ArrayList<>();
         rightPanel.addAll(renderTopRow(game.getBoard(), game.getPlayers(), game.getCurrentPlayer()));
+        
         final List<String> currentPlayer = renderCurrentPlayer(game.getCurrentPlayer(), game.getMaxTokens(),
                 CURRENT_PLAYER_CONTENT_WIDTH);
         final List<String> recentMoves = renderRecentMoves(game.getRecentMoves(), RECENT_MOVES_CONTENT_WIDTH);
+        
         rightPanel.addAll(combineHorizontal(List.of(currentPlayer, recentMoves), 2));
         rightPanel.addAll(renderMenu(menuLines));
-        printSideBySide(leftPanel, rightPanel);
+        
+        return combineSideBySide(leftPanel, rightPanel);
     }
 
     /**
@@ -388,6 +402,11 @@ public class GameRenderer {
     }
 
     private void printSideBySide(final List<String> left, final List<String> right) {
+        System.out.println(combineSideBySide(left, right));
+    }
+
+    private String combineSideBySide(final List<String> left, final List<String> right) {
+        final StringBuilder sb = new StringBuilder();
         int leftWidth = 0;
         for (final String line : left) {
             leftWidth = Math.max(leftWidth, stripAnsi(line).length());
@@ -397,8 +416,9 @@ public class GameRenderer {
             String leftLine = i < left.size() ? left.get(i) : "";
             String rightLine = i < right.size() ? right.get(i) : "";
             leftLine = padRightAnsi(leftLine, leftWidth);
-            System.out.println(leftLine + "  " + rightLine);
+            sb.append(leftLine).append("  ").append(rightLine).append("\n");
         }
+        return sb.toString();
     }
 
     private List<String> renderPlayersTrack(final List<Player> players, final Player currentPlayer) {

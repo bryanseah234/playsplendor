@@ -10,7 +10,6 @@ package com.splendor.network;
 import com.splendor.config.IConfigProvider;
 import com.splendor.util.Constants;
 import com.splendor.util.GameLogger;
-
 import java.io.*;
 import java.net.Socket;
 import java.util.UUID;

@@ -12,9 +12,11 @@ import com.splendor.config.IConfigProvider;
 import com.splendor.exception.SplendorException;
 import com.splendor.util.Constants;
 import com.splendor.util.GameLogger;
+import com.splendor.view.RemoteView;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -28,13 +30,14 @@ import java.util.concurrent.TimeUnit;
  * Network server that handles remote client connections.
  * Uses thread-per-client model for concurrent player handling.
  */
-public class ServerSocketHandler {
+public class ServerSocketHandler implements RemoteView.NetworkMessageHandler {
     
     private final int serverPort;
     private final IConfigProvider configProvider;
     private ServerSocket serverSocket;
     private ExecutorService clientExecutor;
     private final List<ClientHandler> connectedClients;
+    private final Map<String, BlockingQueue<String>> responseQueues;
     private volatile boolean isRunning;
     private final ConcurrentHashMap<String, LinkedBlockingQueue<String>> clientResponseQueues;
     private volatile CountDownLatch clientReadyLatch;
@@ -219,7 +222,9 @@ public class ServerSocketHandler {
     public void broadcastToAllClients(final String message) {
         for (final ClientHandler client : connectedClients) {
             try {
-                client.sendMessage(message);
+                if (client.isConnected()) {
+                    client.sendMessage(message);
+                }
             } catch (final Exception e) {
                 GameLogger.error("Failed to send message to client", e);
             }
@@ -232,6 +237,7 @@ public class ServerSocketHandler {
      * @param clientId Client identifier
      * @param message Message to send
      */
+    @Override
     public void sendToClient(final String clientId, final String message) {
         for (final ClientHandler client : connectedClients) {
             if (client.getClientId().equals(clientId)) {
@@ -340,6 +346,15 @@ public class ServerSocketHandler {
      */
     public int getConnectedClientCount() {
         return connectedClients.size();
+    }
+
+    /**
+     * Gets the list of currently connected clients.
+     * 
+     * @return List of client handlers
+     */
+    public List<ClientHandler> getConnectedClients() {
+        return Collections.unmodifiableList(connectedClients);
     }
     
     /**

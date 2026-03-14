@@ -36,6 +36,7 @@ public class RemoteView implements IGameView {
     public RemoteView(final String clientId, final NetworkMessageHandler messageHandler) {
         this.clientId = clientId;
         this.messageHandler = messageHandler;
+        this.renderer = new GameRenderer();
     }
 
     @Override
