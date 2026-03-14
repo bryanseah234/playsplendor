@@ -117,7 +117,7 @@ public class MultiRemoteView implements IGameView {
 
     @Override
     public void displayAvailableMoves(List<MenuOption> options, Game game) {
-        // RemoteView.displayAvailableMoves is currently empty/handled by client side
+        getRemoteViewForPlayer(game.getCurrentPlayer()).displayAvailableMoves(options, game);
     }
 
     @Override

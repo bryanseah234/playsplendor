@@ -128,9 +128,11 @@ public class RemoteView implements IGameView {
     @Override
     public void displayAvailableMoves(final List<MenuOption> options, final Game game) {
         // Update renderer's menu state so that the next displayGameState call includes it
-        // Note: In local ConsoleView, this is usually followed by promptForMove which calls displayGameState.
         final List<String> menuLines = buildMenuLines(options);
         renderer.setMenuLines(menuLines);
+        
+        // Immediately resend the game state so the user sees the board + menu
+        displayGameState(game);
     }
 
     private List<String> buildMenuLines(final List<MenuOption> options) {
