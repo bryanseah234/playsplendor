@@ -12,10 +12,15 @@ import com.splendor.config.FileConfigProvider;
 import com.splendor.config.IConfigProvider;
 import com.splendor.controller.GameController;
 import com.splendor.exception.SplendorException;
+import com.splendor.network.ClientHandler;
 import com.splendor.network.ServerSocketHandler;
 import com.splendor.util.Constants;
 import com.splendor.view.ConsoleView;
 import com.splendor.view.IGameView;
+import com.splendor.view.MultiRemoteView;
+import com.splendor.model.Player;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Application entry point that handles mode selection and initialization.
@@ -95,6 +100,54 @@ public class Main {
         final int serverPort = configProvider.getIntProperty("server.port", Constants.DEFAULT_SERVER_PORT);
         final ServerSocketHandler serverHandler = new ServerSocketHandler(serverPort, configProvider);
         
-        serverHandler.startServer();
+        // Start server in background thread so we can continue with game orchestration
+        new Thread(() -> {
+            try {
+                serverHandler.startServer();
+            } catch (SplendorException e) {
+                System.err.println("Server failure: " + e.getMessage());
+            }
+        }).start();
+
+        // Wait for players to connect
+        final int targetPlayers = configProvider.getIntProperty("game.players", 2);
+        System.out.println("Waiting for " + targetPlayers + " players to connect...");
+        
+        try {
+            while (serverHandler.getConnectedClientCount() < targetPlayers) {
+                Thread.sleep(1000);
+                if (serverHandler.getConnectedClientCount() > 0) {
+                    System.out.print("\rConnected: " + serverHandler.getConnectedClientCount() + "/" + targetPlayers);
+                }
+            }
+            System.out.println("\nAll players connected. Initializing game...");
+            
+            // Get connected client IDs
+            List<String> clientIds = serverHandler.getConnectedClients().stream()
+                    .map(ClientHandler::getClientId)
+                    .collect(Collectors.toList());
+            
+            // Create MultiRemoteView
+            final MultiRemoteView multiView = new MultiRemoteView(serverHandler, clientIds);
+            
+            // Initialize GameController
+            final GameController gameController = new GameController(multiView, configProvider);
+            gameController.initializeGame();
+            
+            // Map the created Player objects to their network clients
+            List<Player> players = gameController.getPlayers();
+            for (int i = 0; i < players.size(); i++) {
+                multiView.mapPlayerToClient(players.get(i), i);
+            }
+            
+            // Start the game loop
+            gameController.startGame();
+            
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new SplendorException("Connection wait interrupted", e);
+        } finally {
+            serverHandler.stopServer();
+        }
     }
 }

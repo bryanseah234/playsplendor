@@ -111,15 +111,13 @@ public class ClientHandler {
         
         final String trimmedMessage = message.trim();
         
-        // Handle different message types
-        if (trimmedMessage.startsWith(NetworkProtocol.MOVE_COMMAND)) {
-            processMoveCommand(trimmedMessage);
-        } else if (trimmedMessage.startsWith(NetworkProtocol.QUERY_COMMAND)) {
-            processQueryCommand(trimmedMessage);
-        } else if (trimmedMessage.equalsIgnoreCase(NetworkProtocol.DISCONNECT_COMMAND)) {
+        // Pass everything to the server handler's response system
+        // The GameController (via RemoteView) will be waiting for this on a separate thread
+        serverHandler.handleIncomingResponse(clientId, trimmedMessage);
+        
+        // Keep support for direct disconnect if needed
+        if (trimmedMessage.equalsIgnoreCase(NetworkProtocol.DISCONNECT_COMMAND)) {
             handleDisconnect();
-        } else {
-            sendError("Unknown command: " + trimmedMessage);
         }
     }
     

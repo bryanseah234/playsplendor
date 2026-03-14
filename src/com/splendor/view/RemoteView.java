@@ -13,6 +13,7 @@ import com.splendor.util.GameLogger;
 import com.splendor.model.MenuOption;
 import com.splendor.model.Player;
 import com.splendor.network.ClientHandler;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,7 @@ public class RemoteView implements IGameView {
 
     private final String clientId;
     private final NetworkMessageHandler messageHandler;
+    private final GameRenderer renderer;
 
     /**
      * Creates a new RemoteView for the specified client.
@@ -35,12 +37,18 @@ public class RemoteView implements IGameView {
     public RemoteView(final String clientId, final NetworkMessageHandler messageHandler) {
         this.clientId = clientId;
         this.messageHandler = messageHandler;
+        this.renderer = new GameRenderer();
     }
 
     @Override
     public void displayGameState(final Game game) {
-        final String gameState = formatGameState(game);
-        messageHandler.sendToClient(clientId, NetworkProtocol.createMessage("STATE", gameState));
+        // Send actual ASCII board
+        final String board = renderer.getRenderedGameState(game);
+        messageHandler.sendToClient(clientId, board);
+        
+        // Also send raw state data for any custom clients
+        final String gameStateData = formatGameState(game);
+        messageHandler.sendToClient(clientId, NetworkProtocol.createMessage("STATE", gameStateData));
     }
 
     @Override
@@ -119,7 +127,24 @@ public class RemoteView implements IGameView {
 
     @Override
     public void displayAvailableMoves(final List<MenuOption> options, final Game game) {
-        // Handled by client
+        // Update renderer's menu state so that the next displayGameState call includes it
+        // Note: In local ConsoleView, this is usually followed by promptForMove which calls displayGameState.
+        final List<String> menuLines = buildMenuLines(options);
+        renderer.setMenuLines(menuLines);
+    }
+
+    private List<String> buildMenuLines(final List<MenuOption> options) {
+        final List<String> lines = new ArrayList<>();
+        lines.add("Goal: 15 points");
+        lines.add("Pick one action");
+        for (final MenuOption option : options) {
+            final String base = option.getNumber() + ") " + option.getLabel() + ": ";
+            final String detail = option.getDetail();
+            final String reason = option.isAvailable() || option.getReason().isBlank() ? "" : " (" + option.getReason() + ")";
+            final String line = base + detail + reason;
+            lines.add(option.isAvailable() ? line : Colors.colorize(line, Colors.DIM));
+        }
+        return lines;
     }
 
     @Override
