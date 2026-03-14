@@ -181,7 +181,7 @@ public class ConsoleView implements IGameView {
 
     @Override
     public void displayAvailableMoves(final List<MenuOption> options, final Game game) {
-        renderer.setMenuLines(buildMenuLines(options));
+        renderer.setMenuLines(renderer.buildMenuLines(options));
         renderer.displayGameState(game);
     }
 

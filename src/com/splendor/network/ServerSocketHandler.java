@@ -18,8 +18,13 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Network server that handles remote client connections.
@@ -34,6 +39,8 @@ public class ServerSocketHandler implements RemoteView.NetworkMessageHandler {
     private final List<ClientHandler> connectedClients;
     private final Map<String, BlockingQueue<String>> responseQueues;
     private volatile boolean isRunning;
+    private final ConcurrentHashMap<String, LinkedBlockingQueue<String>> clientResponseQueues;
+    private volatile CountDownLatch clientReadyLatch;
     
     /**
      * Creates a new ServerSocketHandler with the specified port and configuration.
@@ -45,7 +52,8 @@ public class ServerSocketHandler implements RemoteView.NetworkMessageHandler {
         this.serverPort = serverPort;
         this.configProvider = configProvider;
         this.connectedClients = new CopyOnWriteArrayList<>();
-        this.responseQueues = new ConcurrentHashMap<>();
+        this.clientResponseQueues = new ConcurrentHashMap<>();
+        this.clientReadyLatch = null;
         this.isRunning = false;
     }
     
@@ -58,9 +66,10 @@ public class ServerSocketHandler implements RemoteView.NetworkMessageHandler {
         try {
             GameLogger.info("Starting Splendor network server on port " + serverPort);
             
-            // Initialize server socket
-            serverSocket = new ServerSocket(serverPort);
-            
+            // Force IPv4 wildcard (0.0.0.0) so all network interfaces are reachable
+            final java.net.InetAddress wildcard = java.net.InetAddress.getByAddress(new byte[]{0, 0, 0, 0});
+            serverSocket = new ServerSocket(serverPort, 50, wildcard);
+
             // Configure server socket properties
             serverSocket.setReuseAddress(true);
             
@@ -69,7 +78,27 @@ public class ServerSocketHandler implements RemoteView.NetworkMessageHandler {
             clientExecutor = Executors.newFixedThreadPool(maxClients);
             
             isRunning = true;
-            GameLogger.info("Server started successfully. Listening for connections...");
+
+            // Print real IPv4 addresses, skipping virtual/loopback adapters
+            final StringBuilder ips = new StringBuilder();
+            for (final java.util.Enumeration<java.net.NetworkInterface> ifaces =
+                    java.net.NetworkInterface.getNetworkInterfaces(); ifaces.hasMoreElements();) {
+                final java.net.NetworkInterface iface = ifaces.nextElement();
+                if (!iface.isUp() || iface.isLoopback()) continue;
+                final String name = iface.getDisplayName().toLowerCase();
+                if (name.contains("virtual") || name.contains("vmware")
+                        || name.contains("vbox") || name.contains("hyper-v")
+                        || name.contains("wsl") || name.contains("loopback")) continue;
+                for (final java.util.Enumeration<java.net.InetAddress> addrs = iface.getInetAddresses();
+                        addrs.hasMoreElements();) {
+                    final java.net.InetAddress addr = addrs.nextElement();
+                    if (addr instanceof java.net.Inet4Address) {
+                        ips.append("\n  ").append(iface.getDisplayName())
+                           .append(" -> ").append(addr.getHostAddress()).append(":").append(serverPort);
+                    }
+                }
+            }
+            GameLogger.info("Server started. Clients can connect at:" + ips);
             
             // Start accepting connections
             acceptClientConnections();
@@ -120,6 +149,9 @@ public class ServerSocketHandler implements RemoteView.NetworkMessageHandler {
             // Create client handler
             final ClientHandler clientHandler = new ClientHandler(clientSocket, this, configProvider);
             connectedClients.add(clientHandler);
+            if (clientReadyLatch != null) {
+                clientReadyLatch.countDown();
+            }
             
             // Handle client in separate thread
             clientExecutor.submit(() -> {
@@ -139,8 +171,42 @@ public class ServerSocketHandler implements RemoteView.NetworkMessageHandler {
     }
     
     /**
+     * Blocks until the given number of clients have connected, or the timeout elapses.
+     *
+     * @param count     Number of clients to wait for
+     * @param timeoutMs Maximum wait time in milliseconds (0 = wait forever)
+     * @return true if the required clients connected in time, false on timeout
+     */
+    public boolean waitForClients(final int count, final long timeoutMs) {
+        clientReadyLatch = new CountDownLatch(count);
+        try {
+            if (timeoutMs <= 0) {
+                clientReadyLatch.await();
+                return true;
+            }
+            return clientReadyLatch.await(timeoutMs, TimeUnit.MILLISECONDS);
+        } catch (final InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
+    }
+
+    /**
+     * Returns the IDs of all currently connected clients.
+     *
+     * @return List of client ID strings
+     */
+    public List<String> getConnectedClientIds() {
+        final List<String> ids = new java.util.ArrayList<>();
+        for (final ClientHandler client : connectedClients) {
+            ids.add(client.getClientId());
+        }
+        return ids;
+    }
+
+    /**
      * Removes a disconnected client.
-     * 
+     *
      * @param clientHandler Client handler to remove
      */
     private void removeClient(final ClientHandler clientHandler) {
@@ -185,20 +251,53 @@ public class ServerSocketHandler implements RemoteView.NetworkMessageHandler {
         }
         GameLogger.warn("Client not found: " + clientId);
     }
+    
+    /**
+     * Registers a response queue for a client when they connect.
+     *
+     * @param clientId Client identifier
+     */
+    public void registerClientQueue(final String clientId) {
+        clientResponseQueues.put(clientId, new LinkedBlockingQueue<>());
+    }
 
     /**
-     * Waits for a response from a specific client.
-     * 
+     * Removes a client's response queue when they disconnect.
+     *
      * @param clientId Client identifier
-     * @param timeoutMs Timeout in milliseconds
-     * @return Client response or null if timeout
      */
-    @Override
-    public String waitForClientResponse(final String clientId, final int timeoutMs) {
-        final BlockingQueue<String> queue = responseQueues.computeIfAbsent(clientId, k -> new LinkedBlockingQueue<>());
+    public void unregisterClientQueue(final String clientId) {
+        clientResponseQueues.remove(clientId);
+    }
+
+    /**
+     * Enqueues a response message from a client for the game to consume.
+     *
+     * @param clientId Client identifier
+     * @param message  Message to enqueue
+     */
+    public void enqueueClientResponse(final String clientId, final String message) {
+        final LinkedBlockingQueue<String> queue = clientResponseQueues.get(clientId);
+        if (queue != null) {
+            queue.offer(message);
+        } else {
+            GameLogger.warn("No response queue found for client: " + clientId);
+        }
+    }
+
+    /**
+     * Blocks until a response is available from the client or the timeout elapses.
+     *
+     * @param clientId  Client identifier
+     * @param timeoutMs Maximum wait time in milliseconds
+     * @return The next response string, or null on timeout
+     */
+    public String pollClientResponse(final String clientId, final long timeoutMs) {
+        final LinkedBlockingQueue<String> queue = clientResponseQueues.get(clientId);
+        if (queue == null) {
+            return null;
+        }
         try {
-            // Clear any stale responses before waiting
-            queue.clear();
             return queue.poll(timeoutMs, TimeUnit.MILLISECONDS);
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -206,19 +305,6 @@ public class ServerSocketHandler implements RemoteView.NetworkMessageHandler {
         }
     }
 
-    /**
-     * Handles an incoming response from a client.
-     * 
-     * @param clientId Client identifier
-     * @param message Incoming message
-     */
-    public void handleIncomingResponse(final String clientId, final String message) {
-        final BlockingQueue<String> queue = responseQueues.get(clientId);
-        if (queue != null) {
-            queue.offer(message);
-        }
-    }
-    
     /**
      * Stops the server and cleans up resources.
      */

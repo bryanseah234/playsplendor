@@ -10,7 +10,6 @@ package com.splendor.network;
 import com.splendor.config.IConfigProvider;
 import com.splendor.util.Constants;
 import com.splendor.util.GameLogger;
-
 import java.io.*;
 import java.net.Socket;
 import java.util.UUID;
@@ -53,6 +52,7 @@ public class ClientHandler {
      */
     public void handleClient() throws NetworkException {
         try {
+            serverHandler.registerClientQueue(clientId);
             initializeStreams();
             GameLogger.info("Client handler initialized for: " + getClientAddress());
             
@@ -111,80 +111,49 @@ public class ClientHandler {
         
         final String trimmedMessage = message.trim();
         
-        // Pass everything to the server handler's response system
-        // The GameController (via RemoteView) will be waiting for this on a separate thread
-        serverHandler.handleIncomingResponse(clientId, trimmedMessage);
-        
-        // Keep support for direct disconnect if needed
-        if (trimmedMessage.equalsIgnoreCase(NetworkProtocol.DISCONNECT_COMMAND)) {
+        // Handle different message types
+        if (trimmedMessage.startsWith(NetworkProtocol.MOVE_COMMAND + NetworkProtocol.FIELD_DELIMITER)) {
+            processMoveCommand(trimmedMessage);
+        } else if (trimmedMessage.startsWith(NetworkProtocol.QUERY_COMMAND + NetworkProtocol.FIELD_DELIMITER)) {
+            processQueryCommand(trimmedMessage);
+        } else if (trimmedMessage.equalsIgnoreCase(NetworkProtocol.DISCONNECT_COMMAND)) {
             handleDisconnect();
+        } else {
+            // Plain response to a server prompt (e.g. player count, player name, noble choice)
+            serverHandler.enqueueClientResponse(clientId, trimmedMessage);
         }
     }
     
     /**
      * Processes a move command from the client.
-     * 
-     * @param command Move command
+     * Validates the action type then forwards the raw command to the game engine
+     * via the server's per-client response queue.
+     *
+     * @param command Move command (e.g. MOVE:TAKE:RGB, MOVE:BUY:42, MOVE:RESERVE:D2)
      */
     private void processMoveCommand(final String command) {
-        // Parse move command format: MOVE:action:parameters
         final String[] parts = command.split(Constants.PROTOCOL_DELIMITER);
-        
-        if (parts.length < 2) {
-            sendError("Invalid move command format");
+
+        if (parts.length < 3) {
+            sendError("Invalid move command. Usage: MOVE:<action>:<params>");
             return;
         }
-        
-        final String action = parts[1];
-        
-        try {
-            // Process the move action
-            switch (action.toUpperCase()) {
-                case "TAKE":
-                    processTakeAction(parts);
-                    break;
-                case "BUY":
-                    processBuyAction(parts);
-                    break;
-                case "RESERVE":
-                    processReserveAction(parts);
-                    break;
-                default:
-                    sendError("Unknown move action: " + action);
-            }
-        } catch (final Exception e) {
-            sendError("Move processing failed: " + e.getMessage());
+
+        final String action = parts[1].toUpperCase();
+
+        switch (action) {
+            case NetworkProtocol.ACTION_TAKE_3:
+            case NetworkProtocol.ACTION_TAKE_2:
+            case NetworkProtocol.ACTION_BUY:
+            case NetworkProtocol.ACTION_RESERVE:
+            case NetworkProtocol.ACTION_DISCARD:
+                serverHandler.enqueueClientResponse(clientId, command);
+                sendSuccess("Move received");
+                break;
+            default:
+                sendError("Unknown move action: " + action
+                        + ". Valid actions: TAKE_3, TAKE_2, BUY, RESERVE, DISCARD");
         }
-    }
-    
-    /**
-     * Processes a take action (gems).
-     * 
-     * @param parts Command parts
-     */
-    private void processTakeAction(final String[] parts) {
-        // Implementation would process gem taking
-        sendSuccess("Take action processed");
-    }
-    
-    /**
-     * Processes a buy action (card purchase).
-     * 
-     * @param parts Command parts
-     */
-    private void processBuyAction(final String[] parts) {
-        // Implementation would process card purchase
-        sendSuccess("Buy action processed");
-    }
-    
-    /**
-     * Processes a reserve action (card reservation).
-     * 
-     * @param parts Command parts
-     */
-    private void processReserveAction(final String[] parts) {
-        // Implementation would process card reservation
-        sendSuccess("Reserve action processed");
     }
     
     /**
@@ -297,6 +266,7 @@ public class ClientHandler {
      * Cleans up client resources.
      */
     private void cleanup() {
+        serverHandler.unregisterClientQueue(clientId);
         try {
             if (outputWriter != null) {
                 outputWriter.close();
