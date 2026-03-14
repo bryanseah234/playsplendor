@@ -1,11 +1,3 @@
-/**
- * Main game controller that orchestrates the game flow.
- * Coordinates between model and view to manage the complete game lifecycle.
- * 
- * @author Splendor Development Team
- * @version 1.0
- * // Edited by AI; implemented main game loop and exception handling
- */
 package com.splendor.controller;
 
 import com.splendor.config.ConfigKeys;
@@ -33,12 +25,6 @@ public class GameController {
     private Game game;
     private List<Player> players;
 
-    /**
-     * Creates a new GameController with the specified view and configuration.
-     * 
-     * @param gameView       Game view implementation
-     * @param configProvider Configuration provider
-     */
     public GameController(final IGameView gameView, final IConfigProvider configProvider) {
         this.gameView = Objects.requireNonNull(gameView, "Game view cannot be null");
         this.configProvider = Objects.requireNonNull(configProvider, "Config provider cannot be null");
@@ -47,29 +33,15 @@ public class GameController {
         this.players = new ArrayList<>();
     }
 
-    /**
-     * Initializes the game by setting up players and game state.
-     * 
-     * @throws SplendorException if initialization fails
-     */
     public void initializeGame() throws SplendorException {
         try {
             gameView.displayWelcomeMessage();
-
-            // Get configuration values
             final int winningPoints = configProvider.getIntProperty(ConfigKeys.WINNING_POINTS, 15);
             final int maxTokens = configProvider.getIntProperty(ConfigKeys.MAX_TOKENS, 10);
-
-            // Get player information
             final int playerCount = gameView.promptForPlayerCount();
 
-            // Validate game parameters
             gameRuleValidator.validateGameStart(playerCount, winningPoints, maxTokens);
-
-            // Create players
             createPlayers(playerCount);
-
-            // Create game
             game = new Game(players, winningPoints, maxTokens);
 
             gameView.displayNotification("Game initialized successfully!");
@@ -79,11 +51,6 @@ public class GameController {
         }
     }
 
-    /**
-     * Starts the main game loop.
-     * 
-     * @throws SplendorException if game execution fails
-     */
     public void startGame() throws SplendorException {
         if (game == null) {
             throw new GameStateException("Game not initialized. Call initializeGame() first.");
@@ -91,17 +58,12 @@ public class GameController {
 
         try {
             gameView.displayNotification("Starting game...");
-
-            // Main game loop
             while (!game.isGameFinished()) {
                 processTurn();
             }
-
-            // Display final results
             displayGameResults();
-
         } catch (final SplendorException e) {
-            throw e; // Re-throw Splendor exceptions
+            throw e; 
         } catch (final Exception e) {
             throw new SplendorException("Game execution failed: " + e.getMessage(), e);
         } finally {
@@ -110,50 +72,67 @@ public class GameController {
     }
 
     /**
-     * Processes a single turn for the current player.
-     * 
-     * @throws SplendorException if turn processing fails
+     * Helper method to handle Undos. 
+     * If reverting a turn lands on a bot, it keeps undoing until it's a human's turn.
      */
+    private boolean performUndo() {
+        boolean success = game.undo();
+        if (success) {
+            // Keep reverting as long as it is a bot's turn!
+            while (game.getCurrentPlayer() instanceof ComputerPlayer) {
+                if (!game.undo()) {
+                    break;
+                }
+            }
+        }
+        return success;
+    }
+
     private void processTurn() throws SplendorException {
         final Player currentPlayer = game.getCurrentPlayer();
 
         try {
-            // Save game state before anything else for undo
             game.saveUndoState();
-
-            // Display current game state
             gameView.displayGameState(game);
             gameView.displayPlayerTurn(currentPlayer);
 
-            // Get player move
             final Move move = getPlayerMove(currentPlayer);
-
-            // Execute move
             executeMove(move, currentPlayer);
 
-            // Check for noble visits after card purchases
             if (move.getMoveType() == MoveType.BUY_CARD) {
                 checkNobleVisits(currentPlayer);
             }
 
-            // Handle token limit
             handleTokenLimit(currentPlayer);
 
-            // Give user chance to undo before advancing
-            final String input = gameView.displayMessage("Move executed successfully!");
-            if (input != null && (input.equalsIgnoreCase("Z") || input.equalsIgnoreCase("UNDO"))) {
-                if (game.undo()) {
-                    gameView.displayNotification("Move undone!");
-                    return; // Re-process same turn
-                } else {
-                    gameView.displayError("Nothing to undo!");
+            if (!(currentPlayer instanceof ComputerPlayer)) {
+                // Human turn: Call the view method that includes the Undo prompt
+                final String input = gameView.displayMessage("Move executed successfully!");
+                if (input != null && (input.equalsIgnoreCase("Z") || input.equalsIgnoreCase("UNDO"))) {
+                    if (performUndo()) { 
+                        gameView.displayNotification("Move undone!");
+                        return; 
+                    } else {
+                        gameView.displayError("Nothing to undo!");
+                    }
+                }
+            } else {
+                // Bot turn: Print notification without the undo prompt, then manually wait for Enter!
+                gameView.displayNotification(currentPlayer.getName() + " finished their turn. (Press ENTER to continue)");
+                try {
+                    // This freezes the game until you hit Enter
+                    System.in.read();
+                    // This cleans up the hidden "Enter" key characters so they don't accidentally skip your next menu!
+                    while (System.in.available() > 0) {
+                        System.in.read();
+                    }
+                } catch (Exception e) {
+                    // Just catch and ignore if the input stream acts up
                 }
             }
 
-            // Advance to next player
             game.advanceToNextPlayer();
     
-
         } catch (final GameStateException e) {
             if ("UNDO_SIGNAL".equals(e.getMessage())) {
                 gameView.displayNotification("Turn reverted!");
@@ -161,10 +140,9 @@ public class GameController {
             }
             throw e;
         } catch (final InvalidMoveException | InsufficientTokensException e) {
-            // Display error and let player try again
             final String input = gameView.displayError(e.getMessage());
             if (input != null && (input.equalsIgnoreCase("Z") || input.equalsIgnoreCase("UNDO"))) {
-                if (game.undo()) {
+                if (performUndo()) { 
                     gameView.displayNotification("Turn reverted!");
                     return;
                 }
@@ -172,34 +150,121 @@ public class GameController {
         }
     }
 
-    /**
-     * Gets a valid move from the current player.
-     * 
-     * @param player Current player
-     * @return Valid move
-     * @throws SplendorException if move acquisition fails
-     */
     private Move getPlayerMove(final Player player) throws SplendorException {
         while (true) {
             try {
                 final List<MenuOption> options = buildMenuOptions(player, game);
+                
+                // --- NEW CPU BOT LOGIC ---
+                if (player instanceof ComputerPlayer) {
+                    gameView.displayNotification(player.getName() + " is calculating a move...");
+                    try { Thread.sleep(1500); } catch (InterruptedException e) {}
+
+                    Move botMove = null;
+
+                    // 1. Try to buy a visible card first
+                    final List<Integer> affordableVisible = getAffordableVisibleIds(player, game.getBoard());
+                    if (!affordableVisible.isEmpty()) {
+                        botMove = new Move(MoveType.BUY_CARD, affordableVisible.get(0), false);
+                    } 
+                    // 2. Try to buy a reserved card next
+                    else if (!getAffordableReservedIds(player).isEmpty()) {
+                        botMove = new Move(MoveType.BUY_CARD, getAffordableReservedIds(player).get(0), true);
+                    } 
+                    // 3. Try to take 3 different gems
+                    else if (getAvailableDifferentGems(game.getBoard()).size() >= 3) {
+                        final List<Gem> diffGems = getAvailableDifferentGems(game.getBoard());
+                        final Map<Gem, Integer> gems = new HashMap<>();
+                        gems.put(diffGems.get(0), 1);
+                        gems.put(diffGems.get(1), 1);
+                        gems.put(diffGems.get(2), 1);
+                        botMove = new Move(MoveType.TAKE_THREE_DIFFERENT, gems);
+                    } 
+                    // 4. Try to take 2 of the same gem
+                    else if (!getAvailableTwoSameGems(game.getBoard()).isEmpty()) {
+                        final List<Gem> sameGems = getAvailableTwoSameGems(game.getBoard());
+                        final Map<Gem, Integer> gems = new HashMap<>();
+                        gems.put(sameGems.get(0), 2);
+                        botMove = new Move(MoveType.TAKE_TWO_SAME, gems);
+                    } 
+                    // 5. Fallback: Reserve from deck
+                    else {
+                        botMove = Move.reserveFromDeck(1);
+                    }
+
+                    moveValidator.validateMove(botMove, player, game);
+                    return botMove;
+                }
+                // --- END BOT LOGIC ---
+
+                // Human logic
                 final Move move = gameView.promptForMove(player, game, options);
-
-                // Validate move
                 moveValidator.validateMove(move, player, game);
-
                 return move;
 
             } catch (final InvalidMoveException | InsufficientTokensException e) {
+                if (player instanceof ComputerPlayer) {
+                    // If bot fails, force a basic reserve to prevent infinite loops
+                    return Move.reserveFromDeck(1); 
+                }
+                
                 final String input = gameView.displayError(e.getMessage());
                 if (input != null && (input.equalsIgnoreCase("Z") || input.equalsIgnoreCase("UNDO"))) {
-                    if (game.undo()) {
-                        throw new GameStateException("UNDO_SIGNAL"); // Custom skip
+                    if (performUndo()) { // <-- Uses smart undo
+                        throw new GameStateException("UNDO_SIGNAL"); 
                     }
                 }
-                // Let player try again
             } catch (final Exception e) {
                 throw new SplendorException("Failed to get player move: " + e.getMessage(), e);
+            }
+        }
+    }
+
+    private void handleTokenLimit(final Player player) throws SplendorException {
+        if (player.getTotalTokenCount() > game.getMaxTokens()) {
+            final int excessCount = player.getTotalTokenCount() - game.getMaxTokens();
+            final Move discardMove;
+
+            // --- NEW CPU BOT LOGIC ---
+            if (player instanceof ComputerPlayer) {
+                final Map<Gem, Integer> discardMap = new HashMap<>();
+                int leftToDiscard = excessCount;
+                for (final Gem gem : Gem.values()) {
+                    final int count = player.getTokenCount(gem);
+                    if (count > 0 && leftToDiscard > 0) {
+                        final int toDiscard = Math.min(count, leftToDiscard);
+                        discardMap.put(gem, toDiscard);
+                        leftToDiscard -= toDiscard;
+                    }
+                }
+                discardMove = new Move(MoveType.DISCARD_TOKENS, discardMap);
+            } else {
+                discardMove = gameView.promptForTokenDiscard(player, excessCount);
+            }
+            // --- END BOT LOGIC ---
+
+            moveValidator.validateMove(discardMove, player, game);
+            final PlayerController playerController = new PlayerController(game, gameView);
+            playerController.executeTokenDiscard(player, discardMove);
+            game.addRecentMove(formatMoveEntry(player, discardMove));
+        }
+    }
+
+    private void createPlayers(final int playerCount) {
+        players.clear();
+        
+        // Let the players know the secret to creating a CPU!
+        gameView.displayNotification("\n--- PLAYER SETUP ---");
+        gameView.displayNotification("Include 'bot' in a player's name (e.g., 'Bot1' or 'AngryBot') to make them a computer player!");
+        
+        for (int i = 1; i <= playerCount; i++) {
+            final String playerName = gameView.promptForPlayerName(i, playerCount);
+            
+            // Type "Bot" as a player name to make them AI!
+            if (playerName.toLowerCase().contains("bot")) {
+                players.add(new ComputerPlayer(playerName));
+            } else {
+                players.add(new Player(playerName));
             }
         }
     }
@@ -227,6 +292,7 @@ public class GameController {
         options.add(new MenuOption(index++, MenuAction.RESERVE_VISIBLE, canReserveVisible,
                 "Reserve visible card", canReserveVisible ? formatIdList(visibleIds, 8) : "None",
                 canReserveVisible ? "" : reserveVisibleReason(player, board)));
+        
         final List<Integer> availableTiers = new ArrayList<>();
         for (int tier = 1; tier <= 3; tier++) {
             if (board.getDeckSize(tier) > 0) {
@@ -255,9 +321,7 @@ public class GameController {
     }
 
     private String formatColoredGemList(final List<Gem> gems) {
-        if (gems.isEmpty()) {
-            return "None";
-        }
+        if (gems.isEmpty()) return "None";
         final StringJoiner joiner = new StringJoiner(" ");
         for (final Gem gem : gems) {
             joiner.add(Colors.colorize(gemLabel(gem), Colors.getGemColor(gem)));
@@ -266,26 +330,20 @@ public class GameController {
     }
 
     private String formatIdList(final List<Integer> ids, final int maxCount) {
-        if (ids.isEmpty()) {
-            return "-";
-        }
+        if (ids.isEmpty()) return "-";
         final StringJoiner joiner = new StringJoiner(", ");
         final int limit = Math.min(ids.size(), maxCount);
         for (int i = 0; i < limit; i++) {
             joiner.add(String.valueOf(ids.get(i)));
         }
-        if (ids.size() > maxCount) {
-            joiner.add("...");
-        }
+        if (ids.size() > maxCount) joiner.add("...");
         return joiner.toString();
     }
 
     private List<Gem> getAvailableDifferentGems(final Board board) {
         final List<Gem> gems = new ArrayList<>();
         for (final Gem gem : Gem.values()) {
-            if (gem != Gem.GOLD && board.getGemCount(gem) > 0) {
-                gems.add(gem);
-            }
+            if (gem != Gem.GOLD && board.getGemCount(gem) > 0) gems.add(gem);
         }
         return gems;
     }
@@ -293,62 +351,44 @@ public class GameController {
     private List<Gem> getAvailableTwoSameGems(final Board board) {
         final List<Gem> gems = new ArrayList<>();
         for (final Gem gem : Gem.values()) {
-            if (gem != Gem.GOLD && board.getGemCount(gem) >= 4) {
-                gems.add(gem);
-            }
+            if (gem != Gem.GOLD && board.getGemCount(gem) >= 4) gems.add(gem);
         }
         return gems;
     }
 
     private boolean hasVisibleCards(final Board board) {
         for (int tier = 1; tier <= 3; tier++) {
-            if (!board.getAvailableCards(tier).isEmpty()) {
-                return true;
-            }
+            if (!board.getAvailableCards(tier).isEmpty()) return true;
         }
         return false;
     }
 
     private boolean hasAnyDeckCards(final Board board) {
         for (int tier = 1; tier <= 3; tier++) {
-            if (board.getDeckSize(tier) > 0) {
-                return true;
-            }
+            if (board.getDeckSize(tier) > 0) return true;
         }
         return false;
     }
 
     private String reserveVisibleReason(final Player player, final Board board) {
-        if (!player.canReserveCard()) {
-            return "Reserve limit reached (3)";
-        }
-        if (!hasVisibleCards(board)) {
-            return "No visible cards";
-        }
+        if (!player.canReserveCard()) return "Reserve limit reached (3)";
+        if (!hasVisibleCards(board)) return "No visible cards";
         return "Not available";
     }
 
     private String reserveDeckReason(final Player player, final Board board) {
-        if (!player.canReserveCard()) {
-            return "Reserve limit reached (3)";
-        }
-        if (!hasAnyDeckCards(board)) {
-            return "Decks are empty";
-        }
+        if (!player.canReserveCard()) return "Reserve limit reached (3)";
+        if (!hasAnyDeckCards(board)) return "Decks are empty";
         return "Not available";
     }
 
     private String buyVisibleReason(final Player player, final Board board) {
-        if (!hasVisibleCards(board)) {
-            return "No visible cards";
-        }
+        if (!hasVisibleCards(board)) return "No visible cards";
         return "Need more tokens";
     }
 
     private String buyReservedReason(final Player player) {
-        if (player.getReservedCards().isEmpty()) {
-            return "No reserved cards";
-        }
+        if (player.getReservedCards().isEmpty()) return "No reserved cards";
         return "Need more tokens";
     }
 
@@ -356,9 +396,7 @@ public class GameController {
         final List<Integer> ids = new ArrayList<>();
         for (int tier = 1; tier <= 3; tier++) {
             for (final Card card : board.getAvailableCards(tier)) {
-                if (moveValidator.canPlayerAffordCard(player, card)) {
-                    ids.add(card.getId());
-                }
+                if (moveValidator.canPlayerAffordCard(player, card)) ids.add(card.getId());
             }
         }
         return ids;
@@ -367,9 +405,7 @@ public class GameController {
     private List<Integer> getAffordableReservedIds(final Player player) {
         final List<Integer> ids = new ArrayList<>();
         for (final Card card : player.getReservedCards()) {
-            if (moveValidator.canPlayerAffordCard(player, card)) {
-                ids.add(card.getId());
-            }
+            if (moveValidator.canPlayerAffordCard(player, card)) ids.add(card.getId());
         }
         return ids;
     }
@@ -377,129 +413,50 @@ public class GameController {
     private List<Integer> getVisibleCardIds(final Board board) {
         final List<Integer> ids = new ArrayList<>();
         for (int tier = 1; tier <= 3; tier++) {
-            for (final Card card : board.getAvailableCards(tier)) {
-                ids.add(card.getId());
-            }
+            for (final Card card : board.getAvailableCards(tier)) ids.add(card.getId());
         }
         return ids;
     }
 
     private List<Integer> getReservedCardIds(final Player player) {
         final List<Integer> ids = new ArrayList<>();
-        for (final Card card : player.getReservedCards()) {
-            ids.add(card.getId());
-        }
+        for (final Card card : player.getReservedCards()) ids.add(card.getId());
         return ids;
     }
 
-    /**
-     * Executes the specified move for the player.
-     * 
-     * @param move   Move to execute
-     * @param player Player executing the move
-     * @throws SplendorException if move execution fails
-     */
     private void executeMove(final Move move, final Player player) throws SplendorException {
         final TurnController turnController = new TurnController(game, gameView);
         turnController.executeMove(move, player);
         game.addRecentMove(formatMoveEntry(player, move));
     }
 
-    /**
-     * Checks if any nobles can visit the player after a card purchase.
-     * 
-     * @param player Player to check for noble visits
-     * @throws SplendorException if noble assignment fails
-     */
     private void checkNobleVisits(final Player player) throws SplendorException {
         final PlayerController playerController = new PlayerController(game, gameView);
         playerController.checkNobleVisits(player);
     }
 
-    /**
-     * Handles token limit enforcement for the player.
-     * 
-     * @param player Player to check for token limit
-     * @throws SplendorException if token handling fails
-     */
-    private void handleTokenLimit(final Player player) throws SplendorException {
-        if (player.getTotalTokenCount() > game.getMaxTokens()) {
-            final int excessCount = player.getTotalTokenCount() - game.getMaxTokens();
-            final Move discardMove = gameView.promptForTokenDiscard(player, excessCount);
-
-            // Validate discard move
-            moveValidator.validateMove(discardMove, player, game);
-
-            // Execute discard
-            final PlayerController playerController = new PlayerController(game, gameView);
-            playerController.executeTokenDiscard(player, discardMove);
-            game.addRecentMove(formatMoveEntry(player, discardMove));
-        }
-    }
-
-    /**
-     * Creates players based on the specified count.
-     * 
-     * @param playerCount Number of players to create
-     */
-    private void createPlayers(final int playerCount) {
-        players.clear();
-
-        for (int i = 1; i <= playerCount; i++) {
-            final String playerName = gameView.promptForPlayerName(i, playerCount);
-            final Player player = new Player(playerName);
-            players.add(player);
-        }
-    }
-
-    /**
-     * Displays the final game results.
-     * 
-     * @throws SplendorException if result display fails
-     */
     private void displayGameResults() throws SplendorException {
         if (game.getWinner() == null) {
             throw new GameStateException("No winner determined for finished game");
         }
-
-        // Build final scores map
         final Map<String, Integer> finalScores = new HashMap<>();
         for (final Player player : game.getPlayers()) {
             finalScores.put(player.getName(), player.getTotalPoints());
         }
-
         gameView.displayWinner(game.getWinner(), finalScores);
     }
 
-    /**
-     * Gets the current game state.
-     * 
-     * @return Current game or null if not initialized
-     */
-    public Game getGame() {
-        return game;
-    }
+    public Game getGame() { return game; }
 
-    /**
-     * Gets the list of players.
-     * 
-     * @return List of players or empty list if not initialized
-     */
-    public List<Player> getPlayers() {
-        return Collections.unmodifiableList(players);
-    }
+    public List<Player> getPlayers() { return Collections.unmodifiableList(players); }
 
     private String formatMoveEntry(final Player player, final Move move) {
         final StringBuilder sb = new StringBuilder();
         sb.append(player.getName()).append(": ").append(move.getMoveType().getDisplayName());
-        if (move.hasGemSelection()) {
-            sb.append(" ").append(formatGemCounts(move.getSelectedGems()));
-        }
+        if (move.hasGemSelection()) sb.append(" ").append(formatGemCounts(move.getSelectedGems()));
         if (move.hasCardSelection()) {
             sb.append(" Card ").append(move.getCardId());
-            if (move.isReservedCard()) {
-                sb.append(" (Res)");
-            }
+            if (move.isReservedCard()) sb.append(" (Res)");
         } else if (move.hasDeckSelection()) {
             sb.append(" Deck ").append(move.getDeckTier());
         }
@@ -511,9 +468,7 @@ public class GameController {
         for (final Gem gem : GEM_ORDER) {
             final int count = counts.getOrDefault(gem, 0);
             if (count > 0) {
-                if (sb.length() > 0) {
-                    sb.append(" ");
-                }
+                if (sb.length() > 0) sb.append(" ");
                 sb.append(Colors.colorize(gemLabel(gem), Colors.getGemColor(gem))).append(count);
             }
         }
@@ -521,24 +476,12 @@ public class GameController {
     }
 
     private String gemLabel(final Gem gem) {
-        if (gem == Gem.WHITE) {
-            return "W";
-        }
-        if (gem == Gem.BLUE) {
-            return "B";
-        }
-        if (gem == Gem.GREEN) {
-            return "G";
-        }
-        if (gem == Gem.RED) {
-            return "R";
-        }
-        if (gem == Gem.BLACK) {
-            return "K";
-        }
-        if (gem == Gem.GOLD) {
-            return "Au";
-        }
+        if (gem == Gem.WHITE) return "W";
+        if (gem == Gem.BLUE) return "B";
+        if (gem == Gem.GREEN) return "G";
+        if (gem == Gem.RED) return "R";
+        if (gem == Gem.BLACK) return "K";
+        if (gem == Gem.GOLD) return "Au";
         return "";
     }
 }
