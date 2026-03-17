@@ -354,7 +354,23 @@ public class GameRenderer {
                 contentWidth));
         final String bonusStr = formatGemCounts(player.getGemDiscounts(), false);
         lines.add(frameLine("Bonuses: " + bonusStr, Colors.WHITE, contentWidth));
-        lines.add(frameLine("Reserved: " + formatReserved(player.getReservedCards()), Colors.WHITE, contentWidth));
+        if (player.getReservedCards().isEmpty()) {
+            lines.add(frameLine("Reserved: None", Colors.WHITE, contentWidth));
+        } else {
+            lines.add(frameLine("Reserved:", Colors.WHITE, contentWidth));
+            for (final Card card : player.getReservedCards()) {
+                final boolean affordable = moveValidator.canPlayerAffordCard(player, card);
+                final String status = affordable
+                        ? Colors.colorize("✓", Colors.GREEN)
+                        : Colors.colorize("✗", Colors.RED);
+                final String bonus = card.getBonusGem() == null ? "-"
+                        : Colors.colorize(gemLabel(card.getBonusGem()), Colors.getGemColor(card.getBonusGem()));
+                final String costStr = formatCardCost(card);
+                final String detail = String.format("#%d %dpt %s %s %s",
+                        card.getId(), card.getPoints(), bonus, costStr, status);
+                lines.add(frameLine(" " + detail, Colors.WHITE, contentWidth));
+            }
+        }
         lines.add(colorBorder("└" + "─".repeat(contentWidth + 2) + "┘", Colors.WHITE));
         return lines;
     }

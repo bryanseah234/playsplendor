@@ -23,6 +23,7 @@ public class ConsoleView implements IGameView {
     private final InputResolver inputResolver;
     private final GameRenderer renderer;
     private final MoveValidator moveValidator;
+    private Player currentPlayer;
 
     /**
      * Creates a new ConsoleView with default input handling.
@@ -32,6 +33,7 @@ public class ConsoleView implements IGameView {
         this.inputResolver = new InputResolver();
         this.renderer = new GameRenderer();
         this.moveValidator = new MoveValidator();
+        this.currentPlayer = null;
     }
 
     @Override
@@ -64,7 +66,11 @@ public class ConsoleView implements IGameView {
     @Override
     public String waitForEnter() {
         System.out.print("Press Enter to continue (or 'Z' to undo)... ");
-        return scanner.nextLine();
+        try {
+            return scanner.nextLine();
+        } catch (final java.util.NoSuchElementException e) {
+            return "";
+        }
     }
 
     @Override
@@ -75,14 +81,24 @@ public class ConsoleView implements IGameView {
 
     @Override
     public Move promptForMove(final Player player, final Game game, final List<MenuOption> options) {
+        this.currentPlayer = player;
         while (true) {
             displayAvailableMoves(options, game);
             final int maxOption = options.stream().mapToInt(MenuOption::getNumber).max().orElse(0);
+            final String availableNums = options.stream()
+                    .filter(MenuOption::isAvailable)
+                    .map(o -> String.valueOf(o.getNumber()))
+                    .reduce((a, b) -> a + ", " + b)
+                    .orElse("none");
             final int choice = inputResolver.promptForInt(
-                    "Select option (1-" + maxOption + "): ",
+                    "Select option (" + availableNums + "): ",
                     1,
                     maxOption,
                     () -> renderer.displayGameState(game));
+            if (choice == -1) {
+                displayNotification("Returning to menu...");
+                continue;
+            }
             final MenuOption selected = options.stream()
                     .filter(option -> option.getNumber() == choice)
                     .findFirst()
@@ -113,6 +129,10 @@ public class ConsoleView implements IGameView {
                         throw new IllegalArgumentException("Unknown menu action: " + selected.getAction());
                 }
             } catch (final IllegalArgumentException e) {
+                if ("BACK_TO_MENU".equals(e.getMessage())) {
+                    displayNotification("Returning to menu...");
+                    continue;
+                }
                 displayError(e.getMessage());
             }
         }
@@ -367,7 +387,10 @@ public class ConsoleView implements IGameView {
 
     private Move promptTakeThree(final MenuOption option) {
         System.out.println("Available colors: " + option.getDetail());
-        final String input = inputResolver.promptForString("Enter 3 different colors (e.g., R G B): ", 3, 30);
+        final String input = inputResolver.promptForString("Pick 3 colors (Z to go back): ", 1, 30);
+        if (input.equalsIgnoreCase("Z") || input.equalsIgnoreCase("UNDO")) {
+            throw new IllegalArgumentException("BACK_TO_MENU");
+        }
         final List<Gem> parsed = parseGemSelection(input);
         if (parsed.size() != 3) {
             throw new IllegalArgumentException("Please enter exactly 3 colors");
@@ -381,7 +404,10 @@ public class ConsoleView implements IGameView {
 
     private Move promptTakeTwo(final MenuOption option) {
         System.out.println("Available colors: " + option.getDetail());
-        final String input = inputResolver.promptForString("Pick one color (e.g., R): ", 1, 10);
+        final String input = inputResolver.promptForString("Pick 1 color (Z to go back): ", 1, 10);
+        if (input.equalsIgnoreCase("Z") || input.equalsIgnoreCase("UNDO")) {
+            throw new IllegalArgumentException("BACK_TO_MENU");
+        }
         final List<Gem> parsed = parseGemSelection(input);
         if (parsed.size() != 1) {
             throw new IllegalArgumentException("Please enter exactly 1 color");
@@ -393,7 +419,10 @@ public class ConsoleView implements IGameView {
 
     private Move promptReserveVisible(final MenuOption option) {
         System.out.println("Visible card IDs: " + option.getDetail());
-        final int cardId = inputResolver.promptForInt("Enter card ID to reserve: ", 1, 9999);
+        final int cardId = inputResolver.promptForInt("Card ID (Z to go back): ", 1, 9999);
+        if (cardId == -1) {
+            throw new IllegalArgumentException("BACK_TO_MENU");
+        }
         return new Move(MoveType.RESERVE_CARD, cardId, false);
     }
 
@@ -405,7 +434,10 @@ public class ConsoleView implements IGameView {
             allowedTiers.add(Integer.parseInt(s.trim()));
         }
 
-        final int tier = inputResolver.promptForInt("Choose deck tier (" + option.getDetail() + "): ", 1, 3);
+        final int tier = inputResolver.promptForInt("Tier (Z to go back): ", 1, 3);
+        if (tier == -1) {
+            throw new IllegalArgumentException("BACK_TO_MENU");
+        }
         if (!allowedTiers.contains(tier)) {
             throw new IllegalArgumentException("Tier " + tier + " has no more cards!");
         }
@@ -414,14 +446,50 @@ public class ConsoleView implements IGameView {
 
     private Move promptBuyVisible(final MenuOption option) {
         System.out.println("Affordable IDs: " + option.getDetail());
-        final int cardId = inputResolver.promptForInt("Enter card ID to buy: ", 1, 9999);
+        final int cardId = inputResolver.promptForInt("Card ID (Z to go back): ", 1, 9999);
+        if (cardId == -1) {
+            throw new IllegalArgumentException("BACK_TO_MENU");
+        }
         return new Move(MoveType.BUY_CARD, cardId, false);
     }
 
     private Move promptBuyReserved(final MenuOption option) {
+        System.out.println("Your reserved cards:");
+        if (currentPlayer != null) {
+            displayReservedCardDetails(currentPlayer);
+        }
         System.out.println("Affordable reserved IDs: " + option.getDetail());
-        final int cardId = inputResolver.promptForInt("Enter reserved card ID to buy: ", 1, 9999);
+        final int cardId = inputResolver.promptForInt("Card ID (Z to go back): ", 1, 9999);
+        if (cardId == -1) {
+            throw new IllegalArgumentException("BACK_TO_MENU");
+        }
         return new Move(MoveType.BUY_CARD, cardId, true);
+    }
+
+    private void displayReservedCardDetails(final Player player) {
+        final List<Card> reserved = player.getReservedCards();
+        if (reserved.isEmpty()) {
+            System.out.println("  (none)");
+            return;
+        }
+        for (final Card card : reserved) {
+            final boolean affordable = moveValidator.canPlayerAffordCard(player, card);
+            final String status = affordable
+                    ? Colors.colorize("[CAN BUY]", Colors.GREEN)
+                    : Colors.colorize("[NOT AFFORDABLE]", Colors.RED);
+            final String bonus = card.getBonusGem() == null ? "-"
+                    : Colors.colorize(gemShort(card.getBonusGem()), Colors.getGemColor(card.getBonusGem()));
+            final StringBuilder costStr = new StringBuilder();
+            for (final Map.Entry<Gem, Integer> entry : card.getCost().entrySet()) {
+                if (entry.getValue() > 0) {
+                    costStr.append(Colors.colorize(gemShort(entry.getKey()), Colors.getGemColor(entry.getKey())))
+                           .append(":").append(entry.getValue()).append(" ");
+                }
+            }
+            if (costStr.length() == 0) costStr.append("Free");
+            System.out.printf("  ID:%d | Pts:%d | Bonus:%s | Cost: %s %s%n",
+                    card.getId(), card.getPoints(), bonus, costStr.toString().trim(), status);
+        }
     }
 
     private List<Integer> getVisibleCardIds(final Board board) {

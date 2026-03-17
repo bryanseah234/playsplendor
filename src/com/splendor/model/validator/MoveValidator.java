@@ -269,22 +269,25 @@ public class MoveValidator {
         final Map<Gem, Integer> discounts = player.getGemDiscounts();
         final Map<Gem, Integer> tokens = player.getTokens();
         
+        // Track cumulative gold usage across all gem types
+        int goldRemaining = tokens.getOrDefault(Gem.GOLD, 0);
+        
         // Calculate effective cost after discounts
         for (final Map.Entry<Gem, Integer> costEntry : card.getCost().entrySet()) {
             final Gem gem = costEntry.getKey();
             final int required = costEntry.getValue();
             final int discount = discounts.getOrDefault(gem, 0);
             final int availableTokens = tokens.getOrDefault(gem, 0);
-            final int goldTokens = tokens.getOrDefault(Gem.GOLD, 0);
             
             final int effectiveCost = Math.max(0, required - discount);
             final int remainingAfterTokens = Math.max(0, effectiveCost - availableTokens);
             
-            // If still need more after using regular tokens, check gold
+            // If still need more after using regular tokens, use gold
             if (remainingAfterTokens > 0) {
-                if (goldTokens < remainingAfterTokens) {
+                if (goldRemaining < remainingAfterTokens) {
                     return false;
                 }
+                goldRemaining -= remainingAfterTokens;
             }
         }
         

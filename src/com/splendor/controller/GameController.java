@@ -114,9 +114,7 @@ public class GameController {
             final Move move = getPlayerMove(currentPlayer);
             executeMove(move, currentPlayer);
 
-            if (move.getMoveType() == MoveType.BUY_CARD) {
-                checkNobleVisits(currentPlayer);
-            }
+            checkNobleVisits(currentPlayer);
 
             handleTokenLimit(currentPlayer);
 
@@ -132,18 +130,8 @@ public class GameController {
                     }
                 }
             } else {
-                // Bot turn: Print notification without the undo prompt, then manually wait for Enter!
-                gameView.displayNotification(currentPlayer.getName() + " finished their turn. (Press ENTER to continue)");
-                try {
-                    // This freezes the game until you hit Enter
-                    System.in.read();
-                    // This cleans up the hidden "Enter" key characters so they don't accidentally skip your next menu!
-                    while (System.in.available() > 0) {
-                        System.in.read();
-                    }
-                } catch (Exception e) {
-                    // Just catch and ignore if the input stream acts up
-                }
+                // Bot turn: prompt via the view so it works both locally AND over the network
+                gameView.displayMessage(currentPlayer.getName() + " finished their turn.");
             }
 
             game.advanceToNextPlayer();

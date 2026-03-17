@@ -49,11 +49,21 @@ public class InputResolver {
                     }
                     System.out.print(prompt);
                 }
-                final String input = sanitizeInput(scanner.nextLine()).trim();
+                final String raw;
+                try {
+                    raw = scanner.nextLine();
+                } catch (final java.util.NoSuchElementException e) {
+                    return -1;
+                }
+                final String input = sanitizeInput(raw).trim();
 
                 if (input.isEmpty()) {
                     System.out.println("Input cannot be empty. Please try again.");
                     continue;
+                }
+
+                if (input.equalsIgnoreCase("Z") || input.equalsIgnoreCase("UNDO")) {
+                    return -1;
                 }
 
                 final int value = Integer.parseInt(input);
@@ -95,6 +105,10 @@ public class InputResolver {
                 if (input.isEmpty()) {
                     System.out.println("Input cannot be empty. Please try again.");
                     continue;
+                }
+
+                if (input.equalsIgnoreCase("Z") || input.equalsIgnoreCase("UNDO")) {
+                    return "Z";
                 }
 
                 if (input.length() < minLength) {

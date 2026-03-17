@@ -291,14 +291,12 @@ public class TurnController {
             throws InsufficientTokensException {
 
         final Map<Gem, Integer> tokensToRemove = new HashMap<>();
-        final Map<Gem, Integer> tokensToAdd = new HashMap<>();
+        int totalGoldUsed = 0;
 
-        // Process each gem type in the cost
         for (final Map.Entry<Gem, Integer> costEntry : effectiveCost.entrySet()) {
             final Gem gem = costEntry.getKey();
             int remainingCost = costEntry.getValue();
 
-            // Use player's tokens first
             final int playerTokens = player.getTokenCount(gem);
             final int tokensToUse = Math.min(playerTokens, remainingCost);
 
@@ -307,25 +305,28 @@ public class TurnController {
                 remainingCost -= tokensToUse;
             }
 
-            // Use gold tokens if needed
             if (remainingCost > 0) {
                 final int playerGold = player.getTokenCount(Gem.GOLD);
-                final int goldToUse = Math.min(playerGold, remainingCost);
+                final int goldAvailable = playerGold - totalGoldUsed;
+                final int goldToUse = Math.min(goldAvailable, remainingCost);
 
                 if (goldToUse > 0) {
-                    tokensToRemove.put(Gem.GOLD, goldToUse);
+                    totalGoldUsed += goldToUse;
                     remainingCost -= goldToUse;
                 }
             }
 
-            // Check if we still need more
             if (remainingCost > 0) {
                 throw new InsufficientTokensException("Insufficient tokens to buy card. Need %d more %s gems",
                         remainingCost, gem);
             }
         }
 
-        // Execute the token transfers
+        if (totalGoldUsed > 0) {
+            tokensToRemove.put(Gem.GOLD, totalGoldUsed);
+        }
+
+        final Map<Gem, Integer> tokensToAdd = new HashMap<>();
         for (final Map.Entry<Gem, Integer> entry : tokensToRemove.entrySet()) {
             player.removeTokens(entry.getKey(), entry.getValue());
             tokensToAdd.put(entry.getKey(), entry.getValue());
