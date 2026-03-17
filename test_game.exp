@@ -1,0 +1,11 @@
+#!/usr/bin/expect -f
+spawn java -cp classes com.splendor.Main
+expect "Enter number of players (2-4):"
+send "2\r"
+expect "Enter name for Player 1:"
+send "Alice\r"
+expect "Enter name for Player 2:"
+send "Bob\r"
+expect "Pick one action"
+send "Z\r"
+expect eof
