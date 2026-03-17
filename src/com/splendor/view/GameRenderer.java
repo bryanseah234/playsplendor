@@ -13,9 +13,9 @@ public class GameRenderer {
             Gem.WHITE, Gem.BLUE, Gem.GREEN, Gem.RED, Gem.BLACK, Gem.GOLD);
     private static final int MENU_CONTENT_WIDTH = 60;
     private static final int CARD_CONTENT_WIDTH = 14;
-    private static final int RECENT_MOVES_CONTENT_WIDTH = 60;
+    private static final int RECENT_MOVES_CONTENT_WIDTH = 96;
     private static final int PLAYER_BOX_WIDTH = 45;
-    private static final int NOBLE_CARD_WIDTH = 12;
+    private static final int NOBLE_CARD_WIDTH = 16;
 
     private List<String> menuLines = List.of();
     private final MoveValidator moveValidator;
@@ -73,7 +73,7 @@ public class GameRenderer {
             leftColumn.add("");
         }
         List<String> leftMenu = renderMenuBox(menuLines);
-        List<String> leftBank = renderBankHorizontal(board);
+        List<String> leftBank = renderBankVertical(board);
         leftColumn.addAll(combineSideBySide(leftMenu, leftBank));
 
         // Build RIGHT column independently
@@ -279,19 +279,19 @@ public class GameRenderer {
         return lines;
     }
 
-    private List<String> renderBankHorizontal(Board board) {
+    private List<String> renderBankVertical(Board board) {
         List<String> lines = new ArrayList<>();
         lines.add(Colors.colorize("Bank", Colors.WHITE));
-        StringBuilder b = new StringBuilder();
+        int bw = 6; // fixed width for bank box
+        lines.add(colorBorder("┌" + "─".repeat(bw + 2) + "┐", Colors.WHITE));
+        
         for (final Gem gem : GEM_ORDER) {
             final int count = board.getGemCount(gem);
-            b.append(Colors.colorize(gemLabel(gem), Colors.getGemColor(gem)))
-             .append(":").append(count).append("  ");
+            String label = gemLabel(gem) + ":" + count;
+            String colText = Colors.colorize(label, Colors.getGemColor(gem));
+            lines.add(frameLine(colText, Colors.WHITE, bw));
         }
-        
-        int bw = Math.max(40, stripAnsi(b.toString()).length());
-        lines.add(colorBorder("┌" + "─".repeat(bw + 2) + "┐", Colors.WHITE));
-        lines.add(frameLine(b.toString().trim(), Colors.WHITE, bw));
+
         lines.add(colorBorder("└" + "─".repeat(bw + 2) + "┘", Colors.WHITE));
         return lines;
     }
