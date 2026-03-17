@@ -10,5 +10,6 @@ public enum MenuAction {
     RESERVE_VISIBLE,
     RESERVE_DECK,
     BUY_VISIBLE,
-    BUY_RESERVED
+    BUY_RESERVED,
+    EXIT_GAME
 }

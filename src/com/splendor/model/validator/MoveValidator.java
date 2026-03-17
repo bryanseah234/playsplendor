@@ -58,6 +58,8 @@ public class MoveValidator {
             case DISCARD_TOKENS:
                 validateDiscardTokens(move, player, game);
                 break;
+            case EXIT_GAME:
+                break;
             default:
                 throw new InvalidMoveException("Unknown move type: " + move.getMoveType());
         }

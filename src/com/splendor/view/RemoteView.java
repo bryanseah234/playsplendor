@@ -153,6 +153,8 @@ public class RemoteView implements IGameView {
                 send("Affordable reserved IDs: " + option.getDetail() + "\nEnter reserved card ID to buy: ");
                 return new Move(MoveType.BUY_CARD, parseId(waitForResponse(60000)), true);
             }
+            case EXIT_GAME:
+                return new Move(MoveType.EXIT_GAME);
             default:
                 throw new IllegalArgumentException("Unknown action: " + option.getAction());
         }

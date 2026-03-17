@@ -41,7 +41,12 @@ public enum MoveType {
      * Discard excess tokens when player has more than maximum allowed.
      * Triggered automatically when token limit is exceeded.
      */
-    DISCARD_TOKENS("Discard Tokens");
+    DISCARD_TOKENS("Discard Tokens"),
+
+    /**
+     * Exits the game cleanly.
+     */
+    EXIT_GAME("Exit Game");
     
     private final String displayName;
     

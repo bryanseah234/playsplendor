@@ -300,7 +300,7 @@ public class GameRenderer {
 
 
     private String stripAnsi(String str) {
-        return str.replaceAll("\\\\u001B\\\\[[;\\\\\\\\d]*m", "");
+        return str.replaceAll("\\\\u001B\\\\[[;\\\\d]*m", "");
     }
 
     public String formatCardAscii(Card card) {

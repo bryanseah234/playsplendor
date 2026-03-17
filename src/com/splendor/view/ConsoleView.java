@@ -65,7 +65,7 @@ public class ConsoleView implements IGameView {
 
     @Override
     public String waitForEnter() {
-        System.out.print("Press Enter to continue (or 'Z' to undo)... ");
+        System.out.print("Press Enter to continue... ");
         try {
             return scanner.nextLine();
         } catch (final java.util.NoSuchElementException e) {
@@ -125,6 +125,8 @@ public class ConsoleView implements IGameView {
                         return promptBuyVisible(selected);
                     case BUY_RESERVED:
                         return promptBuyReserved(selected);
+                    case EXIT_GAME:
+                        return new Move(MoveType.EXIT_GAME);
                     default:
                         throw new IllegalArgumentException("Unknown menu action: " + selected.getAction());
                 }

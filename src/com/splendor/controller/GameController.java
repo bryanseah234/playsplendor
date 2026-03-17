@@ -131,7 +131,7 @@ public class GameController {
                 }
             } else {
                 // Bot turn: prompt via the view so it works both locally AND over the network
-                gameView.displayMessage(currentPlayer.getName() + " finished their turn.");
+                gameView.displayNotification(currentPlayer.getName() + " finished their turn.");
             }
 
             game.advanceToNextPlayer();
@@ -144,7 +144,7 @@ public class GameController {
             throw e;
         } catch (final InvalidMoveException | InsufficientTokensException e) {
             final String input = gameView.displayError(e.getMessage());
-            if (input != null && (input.equalsIgnoreCase("Z") || input.equalsIgnoreCase("UNDO"))) {
+            if (!(currentPlayer instanceof ComputerPlayer) && input != null && (input.equalsIgnoreCase("Z") || input.equalsIgnoreCase("UNDO"))) {
                 if (performUndo()) { 
                     gameView.displayNotification("Turn reverted!");
                     return;
@@ -319,6 +319,9 @@ public class GameController {
         options.add(new MenuOption(index++, MenuAction.BUY_RESERVED, canBuyReserved,
                 "Buy reserved card(s)", reservedIds.isEmpty() ? "None" : formatIdList(reservedIds, 8),
                 canBuyReserved ? "" : buyReservedReason(player)));
+
+        options.add(new MenuOption(index++, MenuAction.EXIT_GAME, !(player instanceof ComputerPlayer),
+                "Exit Game", "-", ""));
 
         return options;
     }

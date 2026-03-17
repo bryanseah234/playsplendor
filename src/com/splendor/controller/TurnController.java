@@ -59,6 +59,9 @@ public class TurnController {
             case DISCARD_TOKENS:
                 executeDiscardTokens(move, player);
                 break;
+            case EXIT_GAME:
+                System.exit(0);
+                break;
             default:
                 throw new InvalidMoveException("Unknown move type: " + move.getMoveType());
         }
