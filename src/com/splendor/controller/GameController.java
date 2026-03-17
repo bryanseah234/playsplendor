@@ -130,8 +130,13 @@ public class GameController {
                     }
                 }
             } else {
-                // Bot turn: prompt via the view so it works both locally AND over the network
-                gameView.displayNotification(currentPlayer.getName() + " finished their turn.");
+                gameView.displayNotification(currentPlayer.getName() + " finished their turn. Press Enter to continue...");
+                try { 
+                    // Flush any garbage typed while the bot was thinking
+                    while (System.in.available() > 0) { System.in.read(); }
+                    // Now block and wait for a real Enter key
+                    System.in.read(); 
+                } catch (Exception e) {}
             }
 
             game.advanceToNextPlayer();
@@ -160,6 +165,7 @@ public class GameController {
                 
                 // --- NEW CPU BOT LOGIC ---
                 if (player instanceof ComputerPlayer) {
+                    gameView.displayAvailableMoves(options, game);
                     gameView.displayNotification(player.getName() + " is calculating a move...");
                     try { Thread.sleep(1500); } catch (InterruptedException e) {}
 

@@ -231,8 +231,21 @@ public class GameRenderer {
             String tokenStr = formatGemCounts(p.getTokens(), false);
             pLines.add(frameLine("Tokens (" + p.getTotalTokenCount() + "/" + maxTokens + "): " + tokenStr, borderCol, PLAYER_BOX_WIDTH));
             
-            pLines.add(frameLine("Nobles Bought: " + p.getNobles().size(), borderCol, PLAYER_BOX_WIDTH));
-            pLines.add(frameLine("Cards Bought: " + p.getPurchasedCards().size(), borderCol, PLAYER_BOX_WIDTH));
+            String noblesStr = "None";
+            if (!p.getNobles().isEmpty()) {
+                StringJoiner sj = new StringJoiner(", ");
+                for (Noble n : p.getNobles()) sj.add(String.valueOf(n.getId()));
+                noblesStr = sj.toString();
+            }
+            pLines.add(frameLine("Nobles Bought: " + noblesStr, borderCol, PLAYER_BOX_WIDTH));
+            
+            String cardsStr = "None";
+            if (!p.getPurchasedCards().isEmpty()) {
+                StringJoiner sj = new StringJoiner(", ");
+                for (Card c : p.getPurchasedCards()) sj.add(String.valueOf(c.getId()));
+                cardsStr = sj.toString();
+            }
+            pLines.add(frameLine("Cards Bought: " + cardsStr, borderCol, PLAYER_BOX_WIDTH));
             
             String res = "None";
             if (!p.getReservedCards().isEmpty()) {
@@ -298,7 +311,7 @@ public class GameRenderer {
 
 
     private String stripAnsi(String str) {
-        return str.replaceAll("\\u001B\\[[;\\d]*m", "");
+        return str.replaceAll("\\u001B\\[[0-9;]*m", "");
     }
 
     public String formatCardAscii(Card card) {
@@ -547,9 +560,12 @@ public class GameRenderer {
         final StringBuilder sb = new StringBuilder();
         int visible = 0;
         int i = 0;
+        boolean inAnsi = false;
+        
         while (i < s.length() && visible < maxVisible) {
             final char c = s.charAt(i);
             if (c == '\u001B') {
+                inAnsi = true;
                 sb.append(c);
                 i++;
                 while (i < s.length()) {
@@ -557,6 +573,7 @@ public class GameRenderer {
                     sb.append(c2);
                     i++;
                     if (c2 == 'm') {
+                        inAnsi = false; // Add this line to clear color state!
                         break;
                     }
                 }
@@ -566,9 +583,13 @@ public class GameRenderer {
                 visible++;
             }
         }
-        if (i < s.length() && s.contains("\u001B")) {
-            sb.append(Colors.RESET);
+        
+        // If we truncated the string, forcefully append a reset code
+        // so colors don't bleed out of the box frame.
+        if (i < s.length() && inAnsi) {
+            sb.append("\u001B[0m");
         }
+        
         return sb.toString();
     }
 
