@@ -1,4 +1,6 @@
-package com.splendor.view;
+const fs = require('fs');
+
+const code = `package com.splendor.view;
 
 import com.splendor.model.*;
 import com.splendor.model.validator.MoveValidator;
@@ -29,11 +31,11 @@ public class GameRenderer {
             if (System.getProperty("os.name").contains("Windows")) {
                 new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
             } else {
-                System.out.print("\u001B[H\u001B[2J");
+                System.out.print("\\u001B[H\\u001B[2J");
                 System.out.flush();
             }
         } catch (Exception e) {
-            System.out.print("\u001B[H\u001B[2J");
+            System.out.print("\\u001B[H\\u001B[2J");
             System.out.flush();
         }
     }
@@ -109,7 +111,7 @@ public class GameRenderer {
             String leftLine = i < left.size() ? left.get(i) : "";
             String rightLine = i < right.size() ? right.get(i) : "";
             leftLine = padRightAnsi(leftLine, leftWidth);
-            sb.append(leftLine).append("  ").append(rightLine).append("\n");
+            sb.append(leftLine).append("  ").append(rightLine).append("\\n");
         }
         return sb.toString();
     }
@@ -142,13 +144,13 @@ public class GameRenderer {
             }
             lines.add(Colors.colorize("Level " + tier + ": " + board.getDeckSize(tier) + " cards available in deck", Colors.WHITE));
             final List<String> tierLines = new ArrayList<>();
-            final int cardHeight = formatCardAscii(cards.get(0)).split("\n").length;
+            final int cardHeight = formatCardAscii(cards.get(0)).split("\\n").length;
             for (int i = 0; i < cardHeight; i++) {
                 tierLines.add("");
             }
             for (final Card card : cards) {
                 final boolean affordable = moveValidator.canPlayerAffordCard(currentPlayer, card);
-                final String[] cardLines = formatCardAscii(card, affordable).split("\n");
+                final String[] cardLines = formatCardAscii(card, affordable).split("\\n");
                 for (int i = 0; i < cardLines.length; i++) {
                     tierLines.set(i, tierLines.get(i) + cardLines[i] + "  ");
                 }
@@ -298,7 +300,7 @@ public class GameRenderer {
 
 
     private String stripAnsi(String str) {
-        return str.replaceAll("\\u001B\\[[;\\\\d]*m", "");
+        return str.replaceAll("\\\\u001B\\\\[[;\\\\\\\\d]*m", "");
     }
 
     public String formatCardAscii(Card card) {
@@ -336,7 +338,7 @@ public class GameRenderer {
                 + Colors.colorize("│", borderColor);
         final String line8 = Colors.colorize("└" + "─".repeat(CARD_CONTENT_WIDTH) + "┘", borderColor);
 
-        return String.join("\n", line1, line2, line3, line4, line5, line6, line7, line8);
+        return String.join("\\n", line1, line2, line3, line4, line5, line6, line7, line8);
     }
 
     private String applyDim(final String text, final String dimColor) {
@@ -357,7 +359,7 @@ public class GameRenderer {
     }
 
     public void displayPlayers(final List<Player> players) {
-        System.out.println("\n" + Colors.colorize("--- OPPONENTS ---", Colors.WHITE));
+        System.out.println("\\n" + Colors.colorize("--- OPPONENTS ---", Colors.WHITE));
         for (final Player player : players) {
             displayPlayerSummary(player);
         }
@@ -549,7 +551,7 @@ public class GameRenderer {
         int i = 0;
         while (i < s.length() && visible < maxVisible) {
             final char c = s.charAt(i);
-            if (c == '\u001B') {
+            if (c == '\\u001B') {
                 sb.append(c);
                 i++;
                 while (i < s.length()) {
@@ -566,7 +568,7 @@ public class GameRenderer {
                 visible++;
             }
         }
-        if (i < s.length() && s.contains("\u001B")) {
+        if (i < s.length() && s.contains("\\u001B")) {
             sb.append(Colors.RESET);
         }
         return sb.toString();
@@ -599,3 +601,7 @@ public class GameRenderer {
         return combined;
     }
 }
+`;
+
+fs.writeFileSync('src/com/splendor/view/GameRenderer.java', code);
+console.log('GameRenderer.java generated successfully!');
