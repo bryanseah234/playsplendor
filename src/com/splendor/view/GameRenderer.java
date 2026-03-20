@@ -2,6 +2,7 @@ package com.splendor.view;
 
 import com.splendor.model.*;
 import com.splendor.model.validator.MoveValidator;
+import com.splendor.util.AnsiUtils;
 import java.util.*;
 
 /**
@@ -12,7 +13,7 @@ public class GameRenderer {
     private static final List<Gem> GEM_ORDER = List.of(
             Gem.WHITE, Gem.BLUE, Gem.GREEN, Gem.RED, Gem.BLACK, Gem.GOLD);
     private static final int MENU_CONTENT_WIDTH = 60;
-    private static final int CARD_CONTENT_WIDTH = 14;
+
     private static final int RECENT_MOVES_CONTENT_WIDTH = 96;
     private static final int PLAYER_BOX_WIDTH = 45;
     private static final int NOBLE_CARD_WIDTH = 16;
@@ -88,27 +89,17 @@ public class GameRenderer {
         return combineSideBySideRaw(leftColumn, rightColumn);
     }
 
-    private List<String> emptyBlock(int lines) {
-        List<String> empty = new ArrayList<>();
-        for (int i = 0; i < lines; i++) empty.add("");
-        return empty;
-    }
-
-    private String sideBySideToString(final List<String> left, final List<String> right) {
-        return combineSideBySideRaw(left, right);
-    }
-
     private String combineSideBySideRaw(final List<String> left, final List<String> right) {
         final StringBuilder sb = new StringBuilder();
         int leftWidth = 0;
         for (final String line : left) {
-            leftWidth = Math.max(leftWidth, stripAnsi(line).length());
+            leftWidth = Math.max(leftWidth, AnsiUtils.stripAnsi(line).length());
         }
         final int maxLines = Math.max(left.size(), right.size());
         for (int i = 0; i < maxLines; i++) {
             String leftLine = i < left.size() ? left.get(i) : "";
             String rightLine = i < right.size() ? right.get(i) : "";
-            leftLine = padRightAnsi(leftLine, leftWidth);
+            leftLine = AnsiUtils.padRightAnsi(leftLine, leftWidth);
             sb.append(leftLine).append("  ").append(rightLine).append("\n");
         }
         return sb.toString();
@@ -118,13 +109,13 @@ public class GameRenderer {
         List<String> res = new ArrayList<>();
         int leftWidth = 0;
         for (final String line : left) {
-            leftWidth = Math.max(leftWidth, stripAnsi(line).length());
+            leftWidth = Math.max(leftWidth, AnsiUtils.stripAnsi(line).length());
         }
         final int maxLines = Math.max(left.size(), right.size());
         for (int i = 0; i < maxLines; i++) {
             String leftLine = i < left.size() ? left.get(i) : "";
             String rightLine = i < right.size() ? right.get(i) : "";
-            leftLine = padRightAnsi(leftLine, leftWidth);
+            leftLine = AnsiUtils.padRightAnsi(leftLine, leftWidth);
             res.add(leftLine + "  " + rightLine);
         }
         return res;
@@ -142,13 +133,13 @@ public class GameRenderer {
             }
             lines.add(Colors.colorize("Level " + tier + ": " + board.getDeckSize(tier) + " cards available in deck", Colors.WHITE));
             final List<String> tierLines = new ArrayList<>();
-            final int cardHeight = formatCardAscii(cards.get(0)).split("\n").length;
+            final int cardHeight = CardRenderer.formatCardAscii(cards.get(0)).split("\n").length;
             for (int i = 0; i < cardHeight; i++) {
                 tierLines.add("");
             }
             for (final Card card : cards) {
                 final boolean affordable = moveValidator.canPlayerAffordCard(currentPlayer, card);
-                final String[] cardLines = formatCardAscii(card, affordable).split("\n");
+                final String[] cardLines = CardRenderer.formatCardAscii(card, affordable).split("\n");
                 for (int i = 0; i < cardLines.length; i++) {
                     tierLines.set(i, tierLines.get(i) + cardLines[i] + "  ");
                 }
@@ -173,24 +164,24 @@ public class GameRenderer {
             // line 1: top border
             nLines.add(Colors.colorize("┌" + "─".repeat(NOBLE_CARD_WIDTH) + "┐", Colors.WHITE));
             // line 2: ID
-            nLines.add(Colors.colorize("│", Colors.WHITE) + padRightAnsi("ID: N" + noble.getId(), NOBLE_CARD_WIDTH) + Colors.colorize("│", Colors.WHITE));
+            nLines.add(Colors.colorize("│", Colors.WHITE) + AnsiUtils.padRightAnsi("ID: N" + noble.getId(), NOBLE_CARD_WIDTH) + Colors.colorize("│", Colors.WHITE));
             // line 3: Points
-            nLines.add(Colors.colorize("│", Colors.WHITE) + padRightAnsi("Pts: " + noble.getPoints(), NOBLE_CARD_WIDTH) + Colors.colorize("│", Colors.WHITE));
+            nLines.add(Colors.colorize("│", Colors.WHITE) + AnsiUtils.padRightAnsi("Pts: " + noble.getPoints(), NOBLE_CARD_WIDTH) + Colors.colorize("│", Colors.WHITE));
             // line 4: "Needs:" label
-            nLines.add(Colors.colorize("│", Colors.WHITE) + padRightAnsi("Needs:", NOBLE_CARD_WIDTH) + Colors.colorize("│", Colors.WHITE));
+            nLines.add(Colors.colorize("│", Colors.WHITE) + AnsiUtils.padRightAnsi("Needs:", NOBLE_CARD_WIDTH) + Colors.colorize("│", Colors.WHITE));
             // lines 5-6: requirements (2 lines, padded with blank if fewer)
             List<String> reqs = formatRequirementsLines(noble.getRequirements(), NOBLE_CARD_WIDTH);
             for (int i = 0; i < 2; i++) {
                 String r = i < reqs.size() ? reqs.get(i) : "";
-                nLines.add(Colors.colorize("│", Colors.WHITE) + padRightAnsi(r, NOBLE_CARD_WIDTH) + Colors.colorize("│", Colors.WHITE));
+                nLines.add(Colors.colorize("│", Colors.WHITE) + AnsiUtils.padRightAnsi(r, NOBLE_CARD_WIDTH) + Colors.colorize("│", Colors.WHITE));
             }
             // line 7: blank padding for height parity with regular cards
-            nLines.add(Colors.colorize("│", Colors.WHITE) + padRightAnsi("", NOBLE_CARD_WIDTH) + Colors.colorize("│", Colors.WHITE));
+            nLines.add(Colors.colorize("│", Colors.WHITE) + AnsiUtils.padRightAnsi("", NOBLE_CARD_WIDTH) + Colors.colorize("│", Colors.WHITE));
             // line 8: bottom border
             nLines.add(Colors.colorize("└" + "─".repeat(NOBLE_CARD_WIDTH) + "┘", Colors.WHITE));
             nobleBlocks.add(nLines);
         }
-        lines.addAll(combineHorizontal(nobleBlocks, 2));
+        lines.addAll(AnsiUtils.combineHorizontal(nobleBlocks, 2));
         return lines;
     }
 
@@ -267,7 +258,7 @@ public class GameRenderer {
             if (i + 1 < playerBlocks.size()) {
                 rowBlocks.add(playerBlocks.get(i + 1));
             }
-            combinedRows.add(combineHorizontal(rowBlocks, 2));
+            combinedRows.add(AnsiUtils.combineHorizontal(rowBlocks, 2));
         }
         
         for (List<String> row : combinedRows) {
@@ -308,82 +299,12 @@ public class GameRenderer {
         lines.add(colorBorder("└" + "─".repeat(bw + 2) + "┘", Colors.WHITE));
         return lines;
     }
-
-
-    private String stripAnsi(String str) {
-        return str.replaceAll("\\u001B\\[[0-9;]*m", "");
-    }
-
     public String formatCardAscii(Card card) {
-        return formatCardAscii(card, true);
+        return CardRenderer.formatCardAscii(card);
     }
 
     public String formatCardAscii(Card card, boolean affordable) {
-        final String borderColor = affordable ? Colors.WHITE : Colors.DIM;
-        final String textColor = affordable ? "" : Colors.DIM;
-        final String bonusLabel = card.getBonusGem() == null
-                ? "-"
-                : (affordable
-                        ? Colors.colorize(gemLabel(card.getBonusGem()), Colors.getGemColor(card.getBonusGem()))
-                        : Colors.colorize(gemLabel(card.getBonusGem()), Colors.DIM));
-        final String points = card.getPoints() > 0 ? String.valueOf(card.getPoints()) : "-";
-        final String line1 = Colors.colorize("┌" + "─".repeat(CARD_CONTENT_WIDTH) + "┐", borderColor);
-        final String line2 = Colors.colorize("│", borderColor)
-                + padRightAnsi(applyDim("ID: " + card.getId(), textColor), CARD_CONTENT_WIDTH)
-                + Colors.colorize("│", borderColor);
-        final String line3 = Colors.colorize("│", borderColor)
-                + padRightAnsi(applyDim("Pts: " + points, textColor), CARD_CONTENT_WIDTH)
-                + Colors.colorize("│", borderColor);
-        final String line4 = Colors.colorize("│", borderColor)
-                + padRightAnsi(applyDim("Bonus: ", textColor) + bonusLabel, CARD_CONTENT_WIDTH)
-                + Colors.colorize("│", borderColor);
-        final String line5 = Colors.colorize("│", borderColor)
-                + padRightAnsi(applyDim("Cost:", textColor), CARD_CONTENT_WIDTH)
-                + Colors.colorize("│", borderColor);
-        final List<String> costLines = affordable ? formatCardCostLines(card, 2) : formatCardCostLinesDim(card, 2);
-        final String line6 = Colors.colorize("│", borderColor)
-                + padRightAnsi(costLines.get(0), CARD_CONTENT_WIDTH)
-                + Colors.colorize("│", borderColor);
-        final String line7 = Colors.colorize("│", borderColor)
-                + padRightAnsi(costLines.get(1), CARD_CONTENT_WIDTH)
-                + Colors.colorize("│", borderColor);
-        final String line8 = Colors.colorize("└" + "─".repeat(CARD_CONTENT_WIDTH) + "┘", borderColor);
-
-        return String.join("\n", line1, line2, line3, line4, line5, line6, line7, line8);
-    }
-
-    private String applyDim(final String text, final String dimColor) {
-        if (dimColor.isEmpty()) {
-            return text;
-        }
-        return Colors.colorize(text, dimColor);
-    }
-
-    private String padRightAnsi(String s, int visibleWidth) {
-        final String truncated = truncateAnsi(s, visibleWidth);
-        final int currentVisible = stripAnsi(truncated).length();
-        final int padding = visibleWidth - currentVisible;
-        if (padding > 0) {
-            return truncated + " ".repeat(padding);
-        }
-        return truncated;
-    }
-
-    public void displayPlayers(final List<Player> players) {
-        System.out.println("\n" + Colors.colorize("--- OPPONENTS ---", Colors.WHITE));
-        for (final Player player : players) {
-            displayPlayerSummary(player);
-        }
-    }
-
-    private void displayPlayerSummary(final Player player) {
-        System.out.printf("%s: %d pts | Res: %d | ",
-                Colors.colorize(player.getName(), Colors.CYAN), player.getTotalPoints(),
-                player.getReservedCards().size());
-        System.out.println();
-    }
-
-    public void displayStatus(final Player currentPlayer) {
+        return CardRenderer.formatCardAscii(card, affordable);
     }
 
     public void displayPlayerTokens(final Player player) {
@@ -411,7 +332,7 @@ public class GameRenderer {
             if (option.isAvailable()) {
                 lines.add(base + detail + reason);
             } else {
-                lines.add(Colors.colorize(base + stripAnsi(detail) + reason, Colors.DIM));
+                lines.add(Colors.colorize(base + AnsiUtils.stripAnsi(detail) + reason, Colors.DIM));
             }
         }
         return lines;
@@ -446,7 +367,7 @@ public class GameRenderer {
         String current = "";
         for (final String token : tokens) {
             final String next = current.isEmpty() ? token : current + " " + token;
-            if (stripAnsi(next).length() > Math.max(1, contentWidth - 5) && !current.isEmpty()) {
+            if (AnsiUtils.stripAnsi(next).length() > Math.max(1, contentWidth - 5) && !current.isEmpty()) {
                 lines.add(current);
                 current = token;
             } else {
@@ -455,98 +376,16 @@ public class GameRenderer {
         }
         if (!current.isEmpty()) {
             lines.add(current);
-        }
-        return lines;
-    }
-
-    private List<String> formatCardCostLines(final Card card, final int maxLines) {
-        final List<String> tokens = new ArrayList<>();
-        for (final Gem gem : GEM_ORDER) {
-            final int count = card.getCost().getOrDefault(gem, 0);
-            if (count > 0) {
-                tokens.add(Colors.colorize(gemLabel(gem) + count, Colors.getGemColor(gem)));
-            }
-        }
-        if (tokens.isEmpty()) {
-            return List.of("None", "");
-        }
-        final List<String> lines = new ArrayList<>();
-        String current = "";
-        for (final String token : tokens) {
-            final String next = current.isEmpty() ? token : current + " " + token;
-            if (stripAnsi(next).length() > CARD_CONTENT_WIDTH && !current.isEmpty()) {
-                lines.add(current);
-                current = token;
-            } else {
-                current = next;
-            }
-        }
-        if (!current.isEmpty()) {
-            lines.add(current);
-        }
-        if (lines.size() < maxLines) {
-            while (lines.size() < maxLines) {
-                lines.add("");
-            }
-            return lines;
-        }
-        if (lines.size() > maxLines) {
-            final String merged = String.join(" ", lines.subList(1, lines.size()));
-            return List.of(lines.get(0), truncateAnsi(merged, CARD_CONTENT_WIDTH));
-        }
-        return lines;
-    }
-
-    private List<String> formatCardCostLinesDim(final Card card, final int maxLines) {
-        final List<String> tokens = new ArrayList<>();
-        for (final Gem gem : GEM_ORDER) {
-            final int count = card.getCost().getOrDefault(gem, 0);
-            if (count > 0) {
-                tokens.add(Colors.colorize(gemLabel(gem) + count, Colors.DIM));
-            }
-        }
-        if (tokens.isEmpty()) {
-            return List.of(Colors.colorize("None", Colors.DIM), "");
-        }
-        final List<String> lines = new ArrayList<>();
-        String current = "";
-        for (final String token : tokens) {
-            final String next = current.isEmpty() ? token : current + " " + token;
-            if (stripAnsi(next).length() > CARD_CONTENT_WIDTH && !current.isEmpty()) {
-                lines.add(current);
-                current = token;
-            } else {
-                current = next;
-            }
-        }
-        if (!current.isEmpty()) {
-            lines.add(current);
-        }
-        if (lines.size() < maxLines) {
-            while (lines.size() < maxLines) {
-                lines.add("");
-            }
-            return lines;
-        }
-        if (lines.size() > maxLines) {
-            final String merged = String.join(" ", lines.subList(1, lines.size()));
-            return List.of(lines.get(0), truncateAnsi(merged, CARD_CONTENT_WIDTH));
         }
         return lines;
     }
 
     private String gemLabel(final Gem gem) {
-        if (gem == Gem.WHITE) return "W";
-        if (gem == Gem.BLUE) return "B";
-        if (gem == Gem.GREEN) return "G";
-        if (gem == Gem.RED) return "R";
-        if (gem == Gem.BLACK) return "K";
-        if (gem == Gem.GOLD) return "Au";
-        return "";
+        return CardRenderer.gemLabel(gem);
     }
 
     private String frameLine(final String content, final String color, final int contentWidth) {
-        final String padded = padRightAnsi(content, contentWidth);
+        final String padded = AnsiUtils.padRightAnsi(content, contentWidth);
         return Colors.colorize("│", color) + " " + padded + " " + Colors.colorize("│", color);
     }
 
@@ -554,70 +393,4 @@ public class GameRenderer {
         return Colors.colorize(line, color);
     }
 
-    private String truncateAnsi(final String s, final int maxVisible) {
-        if (maxVisible <= 0) {
-            return "";
-        }
-        final StringBuilder sb = new StringBuilder();
-        int visible = 0;
-        int i = 0;
-        boolean inAnsi = false;
-        
-        while (i < s.length() && visible < maxVisible) {
-            final char c = s.charAt(i);
-            if (c == '\u001B') {
-                inAnsi = true;
-                sb.append(c);
-                i++;
-                while (i < s.length()) {
-                    final char c2 = s.charAt(i);
-                    sb.append(c2);
-                    i++;
-                    if (c2 == 'm') {
-                        inAnsi = false; // Add this line to clear color state!
-                        break;
-                    }
-                }
-            } else {
-                sb.append(c);
-                i++;
-                visible++;
-            }
-        }
-        
-        // Always append a reset code when string was truncated
-        // so colors don't bleed out of the box frame.
-        if (i < s.length()) {
-            sb.append("\u001B[0m");
-        }
-        
-        return sb.toString();
-    }
-
-    private List<String> combineHorizontal(final List<List<String>> blocks, final int gap) {
-        final List<Integer> widths = new ArrayList<>();
-        int maxHeight = 0;
-        for (final List<String> block : blocks) {
-            int width = 0;
-            for (final String line : block) {
-                width = Math.max(width, stripAnsi(line).length());
-            }
-            widths.add(width);
-            maxHeight = Math.max(maxHeight, block.size());
-        }
-        final List<String> combined = new ArrayList<>();
-        for (int i = 0; i < maxHeight; i++) {
-            final StringBuilder row = new StringBuilder();
-            for (int b = 0; b < blocks.size(); b++) {
-                if (b > 0) {
-                    row.append(" ".repeat(gap));
-                }
-                final List<String> block = blocks.get(b);
-                final String line = i < block.size() ? block.get(i) : "";
-                row.append(padRightAnsi(line, widths.get(b)));
-            }
-            combined.add(row.toString());
-        }
-        return combined;
-    }
 }

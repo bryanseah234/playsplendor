@@ -4,9 +4,10 @@ import com.splendor.config.ConfigKeys;
 import com.splendor.config.IConfigProvider;
 import com.splendor.exception.*;
 import com.splendor.model.*;
+import com.splendor.model.BotStrategy;
 import com.splendor.model.validator.GameRuleValidator;
 import com.splendor.model.validator.MoveValidator;
-import com.splendor.view.Colors;
+import com.splendor.util.MoveFormatter;
 import com.splendor.view.IGameView;
 import java.util.*;
 
@@ -15,9 +16,6 @@ import java.util.*;
  * Manages game initialization, turn handling, and win condition checking.
  */
 public class GameController {
-
-    private static final List<Gem> GEM_ORDER = List.of(
-            Gem.WHITE, Gem.BLUE, Gem.GREEN, Gem.RED, Gem.BLACK, Gem.GOLD);
     private final IGameView gameView;
     private final IConfigProvider configProvider;
     private final MoveValidator moveValidator;
@@ -161,50 +159,16 @@ public class GameController {
     private Move getPlayerMove(final Player player) throws SplendorException {
         while (true) {
             try {
-                final List<MenuOption> options = buildMenuOptions(player, game);
+                final List<MenuOption> options = MenuBuilder.buildMenuOptions(player, game);
                 
-                // --- NEW CPU BOT LOGIC ---
                 if (player instanceof ComputerPlayer) {
                     gameView.displayAvailableMoves(options, game);
                     gameView.displayNotification(player.getName() + " is calculating a move...");
                     try { Thread.sleep(1500); } catch (InterruptedException e) {}
-
-                    Move botMove = null;
-
-                    // 1. Try to buy a visible card first
-                    final List<Integer> affordableVisible = getAffordableVisibleIds(player, game.getBoard());
-                    if (!affordableVisible.isEmpty()) {
-                        botMove = new Move(MoveType.BUY_CARD, affordableVisible.get(0), false);
-                    } 
-                    // 2. Try to buy a reserved card next
-                    else if (!getAffordableReservedIds(player).isEmpty()) {
-                        botMove = new Move(MoveType.BUY_CARD, getAffordableReservedIds(player).get(0), true);
-                    } 
-                    // 3. Try to take 3 different gems
-                    else if (getAvailableDifferentGems(game.getBoard()).size() >= 3) {
-                        final List<Gem> diffGems = getAvailableDifferentGems(game.getBoard());
-                        final Map<Gem, Integer> gems = new HashMap<>();
-                        gems.put(diffGems.get(0), 1);
-                        gems.put(diffGems.get(1), 1);
-                        gems.put(diffGems.get(2), 1);
-                        botMove = new Move(MoveType.TAKE_THREE_DIFFERENT, gems);
-                    } 
-                    // 4. Try to take 2 of the same gem
-                    else if (!getAvailableTwoSameGems(game.getBoard()).isEmpty()) {
-                        final List<Gem> sameGems = getAvailableTwoSameGems(game.getBoard());
-                        final Map<Gem, Integer> gems = new HashMap<>();
-                        gems.put(sameGems.get(0), 2);
-                        botMove = new Move(MoveType.TAKE_TWO_SAME, gems);
-                    } 
-                    // 5. Fallback: Reserve from deck
-                    else {
-                        botMove = Move.reserveFromDeck(1);
-                    }
-
+                    Move botMove = BotStrategy.chooseBotMove(player, game);
                     moveValidator.validateMove(botMove, player, game);
                     return botMove;
                 }
-                // --- END BOT LOGIC ---
 
                 // Human logic
                 final Move move = gameView.promptForMove(player, game, options);
@@ -234,28 +198,16 @@ public class GameController {
             final int excessCount = player.getTotalTokenCount() - game.getMaxTokens();
             final Move discardMove;
 
-            // --- NEW CPU BOT LOGIC ---
             if (player instanceof ComputerPlayer) {
-                final Map<Gem, Integer> discardMap = new HashMap<>();
-                int leftToDiscard = excessCount;
-                for (final Gem gem : Gem.values()) {
-                    final int count = player.getTokenCount(gem);
-                    if (count > 0 && leftToDiscard > 0) {
-                        final int toDiscard = Math.min(count, leftToDiscard);
-                        discardMap.put(gem, toDiscard);
-                        leftToDiscard -= toDiscard;
-                    }
-                }
-                discardMove = new Move(MoveType.DISCARD_TOKENS, discardMap);
+                discardMove = BotStrategy.chooseBotDiscard(player, excessCount);
             } else {
                 discardMove = gameView.promptForTokenDiscard(player, excessCount);
             }
-            // --- END BOT LOGIC ---
 
             moveValidator.validateMove(discardMove, player, game);
             final PlayerController playerController = new PlayerController(game, gameView);
             playerController.executeTokenDiscard(player, discardMove);
-            game.addRecentMove(formatMoveEntry(player, discardMove));
+            game.addRecentMove(MoveFormatter.formatMoveEntry(player, discardMove));
         }
     }
 
@@ -278,168 +230,10 @@ public class GameController {
         }
     }
 
-    private List<MenuOption> buildMenuOptions(final Player player, final Game game) {
-        final Board board = game.getBoard();
-        final List<MenuOption> options = new ArrayList<>();
-        int index = 1;
-
-        final List<Gem> threeDifferent = getAvailableDifferentGems(board);
-        final boolean canTakeThree = threeDifferent.size() >= 3;
-        options.add(new MenuOption(index++, MenuAction.TAKE_THREE, canTakeThree,
-                "Take 3 different", formatColoredGemList(threeDifferent),
-                canTakeThree ? "" : "Need 3 colors in bank"));
-
-        final List<Gem> twoSame = getAvailableTwoSameGems(board);
-        final boolean canTakeTwo = !twoSame.isEmpty();
-        options.add(new MenuOption(index++, MenuAction.TAKE_TWO, canTakeTwo,
-                "Take 2 same", formatColoredGemList(twoSame), canTakeTwo ? "" : "No color with 4+ tokens"));
-
-        final boolean canReserve = player.canReserveCard();
-        final boolean canReserveVisible = canReserve && hasVisibleCards(board);
-        final boolean canReserveDeck = canReserve && hasAnyDeckCards(board);
-        final List<Integer> visibleIds = getVisibleCardIds(board);
-        options.add(new MenuOption(index++, MenuAction.RESERVE_VISIBLE, canReserveVisible,
-                "Reserve visible card", canReserveVisible ? formatIdList(visibleIds, 8) : "None",
-                canReserveVisible ? "" : reserveVisibleReason(player, board)));
-        
-        final List<Integer> availableTiers = new ArrayList<>();
-        for (int tier = 1; tier <= 3; tier++) {
-            if (board.getDeckSize(tier) > 0) {
-                availableTiers.add(tier);
-            }
-        }
-        final String deckInfo = availableTiers.isEmpty() ? "None" : formatIdList(availableTiers, 3).replace(", ", "/");
-        options.add(new MenuOption(index++, MenuAction.RESERVE_DECK, canReserveDeck && !availableTiers.isEmpty(),
-                "Reserve card from deck", deckInfo,
-                canReserveDeck ? (availableTiers.isEmpty() ? "Decks are empty" : "") : reserveDeckReason(player, board)));
-
-        final List<Integer> affordableVisible = getAffordableVisibleIds(player, board);
-        final boolean canBuyVisible = !affordableVisible.isEmpty();
-        options.add(new MenuOption(index++, MenuAction.BUY_VISIBLE, canBuyVisible,
-                "Buy visible card", canBuyVisible ? formatIdList(affordableVisible, 8) : "None",
-                canBuyVisible ? "" : buyVisibleReason(player, board)));
-
-        final List<Integer> reservedIds = getReservedCardIds(player);
-        final List<Integer> affordableReserved = getAffordableReservedIds(player);
-        final boolean canBuyReserved = !affordableReserved.isEmpty();
-        options.add(new MenuOption(index++, MenuAction.BUY_RESERVED, canBuyReserved,
-                "Buy reserved card(s)", reservedIds.isEmpty() ? "None" : formatIdList(reservedIds, 8),
-                canBuyReserved ? "" : buyReservedReason(player)));
-
-        options.add(new MenuOption(index++, MenuAction.EXIT_GAME, !(player instanceof ComputerPlayer),
-                "Exit Game", "-", ""));
-
-        return options;
-    }
-
-    private String formatColoredGemList(final List<Gem> gems) {
-        if (gems.isEmpty()) return "None";
-        final StringJoiner joiner = new StringJoiner(" ");
-        for (final Gem gem : gems) {
-            joiner.add(Colors.colorize(gemLabel(gem), Colors.getGemColor(gem)));
-        }
-        return joiner.toString();
-    }
-
-    private String formatIdList(final List<Integer> ids, final int maxCount) {
-        if (ids.isEmpty()) return "-";
-        final StringJoiner joiner = new StringJoiner(", ");
-        final int limit = Math.min(ids.size(), maxCount);
-        for (int i = 0; i < limit; i++) {
-            joiner.add(String.valueOf(ids.get(i)));
-        }
-        if (ids.size() > maxCount) joiner.add("...");
-        return joiner.toString();
-    }
-
-    private List<Gem> getAvailableDifferentGems(final Board board) {
-        final List<Gem> gems = new ArrayList<>();
-        for (final Gem gem : Gem.values()) {
-            if (gem != Gem.GOLD && board.getGemCount(gem) > 0) gems.add(gem);
-        }
-        return gems;
-    }
-
-    private List<Gem> getAvailableTwoSameGems(final Board board) {
-        final List<Gem> gems = new ArrayList<>();
-        for (final Gem gem : Gem.values()) {
-            if (gem != Gem.GOLD && board.getGemCount(gem) >= 4) gems.add(gem);
-        }
-        return gems;
-    }
-
-    private boolean hasVisibleCards(final Board board) {
-        for (int tier = 1; tier <= 3; tier++) {
-            if (!board.getAvailableCards(tier).isEmpty()) return true;
-        }
-        return false;
-    }
-
-    private boolean hasAnyDeckCards(final Board board) {
-        for (int tier = 1; tier <= 3; tier++) {
-            if (board.getDeckSize(tier) > 0) return true;
-        }
-        return false;
-    }
-
-    private String reserveVisibleReason(final Player player, final Board board) {
-        if (!player.canReserveCard()) return "Reserve limit reached (3)";
-        if (!hasVisibleCards(board)) return "No visible cards";
-        return "Not available";
-    }
-
-    private String reserveDeckReason(final Player player, final Board board) {
-        if (!player.canReserveCard()) return "Reserve limit reached (3)";
-        if (!hasAnyDeckCards(board)) return "Decks are empty";
-        return "Not available";
-    }
-
-    private String buyVisibleReason(final Player player, final Board board) {
-        if (!hasVisibleCards(board)) return "No visible cards";
-        return "Need more tokens";
-    }
-
-    private String buyReservedReason(final Player player) {
-        if (player.getReservedCards().isEmpty()) return "No reserved cards";
-        return "Need more tokens";
-    }
-
-    private List<Integer> getAffordableVisibleIds(final Player player, final Board board) {
-        final List<Integer> ids = new ArrayList<>();
-        for (int tier = 1; tier <= 3; tier++) {
-            for (final Card card : board.getAvailableCards(tier)) {
-                if (moveValidator.canPlayerAffordCard(player, card)) ids.add(card.getId());
-            }
-        }
-        return ids;
-    }
-
-    private List<Integer> getAffordableReservedIds(final Player player) {
-        final List<Integer> ids = new ArrayList<>();
-        for (final Card card : player.getReservedCards()) {
-            if (moveValidator.canPlayerAffordCard(player, card)) ids.add(card.getId());
-        }
-        return ids;
-    }
-
-    private List<Integer> getVisibleCardIds(final Board board) {
-        final List<Integer> ids = new ArrayList<>();
-        for (int tier = 1; tier <= 3; tier++) {
-            for (final Card card : board.getAvailableCards(tier)) ids.add(card.getId());
-        }
-        return ids;
-    }
-
-    private List<Integer> getReservedCardIds(final Player player) {
-        final List<Integer> ids = new ArrayList<>();
-        for (final Card card : player.getReservedCards()) ids.add(card.getId());
-        return ids;
-    }
-
     private void executeMove(final Move move, final Player player) throws SplendorException {
         final TurnController turnController = new TurnController(game, gameView);
         turnController.executeMove(move, player);
-        game.addRecentMove(formatMoveEntry(player, move));
+        game.addRecentMove(MoveFormatter.formatMoveEntry(player, move));
     }
 
     private void checkNobleVisits(final Player player) throws SplendorException {
@@ -461,39 +255,4 @@ public class GameController {
     public Game getGame() { return game; }
 
     public List<Player> getPlayers() { return Collections.unmodifiableList(players); }
-
-    private String formatMoveEntry(final Player player, final Move move) {
-        final StringBuilder sb = new StringBuilder();
-        sb.append(player.getName()).append(": ").append(move.getMoveType().getDisplayName());
-        if (move.hasGemSelection()) sb.append(" ").append(formatGemCounts(move.getSelectedGems()));
-        if (move.hasCardSelection()) {
-            sb.append(" Card ").append(move.getCardId());
-            if (move.isReservedCard()) sb.append(" (Res)");
-        } else if (move.hasDeckSelection()) {
-            sb.append(" Deck ").append(move.getDeckTier());
-        }
-        return sb.toString();
-    }
-
-    private String formatGemCounts(final Map<Gem, Integer> counts) {
-        final StringBuilder sb = new StringBuilder();
-        for (final Gem gem : GEM_ORDER) {
-            final int count = counts.getOrDefault(gem, 0);
-            if (count > 0) {
-                if (sb.length() > 0) sb.append(" ");
-                sb.append(Colors.colorize(gemLabel(gem), Colors.getGemColor(gem))).append(count);
-            }
-        }
-        return sb.length() == 0 ? "-" : sb.toString();
-    }
-
-    private String gemLabel(final Gem gem) {
-        if (gem == Gem.WHITE) return "W";
-        if (gem == Gem.BLUE) return "B";
-        if (gem == Gem.GREEN) return "G";
-        if (gem == Gem.RED) return "R";
-        if (gem == Gem.BLACK) return "K";
-        if (gem == Gem.GOLD) return "Au";
-        return "";
-    }
 }
