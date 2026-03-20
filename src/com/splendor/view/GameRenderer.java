@@ -225,10 +225,10 @@ public class GameRenderer {
             
             pLines.add(frameLine(nameScore, borderCol, PLAYER_BOX_WIDTH));
             
-            String bonusStr = formatGemCounts(p.getGemDiscounts(), false);
+            String bonusStr = formatGemCounts(p.getGemDiscounts(), true);
             pLines.add(frameLine("Bonus: " + bonusStr, borderCol, PLAYER_BOX_WIDTH));
             
-            String tokenStr = formatGemCounts(p.getTokens(), false);
+            String tokenStr = formatGemCounts(p.getTokens(), true);
             pLines.add(frameLine("Tokens (" + p.getTotalTokenCount() + "/" + maxTokens + "): " + tokenStr, borderCol, PLAYER_BOX_WIDTH));
             
             String noblesStr = "None";
@@ -408,26 +408,27 @@ public class GameRenderer {
             final String detail = option.getDetail();
             final String reason = option.isAvailable() || option.getReason().isBlank()
                     ? "" : " (" + option.getReason() + ")";
-            final String line = base + detail + reason;
-            lines.add(option.isAvailable() ? line : Colors.colorize(line, Colors.DIM));
+            if (option.isAvailable()) {
+                lines.add(base + detail + reason);
+            } else {
+                lines.add(Colors.colorize(base + stripAnsi(detail) + reason, Colors.DIM));
+            }
         }
         return lines;
     }
 
     private String formatGemCounts(final Map<Gem, Integer> counts, final boolean includeZero) {
-        final StringBuilder sb = new StringBuilder();
+        final List<String> parts = new ArrayList<>();
         for (final Gem gem : GEM_ORDER) {
             final int count = counts.getOrDefault(gem, 0);
             if (includeZero || count > 0) {
-                sb.append(Colors.colorize(gemLabel(gem), Colors.getGemColor(gem)))
-                        .append(count)
-                        .append(" ");
+                parts.add(Colors.colorize(gemLabel(gem) + count, Colors.getGemColor(gem)));
             }
         }
-        if (sb.length() == 0) {
+        if (parts.isEmpty()) {
             return "None";
         }
-        return sb.toString().trim();
+        return String.join(" ", parts);
     }
 
     private List<String> formatRequirementsLines(final Map<Gem, Integer> requirements, final int contentWidth) {
@@ -435,7 +436,7 @@ public class GameRenderer {
         for (final Gem gem : GEM_ORDER) {
             final int count = requirements.getOrDefault(gem, 0);
             if (count > 0) {
-                tokens.add(Colors.colorize(gemLabel(gem), Colors.getGemColor(gem)) + count);
+                tokens.add(Colors.colorize(gemLabel(gem) + count, Colors.getGemColor(gem)));
             }
         }
         if (tokens.isEmpty()) {
@@ -463,7 +464,7 @@ public class GameRenderer {
         for (final Gem gem : GEM_ORDER) {
             final int count = card.getCost().getOrDefault(gem, 0);
             if (count > 0) {
-                tokens.add(Colors.colorize(gemLabel(gem), Colors.getGemColor(gem)) + count);
+                tokens.add(Colors.colorize(gemLabel(gem) + count, Colors.getGemColor(gem)));
             }
         }
         if (tokens.isEmpty()) {
@@ -584,9 +585,9 @@ public class GameRenderer {
             }
         }
         
-        // If we truncated the string, forcefully append a reset code
+        // Always append a reset code when string was truncated
         // so colors don't bleed out of the box frame.
-        if (i < s.length() && inAnsi) {
+        if (i < s.length()) {
             sb.append("\u001B[0m");
         }
         

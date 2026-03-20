@@ -354,14 +354,12 @@ public class ConsoleView implements IGameView {
     }
 
     private String formatRequirements(final Map<Gem, Integer> requirements) {
-        final StringBuilder sb = new StringBuilder();
+        final List<String> parts = new ArrayList<>();
         for (final Map.Entry<Gem, Integer> entry : requirements.entrySet()) {
-            sb.append(Colors.colorize(entry.getKey().toString().substring(0, 1), Colors.getGemColor(entry.getKey())))
-                    .append(":")
-                    .append(entry.getValue())
-                    .append(" ");
+            parts.add(Colors.colorize(entry.getKey().toString().substring(0, 1), Colors.getGemColor(entry.getKey()))
+                    + ":" + entry.getValue());
         }
-        return sb.toString().trim();
+        return parts.isEmpty() ? "None" : String.join(" ", parts);
     }
 
     private enum MenuAction {
@@ -381,8 +379,12 @@ public class ConsoleView implements IGameView {
             final String base = option.getNumber() + ") " + option.getLabel() + ": ";
             final String detail = option.getDetail();
             final String reason = option.isAvailable() || option.getReason().isBlank() ? "" : " (" + option.getReason() + ")";
-            final String line = base + detail + reason;
-            lines.add(option.isAvailable() ? line : Colors.colorize(line, Colors.DIM));
+            if (option.isAvailable()) {
+                lines.add(base + detail + reason);
+            } else {
+                final String plain = detail.replaceAll("\\u001B\\[[0-9;]*m", "");
+                lines.add(Colors.colorize(base + plain + reason, Colors.DIM));
+            }
         }
         return lines;
     }
@@ -481,16 +483,16 @@ public class ConsoleView implements IGameView {
                     : Colors.colorize("[NOT AFFORDABLE]", Colors.RED);
             final String bonus = card.getBonusGem() == null ? "-"
                     : Colors.colorize(gemShort(card.getBonusGem()), Colors.getGemColor(card.getBonusGem()));
-            final StringBuilder costStr = new StringBuilder();
+            final List<String> costParts = new ArrayList<>();
             for (final Map.Entry<Gem, Integer> entry : card.getCost().entrySet()) {
                 if (entry.getValue() > 0) {
-                    costStr.append(Colors.colorize(gemShort(entry.getKey()), Colors.getGemColor(entry.getKey())))
-                           .append(":").append(entry.getValue()).append(" ");
+                    costParts.add(Colors.colorize(gemShort(entry.getKey()), Colors.getGemColor(entry.getKey()))
+                            + ":" + entry.getValue());
                 }
             }
-            if (costStr.length() == 0) costStr.append("Free");
+            final String costDisplay = costParts.isEmpty() ? "Free" : String.join(" ", costParts);
             System.out.printf("  ID:%d | Pts:%d | Bonus:%s | Cost: %s %s%n",
-                    card.getId(), card.getPoints(), bonus, costStr.toString().trim(), status);
+                    card.getId(), card.getPoints(), bonus, costDisplay, status);
         }
     }
 
