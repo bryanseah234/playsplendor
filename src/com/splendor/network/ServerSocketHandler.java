@@ -41,6 +41,7 @@ public class ServerSocketHandler implements RemoteView.NetworkMessageHandler {
     private volatile boolean isRunning;
     private final ConcurrentHashMap<String, LinkedBlockingQueue<String>> clientResponseQueues;
     private volatile CountDownLatch clientReadyLatch;
+    private volatile boolean gameStarted;
     
     /**
      * Creates a new ServerSocketHandler with the specified port and configuration.
@@ -55,6 +56,7 @@ public class ServerSocketHandler implements RemoteView.NetworkMessageHandler {
         this.clientResponseQueues = new ConcurrentHashMap<>();
         this.clientReadyLatch = null;
         this.isRunning = false;
+        this.gameStarted = false;
     }
     
     /**
@@ -64,11 +66,11 @@ public class ServerSocketHandler implements RemoteView.NetworkMessageHandler {
      */
     public void startServer() throws SplendorException {
         try {
-            GameLogger.info("Starting Splendor network server on port " + serverPort);
+            GameLogger.info("Starting Splendor network server on dynamic port...");
             
             // Force IPv4 wildcard (0.0.0.0) so all network interfaces are reachable
             final java.net.InetAddress wildcard = java.net.InetAddress.getByAddress(new byte[]{0, 0, 0, 0});
-            serverSocket = new ServerSocket(serverPort, 50, wildcard);
+            serverSocket = new ServerSocket(0, 50, wildcard);
 
             // Configure server socket properties
             serverSocket.setReuseAddress(true);
@@ -81,6 +83,7 @@ public class ServerSocketHandler implements RemoteView.NetworkMessageHandler {
 
             // Print real IPv4 addresses, skipping virtual/loopback adapters
             final StringBuilder ips = new StringBuilder();
+            final int actualPort = serverSocket.getLocalPort();
             for (final java.util.Enumeration<java.net.NetworkInterface> ifaces =
                     java.net.NetworkInterface.getNetworkInterfaces(); ifaces.hasMoreElements();) {
                 final java.net.NetworkInterface iface = ifaces.nextElement();
@@ -94,11 +97,11 @@ public class ServerSocketHandler implements RemoteView.NetworkMessageHandler {
                     final java.net.InetAddress addr = addrs.nextElement();
                     if (addr instanceof java.net.Inet4Address) {
                         ips.append("\n  ").append(iface.getDisplayName())
-                           .append(" -> ").append(addr.getHostAddress()).append(":").append(serverPort);
+                           .append(" -> ").append(addr.getHostAddress()).append(":").append(actualPort);
                     }
                 }
             }
-            GameLogger.info("Server started. Clients can connect at:" + ips);
+            GameLogger.info("Server started on port " + actualPort + ". Clients can connect at:" + ips);
             
             // Start accepting connections
             acceptClientConnections();
@@ -204,14 +207,24 @@ public class ServerSocketHandler implements RemoteView.NetworkMessageHandler {
         return ids;
     }
 
+    public void markGameStarted() {
+        this.gameStarted = true;
+    }
+
     /**
-     * Removes a disconnected client.
+     * Removes a disconnected client. If game is in progress, kills the game for all.
      *
      * @param clientHandler Client handler to remove
      */
     private void removeClient(final ClientHandler clientHandler) {
         connectedClients.remove(clientHandler);
         GameLogger.info("Client disconnected. Active connections: " + connectedClients.size());
+        if (gameStarted) {
+            GameLogger.info("Player disconnected mid-game. Terminating game for all players.");
+            broadcastToAllClients("A player has disconnected. Game is over.");
+            stopServer();
+            System.exit(1);
+        }
     }
     
     /**
@@ -377,6 +390,15 @@ public class ServerSocketHandler implements RemoteView.NetworkMessageHandler {
      */
     public boolean isRunning() {
         return isRunning;
+    }
+
+    /**
+     * Gets the actual port the server is bound to.
+     * 
+     * @return Local port number, or -1 if not bound
+     */
+    public int getActualPort() {
+        return (serverSocket != null) ? serverSocket.getLocalPort() : -1;
     }
     
     /**

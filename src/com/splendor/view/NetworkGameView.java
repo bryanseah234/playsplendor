@@ -28,6 +28,7 @@ public class NetworkGameView implements IGameView {
     private final List<RemoteView> playerViews;
     private final int playerCount;
     private List<Player> playerOrder;
+    private Player activePlayer;
 
     /**
      * Creates a NetworkGameView with one RemoteView per connected client.
@@ -38,6 +39,7 @@ public class NetworkGameView implements IGameView {
     public NetworkGameView(final List<RemoteView> playerViews, final int playerCount) {
         this.playerViews = playerViews;
         this.playerCount = playerCount;
+        this.activePlayer = null;
     }
 
     // -------------------------------------------------------------------------
@@ -78,12 +80,16 @@ public class NetworkGameView implements IGameView {
 
     @Override
     public void displayPlayerTurn(final Player player) {
+        this.activePlayer = player;
         broadcast(v -> v.displayPlayerTurn(player));
     }
 
     @Override
     public String displayMessage(final String message) {
-        broadcast(v -> v.displayMessage(message));
+        broadcast(v -> v.displayNotification(message));
+        if (activePlayer != null) {
+            return viewForPlayer(activePlayer).waitForEnter();
+        }
         return "";
     }
 
@@ -94,7 +100,10 @@ public class NetworkGameView implements IGameView {
 
     @Override
     public String displayError(final String errorMessage) {
-        broadcast(v -> v.displayError(errorMessage));
+        broadcast(v -> v.displayNotification("ERROR: " + errorMessage));
+        if (activePlayer != null) {
+            return viewForPlayer(activePlayer).waitForEnter();
+        }
         return "";
     }
 
@@ -125,6 +134,9 @@ public class NetworkGameView implements IGameView {
 
     @Override
     public String waitForEnter() {
+        if (activePlayer != null) {
+            return viewForPlayer(activePlayer).waitForEnter();
+        }
         return "";
     }
 

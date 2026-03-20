@@ -124,7 +124,20 @@ public class Main {
         };
 
         // Step 1: wait for the host to connect
-        System.out.println("Waiting for host to connect on port " + serverPort + "...");
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        
+        final int actualPort = serverHandler.getActualPort();
+        System.out.println("\n╔══════════════════════════════════════════╗");
+        System.out.println("║   SPLENDOR SERVER STARTED                ║");
+        System.out.println(String.format("║   Port: %-33d║", actualPort));
+        System.out.println(String.format("║   Players connect with: nc <ip> %-8d ║", actualPort));
+        System.out.println("╚══════════════════════════════════════════╝\n");
+
+        System.out.println("Waiting for host to connect...");
         if (!serverHandler.waitForClients(1, 0)) {
             System.err.println("Interrupted while waiting for host.");
             return;
@@ -155,6 +168,7 @@ public class Main {
         final GameController gameController = new GameController(gameView, configProvider);
 
         gameController.initializeGame();
+        serverHandler.markGameStarted();
         gameController.startGame();
     }
 }

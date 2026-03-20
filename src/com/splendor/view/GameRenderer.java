@@ -11,12 +11,12 @@ import java.util.*;
 public class GameRenderer {
     private static final List<Gem> GEM_ORDER = List.of(
             Gem.WHITE, Gem.BLUE, Gem.GREEN, Gem.RED, Gem.BLACK, Gem.GOLD);
-    private static final int LEFT_CONTENT_WIDTH = 38;
-    private static final int TOP_PANEL_CONTENT_WIDTH = 20;
     private static final int MENU_CONTENT_WIDTH = 60;
     private static final int CARD_CONTENT_WIDTH = 14;
-    private static final int CURRENT_PLAYER_CONTENT_WIDTH = 26;
-    private static final int RECENT_MOVES_CONTENT_WIDTH = 40;
+    private static final int RECENT_MOVES_CONTENT_WIDTH = 96;
+    private static final int PLAYER_BOX_WIDTH = 45;
+    private static final int NOBLE_CARD_WIDTH = 16;
+
     private List<String> menuLines = List.of();
     private final MoveValidator moveValidator;
 
@@ -24,29 +24,20 @@ public class GameRenderer {
         this.moveValidator = new MoveValidator();
     }
 
-    /**
-     * Clears the terminal display.
-     * Uses ANSI escape codes for modern terminals and attempts system-specific
-     * commands (cls/clear) for Windows/Unix compatibility.
-     */
     public void clearDisplay() {
         try {
             if (System.getProperty("os.name").contains("Windows")) {
                 new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
             } else {
-                System.out.print("\033[H\033[2J");
+                System.out.print("\u001B[H\u001B[2J");
                 System.out.flush();
             }
         } catch (Exception e) {
-            // Fallback to ANSI if system command fails
-            System.out.print("\033[H\033[2J");
+            System.out.print("\u001B[H\u001B[2J");
             System.out.flush();
         }
     }
 
-    /**
-     * Renders the game header banner.
-     */
     public void displayHeader() {
         System.out.println(
                 Colors.colorize("╔══════════════════════════════════════════════════════════════╗", Colors.GOLD));
@@ -61,53 +52,58 @@ public class GameRenderer {
         System.out.println(getRenderedGameState(game));
     }
 
-    /**
-     * Returns the full ASCII game state as a String.
-     * Useful for network transmission.
-     * 
-     * @param game The current game state
-     * @return Formatted ASCII board
-     */
     public String getRenderedGameState(final Game game) {
-        final List<String> leftPanel = renderCardTiers(game.getBoard(), game.getCurrentPlayer());
-        final List<String> rightPanel = new ArrayList<>();
-        rightPanel.addAll(renderTopRow(game.getBoard(), game.getPlayers(), game.getCurrentPlayer()));
-        
-        final List<String> currentPlayer = renderCurrentPlayer(game.getCurrentPlayer(), game.getMaxTokens(),
-                CURRENT_PLAYER_CONTENT_WIDTH);
-        final List<String> recentMoves = renderRecentMoves(game.getRecentMoves(), RECENT_MOVES_CONTENT_WIDTH);
-        
-        rightPanel.addAll(combineHorizontal(List.of(currentPlayer, recentMoves), 2));
-        rightPanel.addAll(renderMenu(menuLines));
-        
-        return combineSideBySide(leftPanel, rightPanel);
+        return renderGameStateInternal(game.getBoard(), game.getPlayers(), game.getCurrentPlayer(), game.getRecentMoves(), game.getMaxTokens());
     }
 
-    /**
-     * Renders the full game state to a String instead of printing to stdout.
-     * Used by the network layer to send the board to remote clients.
-     *
-     * @param game Current game state
-     * @return The complete board layout as a single String with embedded newlines
-     */
     public String renderToString(final Game game) {
-        final List<String> leftPanel = renderCardTiers(game.getBoard(), game.getCurrentPlayer());
-        final List<String> rightPanel = new ArrayList<>();
-        rightPanel.addAll(renderTopRow(game.getBoard(), game.getPlayers(), game.getCurrentPlayer()));
-        final List<String> currentPlayerPanel = renderCurrentPlayer(game.getCurrentPlayer(), game.getMaxTokens(),
-                CURRENT_PLAYER_CONTENT_WIDTH);
-        final List<String> recentMoves = renderRecentMoves(game.getRecentMoves(), RECENT_MOVES_CONTENT_WIDTH);
-        rightPanel.addAll(combineHorizontal(List.of(currentPlayerPanel, recentMoves), 2));
-        rightPanel.addAll(renderMenu(menuLines));
-        return sideBySideToString(leftPanel, rightPanel);
+        return renderGameStateInternal(game.getBoard(), game.getPlayers(), game.getCurrentPlayer(), game.getRecentMoves(), game.getMaxTokens());
+    }
+
+    public void displayBoard(final Board board, final Player currentPlayer) {
+        System.out.println(renderGameStateInternal(board, List.of(currentPlayer), currentPlayer, List.of(), 10));
+    }
+
+    private String renderGameStateInternal(Board board, List<Player> players, Player currentPlayer, List<String> recentMoves, int maxTokens) {
+        // Build LEFT column independently
+        List<String> leftColumn = new ArrayList<>();
+        List<List<String>> tiers = renderCardTiersList(board, currentPlayer);
+        for (List<String> tier : tiers) {
+            leftColumn.addAll(tier);
+            leftColumn.add("");
+        }
+        List<String> leftMenu = renderMenuBox(menuLines);
+        List<String> leftBank = renderBankVertical(board);
+        leftColumn.addAll(combineSideBySide(leftMenu, leftBank));
+
+        // Build RIGHT column independently
+        List<String> rightColumn = new ArrayList<>();
+        rightColumn.addAll(renderNoblesHorizontal(board));
+        rightColumn.add("");
+        rightColumn.addAll(renderRecentMovesBox(recentMoves));
+        rightColumn.add("");
+        rightColumn.addAll(renderPlayersTrackBoxes(players, currentPlayer, maxTokens));
+
+        // Stitch columns side-by-side ONCE
+        return combineSideBySideRaw(leftColumn, rightColumn);
+    }
+
+    private List<String> emptyBlock(int lines) {
+        List<String> empty = new ArrayList<>();
+        for (int i = 0; i < lines; i++) empty.add("");
+        return empty;
     }
 
     private String sideBySideToString(final List<String> left, final List<String> right) {
+        return combineSideBySideRaw(left, right);
+    }
+
+    private String combineSideBySideRaw(final List<String> left, final List<String> right) {
+        final StringBuilder sb = new StringBuilder();
         int leftWidth = 0;
         for (final String line : left) {
             leftWidth = Math.max(leftWidth, stripAnsi(line).length());
         }
-        final StringBuilder sb = new StringBuilder();
         final int maxLines = Math.max(left.size(), right.size());
         for (int i = 0; i < maxLines; i++) {
             String leftLine = i < left.size() ? left.get(i) : "";
@@ -118,23 +114,204 @@ public class GameRenderer {
         return sb.toString();
     }
 
-    /**
-     * Displays the complete game board with a side-by-side layout.
-     * Left Panel: Gem Bank, Nobles, Opponents, Status.
-     * Right Panel: Card Levels.
-     * 
-     * @param board         The game board state
-     * @param currentPlayer The player whose turn it is (for affordability checks)
-     */
-    public void displayBoard(final Board board, final Player currentPlayer) {
-        final List<String> leftPanel = renderCardTiers(board, currentPlayer);
-        final List<String> rightPanel = new ArrayList<>();
-        rightPanel.addAll(renderTopRow(board, List.of(currentPlayer), currentPlayer));
-        printSideBySide(leftPanel, rightPanel);
+    private List<String> combineSideBySide(final List<String> left, final List<String> right) {
+        List<String> res = new ArrayList<>();
+        int leftWidth = 0;
+        for (final String line : left) {
+            leftWidth = Math.max(leftWidth, stripAnsi(line).length());
+        }
+        final int maxLines = Math.max(left.size(), right.size());
+        for (int i = 0; i < maxLines; i++) {
+            String leftLine = i < left.size() ? left.get(i) : "";
+            String rightLine = i < right.size() ? right.get(i) : "";
+            leftLine = padRightAnsi(leftLine, leftWidth);
+            res.add(leftLine + "  " + rightLine);
+        }
+        return res;
     }
 
+    private List<List<String>> renderCardTiersList(final Board board, final Player currentPlayer) {
+        final List<List<String>> tiers = new ArrayList<>();
+        for (int tier = 3; tier >= 1; tier--) {
+            final List<String> lines = new ArrayList<>();
+            final List<Card> cards = board.getAvailableCards().get(tier);
+            if (cards == null || cards.isEmpty()) {
+                lines.add(Colors.colorize("Level " + tier + ": 0 cards available in deck", Colors.WHITE));
+                tiers.add(lines);
+                continue;
+            }
+            lines.add(Colors.colorize("Level " + tier + ": " + board.getDeckSize(tier) + " cards available in deck", Colors.WHITE));
+            final List<String> tierLines = new ArrayList<>();
+            final int cardHeight = formatCardAscii(cards.get(0)).split("\n").length;
+            for (int i = 0; i < cardHeight; i++) {
+                tierLines.add("");
+            }
+            for (final Card card : cards) {
+                final boolean affordable = moveValidator.canPlayerAffordCard(currentPlayer, card);
+                final String[] cardLines = formatCardAscii(card, affordable).split("\n");
+                for (int i = 0; i < cardLines.length; i++) {
+                    tierLines.set(i, tierLines.get(i) + cardLines[i] + "  ");
+                }
+            }
+            lines.addAll(tierLines);
+            tiers.add(lines);
+        }
+        return tiers;
+    }
+
+    private List<String> renderNoblesHorizontal(Board board) {
+        List<String> lines = new ArrayList<>();
+        lines.add(Colors.colorize("Nobles", Colors.WHITE));
+        if (board.getAvailableNobles().isEmpty()) {
+            lines.add("None");
+            return lines;
+        }
+
+        List<List<String>> nobleBlocks = new ArrayList<>();
+        for (Noble noble : board.getAvailableNobles()) {
+            List<String> nLines = new ArrayList<>();
+            // line 1: top border
+            nLines.add(Colors.colorize("┌" + "─".repeat(NOBLE_CARD_WIDTH) + "┐", Colors.WHITE));
+            // line 2: ID
+            nLines.add(Colors.colorize("│", Colors.WHITE) + padRightAnsi("ID: N" + noble.getId(), NOBLE_CARD_WIDTH) + Colors.colorize("│", Colors.WHITE));
+            // line 3: Points
+            nLines.add(Colors.colorize("│", Colors.WHITE) + padRightAnsi("Pts: " + noble.getPoints(), NOBLE_CARD_WIDTH) + Colors.colorize("│", Colors.WHITE));
+            // line 4: "Needs:" label
+            nLines.add(Colors.colorize("│", Colors.WHITE) + padRightAnsi("Needs:", NOBLE_CARD_WIDTH) + Colors.colorize("│", Colors.WHITE));
+            // lines 5-6: requirements (2 lines, padded with blank if fewer)
+            List<String> reqs = formatRequirementsLines(noble.getRequirements(), NOBLE_CARD_WIDTH);
+            for (int i = 0; i < 2; i++) {
+                String r = i < reqs.size() ? reqs.get(i) : "";
+                nLines.add(Colors.colorize("│", Colors.WHITE) + padRightAnsi(r, NOBLE_CARD_WIDTH) + Colors.colorize("│", Colors.WHITE));
+            }
+            // line 7: blank padding for height parity with regular cards
+            nLines.add(Colors.colorize("│", Colors.WHITE) + padRightAnsi("", NOBLE_CARD_WIDTH) + Colors.colorize("│", Colors.WHITE));
+            // line 8: bottom border
+            nLines.add(Colors.colorize("└" + "─".repeat(NOBLE_CARD_WIDTH) + "┘", Colors.WHITE));
+            nobleBlocks.add(nLines);
+        }
+        lines.addAll(combineHorizontal(nobleBlocks, 2));
+        return lines;
+    }
+
+    private List<String> renderRecentMovesBox(List<String> moves) {
+        List<String> lines = new ArrayList<>();
+        lines.add(Colors.colorize("Move History", Colors.WHITE));
+        lines.add(colorBorder("┌" + "─".repeat(RECENT_MOVES_CONTENT_WIDTH + 2) + "┐", Colors.WHITE));
+        List<String> padded = new ArrayList<>(Collections.nCopies(5, "-"));
+        final int startIndex = Math.max(0, 5 - moves.size());
+        for (int i = 0; i < moves.size(); i++) {
+            padded.set(startIndex + i, moves.get(i));
+        }
+        for (int i = 0; i < 5; i++) {
+            lines.add(frameLine((i + 1) + ") " + padded.get(i), Colors.WHITE, RECENT_MOVES_CONTENT_WIDTH));
+        }
+        lines.add(colorBorder("└" + "─".repeat(RECENT_MOVES_CONTENT_WIDTH + 2) + "┘", Colors.WHITE));
+        return lines;
+    }
+
+    private List<String> renderPlayersTrackBoxes(List<Player> players, Player currentPlayer, int maxTokens) {
+        List<String> lines = new ArrayList<>();
+        lines.add(Colors.colorize("Players (" + players.size() + "/4)", Colors.WHITE));
+        
+        List<List<String>> playerBlocks = new ArrayList<>();
+        for (Player p : players) {
+            List<String> pLines = new ArrayList<>();
+            String borderCol = p == currentPlayer ? Colors.GOLD : Colors.WHITE;
+            pLines.add(colorBorder("┌" + "─".repeat(PLAYER_BOX_WIDTH + 2) + "┐", borderCol));
+            
+            String nameScore = p.getName() + " - Score: " + p.getTotalPoints();
+            if (p == currentPlayer) nameScore = Colors.colorize(nameScore, Colors.GOLD);
+            
+            pLines.add(frameLine(nameScore, borderCol, PLAYER_BOX_WIDTH));
+            
+            String bonusStr = formatGemCounts(p.getGemDiscounts(), true);
+            pLines.add(frameLine("Bonus: " + bonusStr, borderCol, PLAYER_BOX_WIDTH));
+            
+            String tokenStr = formatGemCounts(p.getTokens(), true);
+            pLines.add(frameLine("Tokens (" + p.getTotalTokenCount() + "/" + maxTokens + "): " + tokenStr, borderCol, PLAYER_BOX_WIDTH));
+            
+            String noblesStr = "None";
+            if (!p.getNobles().isEmpty()) {
+                StringJoiner sj = new StringJoiner(", ");
+                for (Noble n : p.getNobles()) sj.add(String.valueOf(n.getId()));
+                noblesStr = sj.toString();
+            }
+            pLines.add(frameLine("Nobles Bought: " + noblesStr, borderCol, PLAYER_BOX_WIDTH));
+            
+            String cardsStr = "None";
+            if (!p.getPurchasedCards().isEmpty()) {
+                StringJoiner sj = new StringJoiner(", ");
+                for (Card c : p.getPurchasedCards()) sj.add(String.valueOf(c.getId()));
+                cardsStr = sj.toString();
+            }
+            pLines.add(frameLine("Cards Bought: " + cardsStr, borderCol, PLAYER_BOX_WIDTH));
+            
+            String res = "None";
+            if (!p.getReservedCards().isEmpty()) {
+                StringJoiner sj = new StringJoiner(", ");
+                for (Card c : p.getReservedCards()) sj.add(String.valueOf(c.getId()));
+                res = sj.toString();
+            }
+            pLines.add(frameLine("Cards Reserved: " + res, borderCol, PLAYER_BOX_WIDTH));
+            
+            pLines.add(colorBorder("└" + "─".repeat(PLAYER_BOX_WIDTH + 2) + "┘", borderCol));
+            playerBlocks.add(pLines);
+        }
+        
+        // Stack horizontally 2 by 2
+        List<List<String>> combinedRows = new ArrayList<>();
+        for (int i = 0; i < playerBlocks.size(); i += 2) {
+            List<List<String>> rowBlocks = new ArrayList<>();
+            rowBlocks.add(playerBlocks.get(i));
+            if (i + 1 < playerBlocks.size()) {
+                rowBlocks.add(playerBlocks.get(i + 1));
+            }
+            combinedRows.add(combineHorizontal(rowBlocks, 2));
+        }
+        
+        for (List<String> row : combinedRows) {
+            lines.addAll(row);
+        }
+        
+        return lines;
+    }
+
+    private List<String> renderMenuBox(List<String> menu) {
+        List<String> lines = new ArrayList<>();
+        lines.add(Colors.colorize("Menu", Colors.WHITE));
+        lines.add(colorBorder("┌" + "─".repeat(MENU_CONTENT_WIDTH + 2) + "┐", Colors.WHITE));
+        if (menu == null || menu.isEmpty()) {
+            lines.add(frameLine("None", Colors.WHITE, MENU_CONTENT_WIDTH));
+        } else {
+            for (final String line : menu) {
+                lines.add(frameLine(line, Colors.WHITE, MENU_CONTENT_WIDTH));
+            }
+        }
+        lines.add(colorBorder("└" + "─".repeat(MENU_CONTENT_WIDTH + 2) + "┘", Colors.WHITE));
+        return lines;
+    }
+
+    private List<String> renderBankVertical(Board board) {
+        List<String> lines = new ArrayList<>();
+        lines.add(Colors.colorize("Bank", Colors.WHITE));
+        int bw = 6; // fixed width for bank box
+        lines.add(colorBorder("┌" + "─".repeat(bw + 2) + "┐", Colors.WHITE));
+        
+        for (final Gem gem : GEM_ORDER) {
+            final int count = board.getGemCount(gem);
+            String label = gemLabel(gem) + ":" + count;
+            String colText = Colors.colorize(label, Colors.getGemColor(gem));
+            lines.add(frameLine(colText, Colors.WHITE, bw));
+        }
+
+        lines.add(colorBorder("└" + "─".repeat(bw + 2) + "┘", Colors.WHITE));
+        return lines;
+    }
+
+
     private String stripAnsi(String str) {
-        return str.replaceAll("\u001B\\[[;\\d]*m", "").replaceAll("\u001B\\[\\d+;\\d+;\\d+m", "");
+        return str.replaceAll("\\u001B\\[[0-9;]*m", "");
     }
 
     public String formatCardAscii(Card card) {
@@ -192,10 +369,6 @@ public class GameRenderer {
         return truncated;
     }
 
-    private String formatRequirements(Map<Gem, Integer> reqs) {
-        return formatGemCounts(reqs, false);
-    }
-
     public void displayPlayers(final List<Player> players) {
         System.out.println("\n" + Colors.colorize("--- OPPONENTS ---", Colors.WHITE));
         for (final Player player : players) {
@@ -207,93 +380,10 @@ public class GameRenderer {
         System.out.printf("%s: %d pts | Res: %d | ",
                 Colors.colorize(player.getName(), Colors.CYAN), player.getTotalPoints(),
                 player.getReservedCards().size());
-
-        // Compact token display
-        System.out.print("Tok: ");
-        boolean hasTokens = false;
-        for (Map.Entry<Gem, Integer> entry : player.getTokens().entrySet()) {
-            if (entry.getValue() > 0) {
-                hasTokens = true;
-                System.out.printf("%s%d ",
-                        Colors.colorize(entry.getKey().toString().substring(0, 1), Colors.getGemColor(entry.getKey())),
-                        entry.getValue());
-            }
-        }
-        if (!hasTokens)
-            System.out.print("- ");
-
-        // Compact bonus display
-        System.out.print("| Bon: ");
-        boolean hasBonuses = false;
-        for (Map.Entry<Gem, Integer> entry : player.getGemDiscounts().entrySet()) {
-            if (entry.getValue() > 0) {
-                hasBonuses = true;
-                System.out.printf("%s%d ",
-                        Colors.colorize(entry.getKey().toString().substring(0, 1), Colors.getGemColor(entry.getKey())),
-                        entry.getValue());
-            }
-        }
-        if (!hasBonuses)
-            System.out.print("-");
         System.out.println();
     }
 
-    /**
-     * Displays the status bar for the current player.
-     * Shows detailed stats including points, specific discounts, and token
-     * inventory.
-     * 
-     * @param currentPlayer The player whose turn it is
-     */
     public void displayStatus(final Player currentPlayer) {
-        System.out
-                .println("\n" + Colors.colorize("╔════════════════════ STATUS BAR ════════════════════╗", Colors.CYAN));
-        System.out.printf("║ PLAYER: %-15s POINTS: %-17d ║%n",
-                currentPlayer.getName(), currentPlayer.getTotalPoints());
-
-        System.out.print("║ DISCOUNTS: ");
-        StringBuilder discSb = new StringBuilder();
-        for (Map.Entry<Gem, Integer> entry : currentPlayer.getGemDiscounts().entrySet()) {
-            if (entry.getValue() > 0) {
-                discSb.append(
-                        Colors.colorize(entry.getKey().toString().substring(0, 1), Colors.getGemColor(entry.getKey())))
-                        .append(":")
-                        .append(entry.getValue())
-                        .append(" ");
-            }
-        }
-        if (discSb.length() == 0)
-            discSb.append("None");
-        System.out.print(discSb.toString());
-        System.out.println(Colors.colorize("", Colors.RESET));
-
-        System.out.print("║ TOKENS:    ");
-        StringBuilder tokSb = new StringBuilder();
-        for (Map.Entry<Gem, Integer> entry : currentPlayer.getTokens().entrySet()) {
-            if (entry.getValue() > 0) {
-                tokSb.append(
-                        Colors.colorize(entry.getKey().toString().substring(0, 1), Colors.getGemColor(entry.getKey())))
-                        .append(":")
-                        .append(entry.getValue())
-                        .append(" ");
-            }
-        }
-        if (tokSb.length() == 0)
-            tokSb.append("None");
-        System.out.println(tokSb.toString());
-
-        String reservedText;
-        if (currentPlayer.getReservedCards().isEmpty()) {
-            reservedText = "None";
-        } else {
-            StringJoiner joiner = new StringJoiner(", ");
-            for (Card card : currentPlayer.getReservedCards()) {
-                joiner.add(String.valueOf(card.getId()));
-            }
-            reservedText = joiner.toString();
-        }
-        System.out.println("║ RESERVED: " + padRightAnsi(reservedText, 38) + " ║");
-        System.out.println(Colors.colorize("╚════════════════════════════════════════════════════╝", Colors.CYAN));
     }
 
     public void displayPlayerTokens(final Player player) {
@@ -305,167 +395,10 @@ public class GameRenderer {
         System.out.println();
     }
 
-    private List<String> renderBank(final Board board) {
-        return renderBank(board, LEFT_CONTENT_WIDTH);
-    }
-
-    private List<String> renderBank(final Board board, final int contentWidth) {
-        final List<String> lines = new ArrayList<>();
-        lines.add(colorBorder("┌" + "─".repeat(contentWidth + 2) + "┐", Colors.WHITE));
-        lines.add(frameLine("BANK", Colors.WHITE, contentWidth));
-        for (final String line : formatGemCountsVertical(board.getGemBank(), true)) {
-            lines.add(frameLine(line, Colors.WHITE, contentWidth));
-        }
-        lines.add(colorBorder("└" + "─".repeat(contentWidth + 2) + "┘", Colors.WHITE));
-        return lines;
-    }
-
-    private List<String> renderNobles(final Board board) {
-        return renderNobles(board, LEFT_CONTENT_WIDTH);
-    }
-
-    private List<String> renderNobles(final Board board, final int contentWidth) {
-        final List<String> lines = new ArrayList<>();
-        lines.add(colorBorder("┌" + "─".repeat(contentWidth + 2) + "┐", Colors.WHITE));
-        lines.add(frameLine("NOBLES", Colors.WHITE, contentWidth));
-        if (board.getAvailableNobles().isEmpty()) {
-            lines.add(frameLine("None", Colors.WHITE, contentWidth));
-        } else {
-            for (final Noble noble : board.getAvailableNobles()) {
-                final String header = String.format("N%d %dpts", noble.getId(), noble.getPoints());
-                lines.add(frameLine(header, Colors.WHITE, contentWidth));
-                for (final String reqLine : formatRequirementsLines(noble.getRequirements(), contentWidth)) {
-                    lines.add(frameLine("Req: " + reqLine, Colors.WHITE, contentWidth));
-                }
-            }
-        }
-        lines.add(colorBorder("└" + "─".repeat(contentWidth + 2) + "┘", Colors.WHITE));
-        return lines;
-    }
-
-    private List<String> renderCurrentPlayer(final Player player, final int maxTokens, final int contentWidth) {
-        final List<String> lines = new ArrayList<>();
-        lines.add(colorBorder("┌" + "─".repeat(contentWidth + 2) + "┐", Colors.WHITE));
-        lines.add(frameLine("CURRENT", Colors.WHITE, contentWidth));
-        lines.add(frameLine("Name: " + player.getName(), Colors.WHITE, contentWidth));
-        lines.add(frameLine("Score: " + player.getTotalPoints(), Colors.WHITE, contentWidth));
-        final String tokenStr = formatGemCounts(player.getTokens(), false);
-        lines.add(frameLine("Tokens " + player.getTotalTokenCount() + "/" + maxTokens + ": " + tokenStr, Colors.WHITE,
-                contentWidth));
-        final String bonusStr = formatGemCounts(player.getGemDiscounts(), false);
-        lines.add(frameLine("Bonuses: " + bonusStr, Colors.WHITE, contentWidth));
-        lines.add(frameLine("Reserved: " + formatReserved(player.getReservedCards()), Colors.WHITE, contentWidth));
-        lines.add(colorBorder("└" + "─".repeat(contentWidth + 2) + "┘", Colors.WHITE));
-        return lines;
-    }
-
-    private List<String> renderRecentMoves(final List<String> moves, final int contentWidth) {
-        final List<String> lines = new ArrayList<>();
-        lines.add(colorBorder("┌" + "─".repeat(contentWidth + 2) + "┐", Colors.WHITE));
-        lines.add(frameLine("MOVES", Colors.WHITE, contentWidth));
-        final List<String> padded = new ArrayList<>(Collections.nCopies(5, "-"));
-        final int startIndex = Math.max(0, 5 - moves.size());
-        for (int i = 0; i < moves.size(); i++) {
-            padded.set(startIndex + i, moves.get(i));
-        }
-        for (int i = 0; i < 5; i++) {
-            lines.add(frameLine((i + 1) + ") " + padded.get(i), Colors.WHITE, contentWidth));
-        }
-        lines.add(colorBorder("└" + "─".repeat(contentWidth + 2) + "┘", Colors.WHITE));
-        return lines;
-    }
-
-    private List<String> renderCardTiers(final Board board, final Player currentPlayer) {
-        final List<String> lines = new ArrayList<>();
-        for (int tier = 3; tier >= 1; tier--) {
-            final List<Card> cards = board.getAvailableCards().get(tier);
-            if (cards == null || cards.isEmpty()) {
-                continue;
-            }
-            lines.add(Colors.colorize("LEVEL " + tier + ":  " + board.getDeckSize(tier) + " cards available in deck",
-                    Colors.WHITE));
-            final List<String> tierLines = new ArrayList<>();
-            final int cardHeight = formatCardAscii(cards.get(0)).split("\n").length;
-            for (int i = 0; i < cardHeight; i++) {
-                tierLines.add("");
-            }
-            for (final Card card : cards) {
-                final boolean affordable = moveValidator.canPlayerAffordCard(currentPlayer, card);
-                final String[] cardLines = formatCardAscii(card, affordable).split("\n");
-                for (int i = 0; i < cardLines.length; i++) {
-                    tierLines.set(i, tierLines.get(i) + cardLines[i] + "  ");
-                }
-            }
-            lines.addAll(tierLines);
-        }
-        return lines;
-    }
-
-    private void printSideBySide(final List<String> left, final List<String> right) {
-        System.out.println(combineSideBySide(left, right));
-    }
-
-    private String combineSideBySide(final List<String> left, final List<String> right) {
-        final StringBuilder sb = new StringBuilder();
-        int leftWidth = 0;
-        for (final String line : left) {
-            leftWidth = Math.max(leftWidth, stripAnsi(line).length());
-        }
-        final int maxLines = Math.max(left.size(), right.size());
-        for (int i = 0; i < maxLines; i++) {
-            String leftLine = i < left.size() ? left.get(i) : "";
-            String rightLine = i < right.size() ? right.get(i) : "";
-            leftLine = padRightAnsi(leftLine, leftWidth);
-            sb.append(leftLine).append("  ").append(rightLine).append("\n");
-        }
-        return sb.toString();
-    }
-
-    private List<String> renderPlayersTrack(final List<Player> players, final Player currentPlayer) {
-        return renderPlayersTrack(players, currentPlayer, LEFT_CONTENT_WIDTH);
-    }
-
-    private List<String> renderPlayersTrack(final List<Player> players, final Player currentPlayer,
-            final int contentWidth) {
-        final List<String> lines = new ArrayList<>();
-        lines.add(colorBorder("┌" + "─".repeat(contentWidth + 2) + "┐", Colors.WHITE));
-        lines.add(frameLine("PLAYERS", Colors.WHITE, contentWidth));
-        for (final Player player : players) {
-            final String name = player == currentPlayer
-                    ? Colors.colorize(player.getName(), Colors.GOLD)
-                    : Colors.colorize(player.getName(), Colors.CYAN);
-            lines.add(frameLine(name + " (" + player.getTotalPoints() + ")", Colors.WHITE, contentWidth));
-        }
-        lines.add(colorBorder("└" + "─".repeat(contentWidth + 2) + "┘", Colors.WHITE));
-        return lines;
-    }
-
-    private List<String> renderMenu(final List<String> menu) {
-        final List<String> lines = new ArrayList<>();
-        lines.add(colorBorder("┌" + "─".repeat(MENU_CONTENT_WIDTH + 2) + "┐", Colors.WHITE));
-        lines.add(frameLine("MENU", Colors.WHITE, MENU_CONTENT_WIDTH));
-        if (menu == null || menu.isEmpty()) {
-            lines.add(frameLine("None", Colors.WHITE, MENU_CONTENT_WIDTH));
-        } else {
-            for (final String line : menu) {
-                lines.add(frameLine(line, Colors.WHITE, MENU_CONTENT_WIDTH));
-            }
-        }
-        lines.add(colorBorder("└" + "─".repeat(MENU_CONTENT_WIDTH + 2) + "┘", Colors.WHITE));
-        return lines;
-    }
-
     public void setMenuLines(final List<String> menuLines) {
         this.menuLines = menuLines == null ? List.of() : new ArrayList<>(menuLines);
     }
 
-    /**
-     * Builds the menu line list from a set of MenuOptions.
-     * Shared by both ConsoleView and RemoteView so the menu always looks the same.
-     *
-     * @param options Available menu options for the current player
-     * @return List of formatted menu lines ready to pass to setMenuLines()
-     */
     public List<String> buildMenuLines(final List<MenuOption> options) {
         final List<String> lines = new ArrayList<>();
         lines.add("Goal: 15 points");
@@ -475,45 +408,27 @@ public class GameRenderer {
             final String detail = option.getDetail();
             final String reason = option.isAvailable() || option.getReason().isBlank()
                     ? "" : " (" + option.getReason() + ")";
-            final String line = base + detail + reason;
-            lines.add(option.isAvailable() ? line : Colors.colorize(line, Colors.DIM));
+            if (option.isAvailable()) {
+                lines.add(base + detail + reason);
+            } else {
+                lines.add(Colors.colorize(base + stripAnsi(detail) + reason, Colors.DIM));
+            }
         }
         return lines;
     }
 
     private String formatGemCounts(final Map<Gem, Integer> counts, final boolean includeZero) {
-        final StringBuilder sb = new StringBuilder();
+        final List<String> parts = new ArrayList<>();
         for (final Gem gem : GEM_ORDER) {
             final int count = counts.getOrDefault(gem, 0);
             if (includeZero || count > 0) {
-                sb.append(Colors.colorize(gemLabel(gem), Colors.getGemColor(gem)))
-                        .append(count)
-                        .append(" ");
+                parts.add(Colors.colorize(gemLabel(gem) + count, Colors.getGemColor(gem)));
             }
         }
-        if (sb.length() == 0) {
+        if (parts.isEmpty()) {
             return "None";
         }
-        return sb.toString().trim();
-    }
-
-    private List<String> formatGemCountsVertical(final Map<Gem, Integer> counts, final boolean includeZero) {
-        final List<String> lines = new ArrayList<>();
-        for (final Gem gem : GEM_ORDER) {
-            final int count = counts.getOrDefault(gem, 0);
-            if (includeZero || count > 0) {
-                final String label = Colors.colorize(gemLabel(gem), Colors.getGemColor(gem)) + ": " + count;
-                lines.add(label);
-            }
-        }
-        if (lines.isEmpty()) {
-            lines.add("None");
-        }
-        return lines;
-    }
-
-    private List<String> formatRequirementsLines(final Map<Gem, Integer> requirements) {
-        return formatRequirementsLines(requirements, LEFT_CONTENT_WIDTH);
+        return String.join(" ", parts);
     }
 
     private List<String> formatRequirementsLines(final Map<Gem, Integer> requirements, final int contentWidth) {
@@ -521,7 +436,7 @@ public class GameRenderer {
         for (final Gem gem : GEM_ORDER) {
             final int count = requirements.getOrDefault(gem, 0);
             if (count > 0) {
-                tokens.add(Colors.colorize(gemLabel(gem), Colors.getGemColor(gem)) + count);
+                tokens.add(Colors.colorize(gemLabel(gem) + count, Colors.getGemColor(gem)));
             }
         }
         if (tokens.isEmpty()) {
@@ -544,28 +459,12 @@ public class GameRenderer {
         return lines;
     }
 
-    private String formatCardCost(final Card card) {
-        final StringBuilder sb = new StringBuilder();
-        for (final Gem gem : GEM_ORDER) {
-            final int count = card.getCost().getOrDefault(gem, 0);
-            if (count > 0) {
-                sb.append(Colors.colorize(gemLabel(gem), Colors.getGemColor(gem)))
-                        .append(count)
-                        .append(" ");
-            }
-        }
-        if (sb.length() == 0) {
-            return "None";
-        }
-        return sb.toString().trim();
-    }
-
     private List<String> formatCardCostLines(final Card card, final int maxLines) {
         final List<String> tokens = new ArrayList<>();
         for (final Gem gem : GEM_ORDER) {
             final int count = card.getCost().getOrDefault(gem, 0);
             if (count > 0) {
-                tokens.add(Colors.colorize(gemLabel(gem), Colors.getGemColor(gem)) + count);
+                tokens.add(Colors.colorize(gemLabel(gem) + count, Colors.getGemColor(gem)));
             }
         }
         if (tokens.isEmpty()) {
@@ -636,41 +535,14 @@ public class GameRenderer {
         return lines;
     }
 
-    private String formatReserved(final List<Card> reserved) {
-        if (reserved.isEmpty()) {
-            return "None";
-        }
-        final StringJoiner joiner = new StringJoiner(", ");
-        for (final Card card : reserved) {
-            joiner.add(String.valueOf(card.getId()));
-        }
-        return joiner.toString();
-    }
-
     private String gemLabel(final Gem gem) {
-        if (gem == Gem.WHITE) {
-            return "W";
-        }
-        if (gem == Gem.BLUE) {
-            return "B";
-        }
-        if (gem == Gem.GREEN) {
-            return "G";
-        }
-        if (gem == Gem.RED) {
-            return "R";
-        }
-        if (gem == Gem.BLACK) {
-            return "K";
-        }
-        if (gem == Gem.GOLD) {
-            return "Au";
-        }
+        if (gem == Gem.WHITE) return "W";
+        if (gem == Gem.BLUE) return "B";
+        if (gem == Gem.GREEN) return "G";
+        if (gem == Gem.RED) return "R";
+        if (gem == Gem.BLACK) return "K";
+        if (gem == Gem.GOLD) return "Au";
         return "";
-    }
-
-    private String frameLine(final String content, final String color) {
-        return frameLine(content, color, LEFT_CONTENT_WIDTH);
     }
 
     private String frameLine(final String content, final String color, final int contentWidth) {
@@ -689,9 +561,12 @@ public class GameRenderer {
         final StringBuilder sb = new StringBuilder();
         int visible = 0;
         int i = 0;
+        boolean inAnsi = false;
+        
         while (i < s.length() && visible < maxVisible) {
             final char c = s.charAt(i);
             if (c == '\u001B') {
+                inAnsi = true;
                 sb.append(c);
                 i++;
                 while (i < s.length()) {
@@ -699,6 +574,7 @@ public class GameRenderer {
                     sb.append(c2);
                     i++;
                     if (c2 == 'm') {
+                        inAnsi = false; // Add this line to clear color state!
                         break;
                     }
                 }
@@ -708,36 +584,14 @@ public class GameRenderer {
                 visible++;
             }
         }
-        if (i < s.length() && s.contains("\u001B")) {
-            sb.append(Colors.RESET);
+        
+        // Always append a reset code when string was truncated
+        // so colors don't bleed out of the box frame.
+        if (i < s.length()) {
+            sb.append("\u001B[0m");
         }
+        
         return sb.toString();
-    }
-
-    private List<String> renderTopRow(final Board board, final List<Player> players, final Player currentPlayer) {
-        final int bankWidth = getBankContentWidth(board);
-        final List<String> bank = renderBank(board, bankWidth);
-        final List<String> nobles = renderNobles(board, TOP_PANEL_CONTENT_WIDTH);
-        final int playersWidth = getPlayersTrackContentWidth(players);
-        final List<String> playersTrack = renderPlayersTrack(players, currentPlayer, playersWidth);
-        return combineHorizontal(List.of(bank, nobles, playersTrack), 2);
-    }
-
-    private int getBankContentWidth(final Board board) {
-        int maxContent = "BANK".length();
-        for (final String line : formatGemCountsVertical(board.getGemBank(), true)) {
-            maxContent = Math.max(maxContent, stripAnsi(line).length());
-        }
-        return Math.max(8, maxContent);
-    }
-
-    private int getPlayersTrackContentWidth(final List<Player> players) {
-        int maxContent = "PLAYERS".length();
-        for (final Player player : players) {
-            final String content = player.getName() + " (" + player.getTotalPoints() + ")";
-            maxContent = Math.max(maxContent, stripAnsi(content).length());
-        }
-        return Math.max(10, maxContent);
     }
 
     private List<String> combineHorizontal(final List<List<String>> blocks, final int gap) {

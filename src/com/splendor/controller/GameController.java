@@ -114,9 +114,7 @@ public class GameController {
             final Move move = getPlayerMove(currentPlayer);
             executeMove(move, currentPlayer);
 
-            if (move.getMoveType() == MoveType.BUY_CARD) {
-                checkNobleVisits(currentPlayer);
-            }
+            checkNobleVisits(currentPlayer);
 
             handleTokenLimit(currentPlayer);
 
@@ -132,18 +130,13 @@ public class GameController {
                     }
                 }
             } else {
-                // Bot turn: Print notification without the undo prompt, then manually wait for Enter!
-                gameView.displayNotification(currentPlayer.getName() + " finished their turn. (Press ENTER to continue)");
-                try {
-                    // This freezes the game until you hit Enter
-                    System.in.read();
-                    // This cleans up the hidden "Enter" key characters so they don't accidentally skip your next menu!
-                    while (System.in.available() > 0) {
-                        System.in.read();
-                    }
-                } catch (Exception e) {
-                    // Just catch and ignore if the input stream acts up
-                }
+                gameView.displayNotification(currentPlayer.getName() + " finished their turn. Press Enter to continue...");
+                try { 
+                    // Flush any garbage typed while the bot was thinking
+                    while (System.in.available() > 0) { System.in.read(); }
+                    // Now block and wait for a real Enter key
+                    System.in.read(); 
+                } catch (Exception e) {}
             }
 
             game.advanceToNextPlayer();
@@ -156,7 +149,7 @@ public class GameController {
             throw e;
         } catch (final InvalidMoveException | InsufficientTokensException e) {
             final String input = gameView.displayError(e.getMessage());
-            if (input != null && (input.equalsIgnoreCase("Z") || input.equalsIgnoreCase("UNDO"))) {
+            if (!(currentPlayer instanceof ComputerPlayer) && input != null && (input.equalsIgnoreCase("Z") || input.equalsIgnoreCase("UNDO"))) {
                 if (performUndo()) { 
                     gameView.displayNotification("Turn reverted!");
                     return;
@@ -172,6 +165,7 @@ public class GameController {
                 
                 // --- NEW CPU BOT LOGIC ---
                 if (player instanceof ComputerPlayer) {
+                    gameView.displayAvailableMoves(options, game);
                     gameView.displayNotification(player.getName() + " is calculating a move...");
                     try { Thread.sleep(1500); } catch (InterruptedException e) {}
 
@@ -331,6 +325,9 @@ public class GameController {
         options.add(new MenuOption(index++, MenuAction.BUY_RESERVED, canBuyReserved,
                 "Buy reserved card(s)", reservedIds.isEmpty() ? "None" : formatIdList(reservedIds, 8),
                 canBuyReserved ? "" : buyReservedReason(player)));
+
+        options.add(new MenuOption(index++, MenuAction.EXIT_GAME, !(player instanceof ComputerPlayer),
+                "Exit Game", "-", ""));
 
         return options;
     }

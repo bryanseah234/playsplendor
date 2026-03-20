@@ -46,29 +46,29 @@ public class RemoteView implements IGameView {
 
     @Override
     public void displayPlayerTurn(final Player player) {
-        messageHandler.sendToClient(clientId, NetworkProtocol.createMessage("TURN", player.getName()));
+        messageHandler.sendToClient(clientId, "It's " + player.getName() + "'s turn.");
     }
 
     @Override
     public String displayMessage(final String message) {
-        messageHandler.sendToClient(clientId, NetworkProtocol.createMessage("MESSAGE", message));
+        messageHandler.sendToClient(clientId, message);
         return "";
     }
 
     @Override
     public String displayError(final String errorMessage) {
-        messageHandler.sendToClient(clientId, NetworkProtocol.createErrorResponse(errorMessage));
+        messageHandler.sendToClient(clientId, "ERROR: " + errorMessage);
         return "";
     }
 
     @Override
     public void displayNotification(final String message) {
-        messageHandler.sendToClient(clientId, NetworkProtocol.createMessage("NOTIFICATION", message));
+        messageHandler.sendToClient(clientId, message);
     }
 
     @Override
     public String promptForCommand(final Player player, final Game game) {
-        messageHandler.sendToClient(clientId, NetworkProtocol.createMessage("PROMPT_COMMAND", player.getName()));
+        send("Command > ");
         final String response = messageHandler.waitForClientResponse(clientId, 30000);
         return response == null ? "" : response.trim();
     }
@@ -153,6 +153,8 @@ public class RemoteView implements IGameView {
                 send("Affordable reserved IDs: " + option.getDetail() + "\nEnter reserved card ID to buy: ");
                 return new Move(MoveType.BUY_CARD, parseId(waitForResponse(60000)), true);
             }
+            case EXIT_GAME:
+                return new Move(MoveType.EXIT_GAME);
             default:
                 throw new IllegalArgumentException("Unknown action: " + option.getAction());
         }
@@ -211,11 +213,7 @@ public class RemoteView implements IGameView {
 
     @Override
     public Move promptForTokenDiscard(final Player player, final int excessCount) {
-        // Request discard from client
-        messageHandler.sendToClient(clientId, NetworkProtocol.createMessage("PROMPT_DISCARD",
-                player.getName(), String.valueOf(excessCount)));
-
-        // Wait for and parse client response
+        send("You must discard " + excessCount + " tokens. Format: COLOR QUANTITY (e.g., R 1)");
         final String response = messageHandler.waitForClientResponse(clientId, 30000);
 
         if (response == null) {
@@ -228,14 +226,22 @@ public class RemoteView implements IGameView {
 
     @Override
     public void displayWinner(final Player winner, final Map<String, Integer> finalScores) {
-        final String scores = formatFinalScores(finalScores);
-        messageHandler.sendToClient(clientId, NetworkProtocol.createMessage("WINNER", winner.getName(), scores));
+        final StringBuilder sb = new StringBuilder();
+        sb.append("\n").append("=".repeat(50)).append("\n");
+        sb.append("                   GAME OVER\n");
+        sb.append("=".repeat(50)).append("\n");
+        sb.append("WINNER: ").append(winner.getName()).append(" with ").append(winner.getTotalPoints()).append(" points!\n");
+        sb.append("\nFinal Scores:\n");
+        for (final Map.Entry<String, Integer> entry : finalScores.entrySet()) {
+            sb.append(String.format("  %-10s: %d points%n", entry.getKey(), entry.getValue()));
+        }
+        sb.append("=".repeat(50));
+        messageHandler.sendToClient(clientId, sb.toString());
     }
 
     @Override
     public void clearDisplay() {
-        // Network clients handle their own display clearing
-        messageHandler.sendToClient(clientId, NetworkProtocol.createMessage("CLEAR"));
+        messageHandler.sendToClient(clientId, "\033[H\033[2J");
     }
 
     @Override
@@ -246,7 +252,15 @@ public class RemoteView implements IGameView {
 
     @Override
     public Noble promptForNobleChoice(final Player player, final List<Noble> nobles) {
-        messageHandler.sendToClient(clientId, NetworkProtocol.createMessage("PROMPT_NOBLE", formatNobles(nobles)));
+        final StringBuilder sb = new StringBuilder();
+        sb.append(player.getName()).append(" can claim a noble:\n");
+        for (int i = 0; i < nobles.size(); i++) {
+            final Noble noble = nobles.get(i);
+            sb.append(String.format("%d) Noble %d - %d pts - %s%n",
+                    i + 1, noble.getId(), noble.getPoints(), noble.getRequirements()));
+        }
+        sb.append("Choose noble (1-").append(nobles.size()).append("): ");
+        send(sb.toString());
         final String response = messageHandler.waitForClientResponse(clientId, 30000);
         try {
             final int choice = Integer.parseInt(response.trim());
@@ -261,13 +275,12 @@ public class RemoteView implements IGameView {
 
     @Override
     public String promptForPlayerName(final int playerNumber, final int totalPlayers) {
-        messageHandler.sendToClient(clientId, NetworkProtocol.createMessage("PROMPT_NAME",
-                String.valueOf(playerNumber), String.valueOf(totalPlayers)));
+        send("Enter name for Player " + playerNumber + ": ");
 
         final String response = messageHandler.waitForClientResponse(clientId, 30000);
 
         if (response == null || response.trim().isEmpty()) {
-            return "Player" + playerNumber; // Default name
+            return "Player" + playerNumber;
         }
 
         return response.trim();
@@ -275,7 +288,7 @@ public class RemoteView implements IGameView {
 
     @Override
     public int promptForPlayerCount() {
-        messageHandler.sendToClient(clientId, NetworkProtocol.createMessage("PROMPT_PLAYER_COUNT"));
+        send("Enter number of players (2-4): ");
 
         final String response = messageHandler.waitForClientResponse(clientId, 30000);
 
@@ -289,19 +302,19 @@ public class RemoteView implements IGameView {
 
     @Override
     public void displayWelcomeMessage() {
-        messageHandler.sendToClient(clientId, NetworkProtocol.createMessage("WELCOME",
-                "Welcome to Splendor Network Game!"));
+        send("Welcome to Splendor Network Game!");
     }
 
     @Override
     public String waitForEnter() {
-        // Network clients handle their own pacing
+        send("Press Enter to continue...");
+        messageHandler.waitForClientResponse(clientId, 120000);
         return "";
     }
 
     @Override
     public void close() {
-        messageHandler.sendToClient(clientId, NetworkProtocol.createMessage("DISCONNECT"));
+        send("Game ended. Disconnecting.");
         GameLogger.info("Remote view closed for client: " + clientId);
     }
 
