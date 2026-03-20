@@ -62,6 +62,10 @@ public class PlayerController {
         }
         
         if (qualifyingNobles.isEmpty()) {
+            // Debug: Show why no nobles visited
+            gameView.displayNotification("No nobles interested in visiting " + player.getName() 
+                + " - need more discounts from purchased cards (current discounts: " 
+                + formatDiscounts(playerDiscounts) + ")");
             return;
         }
         
@@ -133,6 +137,17 @@ public class PlayerController {
         } catch (final Exception e) {
             throw new SplendorException("Token discard failed: " + e.getMessage(), e);
         }
+    }
+
+    private String formatDiscounts(final Map<Gem, Integer> discounts) {
+        final StringBuilder sb = new StringBuilder();
+        for (final Map.Entry<Gem, Integer> entry : discounts.entrySet()) {
+            if (entry.getValue() > 0) {
+                if (sb.length() > 0) sb.append(", ");
+                sb.append(entry.getKey()).append("=").append(entry.getValue());
+            }
+        }
+        return sb.length() == 0 ? "None" : sb.toString();
     }
     
     /**

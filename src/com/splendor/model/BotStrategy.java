@@ -33,7 +33,21 @@ public final class BotStrategy {
             gems.put(sameGems.get(0), 2);
             return new Move(MoveType.TAKE_TWO_SAME, gems);
         }
-        return Move.reserveFromDeck(1);
+        // Try to reserve from any available deck as fallback
+        for (int tier = 1; tier <= 3; tier++) {
+            if (board.getDeckSize(tier) > 0) {
+                return Move.reserveFromDeck(tier);
+            }
+        }
+        // If all decks are empty, take any available single gem
+        final List<Gem> availableGems = getAvailableDifferentGems(board);
+        if (!availableGems.isEmpty()) {
+            final Map<Gem, Integer> gem = new HashMap<>();
+            gem.put(availableGems.get(0), 1);
+            return new Move(MoveType.TAKE_THREE_DIFFERENT, gem);
+        }
+        // Ultimate fallback: empty valid move
+        return new Move(MoveType.TAKE_THREE_DIFFERENT, new HashMap<>());
     }
 
     public static Move chooseBotDiscard(final Player player, final int excessCount) {
