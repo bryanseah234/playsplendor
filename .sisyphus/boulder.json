@@ -1,9 +1,14 @@
 {
-  "active_plan": "C:\\playsplendor\\.sisyphus\\plans\\ui-layout-fix.md",
-  "started_at": "2026-03-17T10:08:50.869Z",
+  "active_plan": "C:\\playsplendor\\.sisyphus\\plans\\readme-uml-documentation.md",
+  "started_at": "2026-03-20T14:06:27.139Z",
   "session_ids": [
-    "ses_304cd0b2bffe8iZhpuGMooLJGI"
+    "ses_2f47e1019ffeqiHWbqp5orEB6O",
+    "ses_2f46b9ad7ffe20nGCXAXzB8Vc3",
+    "ses_2f465d6a5ffea76eqgkI881yM2",
+    "ses_2f4661d0dffejUWonQ7LOCFfgv",
+    "ses_2f46644d5ffeE5NE1UEdNyvgQN",
+    "ses_2f465b281ffe64UIFTzu2NbBAS"
   ],
-  "plan_name": "ui-layout-fix",
+  "plan_name": "readme-uml-documentation",
   "agent": "atlas"
 }

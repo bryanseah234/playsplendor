@@ -4,6 +4,8 @@ A modular, strictly MVC-based implementation of the board game Splendor in Java.
 
 ## Table of Contents
 - [Features](#features)
+- [Architecture Overview](#architecture-overview)
+- [Gameplay Flow](#gameplay-flow)
 - [How to Play](#how-to-play)
 - [Getting Started](#getting-started)
 - [Network Multiplayer](#network-multiplayer)
@@ -26,6 +28,128 @@ A modular, strictly MVC-based implementation of the board game Splendor in Java.
   - **Undo Feature**: Allows players to undo their last turn by typing `Z` or `UNDO`.
 - **Network Support**: Multiplayer capabilities via TCP sockets.
 - **Bot/CPU Players**: Name a player with "bot" in the name to enable computer-controlled opponents.
+
+## Architecture Overview
+
+The project follows a strict MVC pattern to ensure separation of concerns. The Controller layer orchestrates the game logic by delegating specific tasks to specialized sub-controllers and validators.
+
+```mermaid
+flowchart TD
+    subgraph Main
+        M[Main]
+    end
+    subgraph controller
+        GC[GameController]
+        TC[TurnController]
+        GFC[GameFlowController]
+        PC[PlayerController]
+        MB[MenuBuilder]
+    end
+    subgraph model
+        MO[model]
+        MV[MoveValidator]
+        GRV[GameRuleValidator]
+    end
+    subgraph view
+        IV[IGameView]
+        CV[ConsoleView]
+        RV[RemoteView]
+        MRV[MultiRemoteView]
+        NV[NetworkGameView]
+    end
+    subgraph network
+        SSH[ServerSocketHandler]
+    end
+    subgraph config
+        ICP[IConfigProvider]
+        FCP[FileConfigProvider]
+    end
+    subgraph util
+        UT[util]
+    end
+    subgraph exception
+        EX[exception]
+    end
+
+    M -->|creates| GC
+    GC -->|delegates| TC
+    GC -->|delegates| GFC
+    GC -->|delegates| PC
+    GC -->|delegates| MB
+    GC -->|renders via| IV
+    GC -->|reads via| ICP
+    GC -->|validates via| MV
+    GC -->|validates via| GRV
+    CV -->|implements| IV
+    RV -->|implements| IV
+    MRV -->|implements| IV
+    NV -->|implements| IV
+    FCP -->|implements| ICP
+    SSH -->|network bridge| IV
+    MO -->|throws| EX
+    controller -->|uses| MO
+    controller -->|uses| IV
+    controller -->|uses| ICP
+    controller -->|uses| UT
+```
+
+<details>
+<summary>🎲 Game State Lifecycle — ONGOING → FINAL_ROUND → FINISHED</summary>
+
+```mermaid
+stateDiagram-v2
+    [*] --> ONGOING : GameController.startGame()
+    ONGOING --> ONGOING : processTurn() [points < 15]
+    ONGOING --> FINAL_ROUND : processTurn() [player reaches 15+ pts]
+    FINAL_ROUND --> FINAL_ROUND : processTurn() [round not complete]
+    FINAL_ROUND --> FINISHED : All players took equal turns
+    FINISHED --> [*] : determineWinner() called
+```
+
+</details>
+
+## Gameplay Flow
+
+The following sequence diagram illustrates the standard turn lifecycle, including validation and special post-turn checks for noble visits or token limits.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Player
+    participant GameController
+    participant MenuBuilder
+    participant IGameView
+    participant MoveValidator
+    participant TurnController
+    participant PlayerController
+    participant GameFlowController
+
+    GameController->>MenuBuilder: buildMenuOptions()
+    GameController->>IGameView: promptForMove()
+    Player->>IGameView: submit move
+    IGameView->>GameController: move details
+    GameController->>MoveValidator: validate(move)
+    alt Invalid Move
+        MoveValidator-->>IGameView: rejection
+        IGameView-->>Player: show error / re-prompt
+    else Valid Move
+        GameController->>TurnController: executeMove()
+        TurnController->>GameController: updated state
+        GameController->>PlayerController: checkNobleVisits()
+        opt Noble Visit
+            PlayerController->>Player: assign noble (+3pts)
+        end
+        GameController->>PlayerController: handleTokenDiscard()
+        opt Token Limit Exceeded
+            PlayerController->>IGameView: trigger discard flow
+        end
+        GameController->>GameFlowController: updateState()
+        opt Final Round Triggered
+            GameFlowController->>GameController: transition to FINAL_ROUND
+        end
+        GameFlowController->>GameController: next turn
+    end
+```
 
 ## How to Play
 
@@ -96,6 +220,43 @@ chmod +x run.sh
 
 ## Network Multiplayer
 
+Multiplayer is supported via a custom TCP protocol. The server manages the game state and broadcasts updates to all connected clients.
+
+<details>
+<summary>🌐 Network Flow — Client command to game response</summary>
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Client
+    participant ClientHandler
+    participant ServerSocketHandler
+    participant NetworkProtocol
+    participant GameController
+    participant IGameView
+
+    Client->>ClientHandler: "MOVE:BUY_CARD:42"
+    ClientHandler->>ServerSocketHandler: handleMove()
+    ServerSocketHandler->>NetworkProtocol: parseMessage()
+    alt Invalid Protocol Message
+        NetworkProtocol-->>ClientHandler: parse error
+        ClientHandler-->>Client: "ERROR:Invalid command"
+    else Valid Message
+        ServerSocketHandler->>GameController: processTurn()
+        GameController->>IGameView: displayGameState()
+        IGameView->>ServerSocketHandler: broadcast()
+        ServerSocketHandler->>ClientHandler: send update
+        ClientHandler->>Client: new game state
+    end
+    opt Client Disconnects
+        ClientHandler->>ServerSocketHandler: notifyDisconnect()
+        ServerSocketHandler->>IGameView: remove client
+        IGameView->>ServerSocketHandler: broadcast disconnect
+    end
+```
+
+</details>
+
 ### 1. Start the Server
 ```bash
 java -cp classes com.splendor.Main --server
@@ -156,6 +317,9 @@ The test suite uses **JUnit 5** and covers:
 Test files are in the `test/` directory mirroring the `src/` package structure.
 
 ## Project Structure
+
+The project directory structure is organized into logical packages following the MVC pattern.
+
 ```
 src/com/splendor/
 ├── Main.java             # Entry point (console or --server mode)
@@ -168,6 +332,204 @@ src/com/splendor/
 ├── util/                 # Utilities (InputResolver, CardLoader, GameLogger, GemParser, MoveParser, MoveFormatter, AnsiUtils)
 └── view/                 # UI (ConsoleView, RemoteView, GameRenderer, CardRenderer, IGameView)
 ```
+
+<details>
+<summary>📦 Model Domain — Game, Player, Board, Card, Noble, Move + enums</summary>
+
+```mermaid
+classDiagram
+    class Game {
+        +getBoard()
+        +getPlayers()
+        +getState()
+        +snapshot()
+    }
+    class Player {
+        +getTokens()
+        +getReservedCards()
+        +getPurchasedCards()
+        +getPrestigePoints()
+    }
+    class ComputerPlayer
+    class Board {
+        +getGemBank()
+        +getAvailableCards(int tier)
+        +getNobles()
+    }
+    class Card {
+        +getTier()
+        +getCost()
+        +getBonusGem()
+        +getPrestigePoints()
+    }
+    class Noble {
+        +getCost()
+        +getPrestigePoints()
+    }
+    class Move {
+        +getType()
+        +getSelectedGems()
+        +getCardId()
+    }
+    class GameState {
+        <<enumeration>>
+        ONGOING
+        FINAL_ROUND
+        FINISHED
+    }
+    class Gem {
+        <<enumeration>>
+        RED
+        GREEN
+        BLUE
+        WHITE
+        BLACK
+        GOLD
+    }
+    class MoveType {
+        <<enumeration>>
+        TAKE_THREE_DIFFERENT
+        TAKE_TWO_SAME
+        RESERVE_CARD
+        BUY_CARD
+        DISCARD_TOKENS
+        EXIT_GAME
+    }
+
+    Player <|-- ComputerPlayer
+    Game "1" *-- "2..4" Player
+    Game "1" *-- "1" Board
+    Game "1" *-- "1" GameState
+    Player "1" o-- "0..*" Card
+    Player "1" o-- "0..*" Noble
+    Board "1" *-- "many" Card
+    Board "1" *-- "0..*" Noble
+    Card --> Gem
+    Move --> MoveType
+    Move --> Gem
+```
+
+</details>
+
+<details>
+<summary>🎮 Controller Layer — GameController orchestration chain</summary>
+
+```mermaid
+classDiagram
+    class GameController {
+        +startGame()
+        +processTurn()
+        +initializePlayers()
+    }
+    class TurnController {
+        +executeMove()
+        +handleTakeGems()
+        +handleBuyCard()
+        +handleReserveCard()
+    }
+    class GameFlowController {
+        +shouldStartFinalRound()
+        +determineWinner()
+        +isGameFinished()
+    }
+    class PlayerController {
+        +checkNobleVisits()
+        +handleTokenDiscard()
+    }
+    class MenuBuilder {
+        +buildMenuOptions()
+    }
+    class IGameView {
+        <<interface>>
+    }
+    class MoveValidator
+    class GameRuleValidator
+
+    GameController --> TurnController : delegates move
+    GameController --> GameFlowController : delegates state
+    GameController --> PlayerController : delegates noble
+    GameController --> MenuBuilder : builds options
+    GameController --> IGameView : renders UI
+    GameController --> MoveValidator : validates move
+    GameController --> GameRuleValidator : validates rule
+```
+
+</details>
+
+<details>
+<summary>👁️ View & Config Interfaces — IGameView implementations and IConfigProvider</summary>
+
+```mermaid
+classDiagram
+    class IGameView {
+        <<interface>>
+        +displayGameState()
+        +promptForMove()
+        +promptForPlayerName()
+        +displayWinner()
+        +close()
+    }
+    class ConsoleView
+    class RemoteView
+    class NetworkMessageHandler {
+        <<interface>>
+        +send()
+        +broadcast()
+    }
+    class MultiRemoteView
+    class NetworkGameView
+    class GameRenderer
+    class CardRenderer
+    class IConfigProvider {
+        <<interface>>
+        +getIntProperty()
+        +getStringProperty()
+        +loadConfiguration()
+    }
+    class FileConfigProvider
+    class ServerSocketHandler
+
+    IGameView <|.. ConsoleView
+    IGameView <|.. RemoteView
+    IGameView <|.. MultiRemoteView
+    IGameView <|.. NetworkGameView
+    ConsoleView --> GameRenderer
+    RemoteView --> GameRenderer
+    MultiRemoteView --> RemoteView
+    MultiRemoteView --> ServerSocketHandler
+    IConfigProvider <|.. FileConfigProvider
+    ServerSocketHandler ..|> NetworkMessageHandler : implements nested interface
+```
+
+</details>
+
+<details>
+<summary>⚠️ Exception Hierarchy — SplendorException and domain subclasses</summary>
+
+```mermaid
+classDiagram
+    class SplendorException
+    class GameStateException
+    class InvalidPlayerActionException
+    class InsufficientTokensException
+    class InvalidMoveException
+    class ViewException
+    class NetworkException
+    class ConfigException
+
+    Exception <|-- SplendorException
+    SplendorException <|-- GameStateException
+    SplendorException <|-- InvalidPlayerActionException
+    SplendorException <|-- InsufficientTokensException
+    SplendorException <|-- InvalidMoveException
+    SplendorException <|-- ViewException
+    SplendorException <|-- NetworkException
+    Exception <|-- ConfigException
+
+    note for ConfigException "Separate from SplendorException hierarchy"
+```
+
+</details>
 
 ## Contributing
 
@@ -183,6 +545,7 @@ src/com/splendor/
 - **Exception Handling**: Use the custom `SplendorException` hierarchy, never expose raw stack traces.
 - **Input Safety**: All user input wrapped in try-catch via `InputResolver`.
 - **AI Transparency**: Document any AI-assisted code in comments.
+- **Documentation**: When adding new core logic, update relevant Mermaid diagrams in `README.md`.
 
 ### CI/CD
 The repository uses GitHub Actions for:

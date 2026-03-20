@@ -1,0 +1,67 @@
+F3: Real QA Scenarios - Evidence Report
+=======================================
+Date: 2026-03-20
+Target: C:\playsplendor\README.md (READ-ONLY verification)
+
+Scenario 1 (Mermaid Block Count) [PASS]
+----------------------------------------
+  grep -c '```mermaid' README.md  => 8  (Expected: 8) PASS
+  grep -c '<details>' README.md   => 6  (Expected: 6) PASS
+
+Scenario 2 (Section Heading Verification) [PASS]
+-------------------------------------------------
+  Headings found (in order):
+    L5:   ## Table of Contents
+    L19:  ## Features
+    L32:  ## Architecture Overview
+    L111: ## Gameplay Flow
+    L154: ## How to Play
+    L188: ## Getting Started
+    L221: ## Network Multiplayer
+    L286: ## Configuration
+    L295: ## Testing
+    L319: ## Project Structure
+    L531: ## Contributing
+    L559: ## AI Attribution
+    L566: ## License
+  Expected order: Features, Architecture Overview, Gameplay Flow, How to Play,
+    Getting Started, Network Multiplayer, Configuration, Testing,
+    Project Structure, Contributing, AI Attribution, License
+  All present and in correct order: PASS
+
+Scenario 3 (ToC Anchor Integrity) [PASS]
+-----------------------------------------
+  ToC links found: 12
+  Missing anchors: NONE
+  All ToC (#anchor) links resolve to actual headings: PASS
+
+Scenario 4 (No Nested Details) [PASS]
+--------------------------------------
+  No nesting detected: PASS
+
+Scenario 5 (No Forbidden Mermaid Patterns) [PASS]
+--------------------------------------------------
+  PASS: no classDef color override
+  PASS: no style fill override
+  PASS: no theme config override
+
+Scenario 6 (Prose Preservation) [PASS]
+---------------------------------------
+  PASS: compile.bat
+  PASS: run.bat
+  PASS: run_tests.bat
+  PASS: ./compile.sh
+  PASS: java -cp classes com.splendor.Main --server
+  PASS: MOVE:BUY_CARD
+  PASS: game.points.win
+  PASS: JUnit 5
+  PASS: SplendorException
+  PASS: 15 prestige points
+  PASS: TruffleHog
+  All 11/11 prose markers present: PASS
+
+=======================================================================
+SUMMARY
+=======================================================================
+Scenario 1 (counts) [PASS] | Scenario 2 (sections) [PASS] | Scenario 3 (anchors) [PASS] | Scenario 4 (nesting) [PASS] | Scenario 5 (syntax) [PASS] | Scenario 6 (prose) [PASS]
+VERDICT: APPROVE
