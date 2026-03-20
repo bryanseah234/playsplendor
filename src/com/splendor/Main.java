@@ -18,6 +18,7 @@ import com.splendor.view.ConsoleView;
 import com.splendor.view.IGameView;
 import com.splendor.view.NetworkGameView;
 import com.splendor.view.RemoteView;
+import com.splendor.view.tui.TuiGameView;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,6 +40,8 @@ public class Main {
             
             if (isServerMode(args)) {
                 startServerMode(configProvider);
+            } else if (isTuiMode(args)) {
+                startTuiMode(configProvider);
             } else {
                 startConsoleMode(configProvider);
             }
@@ -59,12 +62,19 @@ public class Main {
      * @return true if "--server" flag is present
      */
     private static boolean isServerMode(final String[] args) {
+        return hasFlag(args, Constants.SERVER_MODE_FLAG);
+    }
+
+    private static boolean isTuiMode(final String[] args) {
+        return hasFlag(args, "--tui");
+    }
+
+    private static boolean hasFlag(final String[] args, final String flag) {
         if (args == null || args.length == 0) {
             return false;
         }
-        
         for (final String arg : args) {
-            if (Constants.SERVER_MODE_FLAG.equals(arg)) {
+            if (flag.equals(arg)) {
                 return true;
             }
         }
@@ -83,6 +93,14 @@ public class Main {
         final IGameView consoleView = new ConsoleView();
         final GameController gameController = new GameController(consoleView, configProvider);
         
+        gameController.initializeGame();
+        gameController.startGame();
+    }
+
+    private static void startTuiMode(final IConfigProvider configProvider) throws SplendorException {
+        final IGameView tuiView = new TuiGameView();
+        final GameController gameController = new GameController(tuiView, configProvider);
+
         gameController.initializeGame();
         gameController.startGame();
     }

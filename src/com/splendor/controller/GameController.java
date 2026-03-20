@@ -130,13 +130,8 @@ public class GameController {
                     }
                 }
             } else {
-                gameView.displayNotification(currentPlayer.getName() + " finished their turn. Press Enter to continue...");
-                try { 
-                    // Flush any garbage typed while the bot was thinking
-                    while (System.in.available() > 0) { System.in.read(); }
-                    // Now block and wait for a real Enter key
-                    System.in.read(); 
-                } catch (Exception e) {}
+                gameView.displayNotification(currentPlayer.getName() + " finished their turn.");
+                gameView.waitForEnter();
             }
 
             game.advanceToNextPlayer();
