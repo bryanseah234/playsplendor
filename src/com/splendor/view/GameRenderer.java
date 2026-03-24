@@ -325,8 +325,8 @@ public class GameRenderer {
         lines.add("Goal: 15 points");
         lines.add("Pick one action (or 'Z' to Undo)");
         for (final MenuOption option : options) {
-            final String base = option.getNumber() + ") " + option.getLabel() + ": ";
             final String detail = option.getDetail();
+            final String base = option.getNumber() + ") " + option.getLabel() + (detail.isBlank() ? "" : ": ");
             final String reason = option.isAvailable() || option.getReason().isBlank()
                     ? "" : " (" + option.getReason() + ")";
             if (option.isAvailable()) {

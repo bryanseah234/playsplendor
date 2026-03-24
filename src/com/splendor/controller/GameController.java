@@ -199,7 +199,7 @@ public class GameController {
             final Move discardMove;
 
             if (player instanceof ComputerPlayer) {
-                discardMove = BotStrategy.chooseBotDiscard(player, excessCount);
+                discardMove = BotStrategy.chooseBotDiscard(player, excessCount, game);
             } else {
                 discardMove = gameView.promptForTokenDiscard(player, excessCount);
             }

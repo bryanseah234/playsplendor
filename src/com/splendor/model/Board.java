@@ -164,18 +164,12 @@ public class Board {
         if (deck == null || deck.isEmpty()) {
             return null;
         }
-        
-        final Card drawnCard = deck.poll();
-        
-        // Replace the drawn card with a new one from the deck if available
-        if (!deck.isEmpty() && availableCards.get(tier).size() < 4) {
-            final Card newCard = deck.poll();
-            if (newCard != null) {
-                availableCards.get(tier).add(newCard);
-            }
+
+        final Card newCard = deck.poll();
+        if (newCard != null && availableCards.get(tier).size() < 4) {
+            availableCards.get(tier).add(newCard);
         }
-        
-        return drawnCard;
+        return newCard;
     }
 
     public Card drawBlindCard(final int tier) {
@@ -270,10 +264,13 @@ public class Board {
      * Initializes the available cards display for each tier.
      */
     private void initializeAvailableCards() {
-        // Draw initial 4 cards for each tier
+        // Deal initial 4 face-up cards for each tier
         for (int tier = 1; tier <= 3; tier++) {
             for (int i = 0; i < 4; i++) {
-                drawCard(tier);
+                final Card card = drawBlindCard(tier);
+                if (card != null) {
+                    availableCards.get(tier).add(card);
+                }
             }
         }
     }

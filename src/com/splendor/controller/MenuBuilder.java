@@ -58,7 +58,7 @@ public final class MenuBuilder {
                 canBuyReserved ? "" : buyReservedReason(player)));
 
         options.add(new MenuOption(index++, MenuAction.EXIT_GAME, !(player instanceof ComputerPlayer),
-                "Exit Game", "-", ""));
+                "Exit Game", "", ""));
 
         return options;
     }
