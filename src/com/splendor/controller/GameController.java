@@ -4,7 +4,6 @@ import com.splendor.config.ConfigKeys;
 import com.splendor.config.IConfigProvider;
 import com.splendor.exception.*;
 import com.splendor.model.*;
-import com.splendor.model.BotStrategy;
 import com.splendor.model.validator.GameRuleValidator;
 import com.splendor.model.validator.MoveValidator;
 import com.splendor.util.MoveFormatter;
@@ -57,17 +56,39 @@ public class GameController {
         try {
             gameView.displayNotification("Starting game...");
 
-            // for fun hahaha
+            // for fun hahaha :)
+            boolean hasYeowLeong = false;
+            boolean hasLayFoo = false;
             for (final Player p : game.getPlayers()) {
-                if (p.getName().equalsIgnoreCase("bot yeow leong")) {
-                    gameView.displayNotification("\n=======================================================");
-                    gameView.displayNotification(" ERROR: OPPONENT INTELLIGENCE TOO HIGH.");
-                    gameView.displayNotification(" " + p.getName() + " gives our group an instant A+!");
-                    gameView.displayNotification(" All gems and nobles instantly fly into his hands.");
-                    gameView.displayNotification(" " + p.getName().toUpperCase() + " WINS INSTANTLY! (Flawless Victory)");
-                    gameView.displayNotification("=======================================================\n");
-                    return; // This immediately exits the game without playing a single turn!
-                }
+                if (p.getName().equalsIgnoreCase("bot yeow leong")) hasYeowLeong = true;
+                if (p.getName().equalsIgnoreCase("bot lay foo")) hasLayFoo = true;
+            }
+            if (hasYeowLeong && hasLayFoo) {
+                gameView.displayNotification("\n=======================================================");
+                gameView.displayNotification(" WARNING: TWO APEX INTELLIGENCES DETECTED.");
+                gameView.displayNotification(" BOT YEOW LEONG vs BOT LAY FOO.");
+                gameView.displayNotification(" Their intellects are perfectly matched.");
+                gameView.displayNotification(" RESULT: UNMATCH. No winner can be determined.");
+                gameView.displayNotification("=======================================================\n");
+                return;
+            }
+            if (hasLayFoo) {
+                gameView.displayNotification("\n=======================================================");
+                gameView.displayNotification(" ALERT: DANGEROUS OPPONENT DETECTED.");
+                gameView.displayNotification(" Bot Lay Foo has entered the game.");
+                gameView.displayNotification(" All other players immediately forfeit in fear.");
+                gameView.displayNotification(" RESULT: BOT LAY FOO WINS INSTANTLY! (Unopposed Victory)");
+                gameView.displayNotification("=======================================================\n");
+                return;
+            }
+            if (hasYeowLeong) {
+                gameView.displayNotification("\n=======================================================");
+                gameView.displayNotification(" ERROR: OPPONENT INTELLIGENCE TOO HIGH.");
+                gameView.displayNotification(" Bot Yeow Leong gives our group an instant A+!");
+                gameView.displayNotification(" All gems and nobles instantly fly into his hands.");
+                gameView.displayNotification(" RESULT: BOT YEOW LEONG WINS INSTANTLY! (Flawless Victory)");
+                gameView.displayNotification("=======================================================\n");
+                return;
             }
             // --- END EASTER EGG ---
 
@@ -164,7 +185,6 @@ public class GameController {
                 if (player instanceof ComputerPlayer) {
                     gameView.displayAvailableMoves(options, game);
                     gameView.displayNotification(player.getName() + " is calculating a move...");
-                    try { Thread.sleep(1500); } catch (InterruptedException e) {}
                     Move botMove = BotStrategy.chooseBotMove(player, game);
                     moveValidator.validateMove(botMove, player, game);
                     return botMove;
@@ -199,7 +219,7 @@ public class GameController {
             final Move discardMove;
 
             if (player instanceof ComputerPlayer) {
-                discardMove = BotStrategy.chooseBotDiscard(player, excessCount);
+                discardMove = BotStrategy.chooseBotDiscard(player, excessCount, game);
             } else {
                 discardMove = gameView.promptForTokenDiscard(player, excessCount);
             }
