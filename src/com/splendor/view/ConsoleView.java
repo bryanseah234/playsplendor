@@ -10,6 +10,7 @@ package com.splendor.view;
 
 import com.splendor.model.*;
 import com.splendor.model.validator.MoveValidator;
+import com.splendor.util.GemParser;
 import com.splendor.util.InputResolver;
 import java.util.*;
 
@@ -159,7 +160,7 @@ public class ConsoleView implements IGameView {
                 if (parts.length != 2)
                     throw new IllegalArgumentException("Invalid format.");
 
-                Gem gem = parseGem(parts[0]);
+                Gem gem = GemParser.parseGem(parts[0]);
                 int qty = Integer.parseInt(parts[1]);
 
                 if (qty <= 0)
@@ -241,118 +242,6 @@ public class ConsoleView implements IGameView {
         scanner.close();
     }
 
-    private Move parseTakeMove(final String[] parts) {
-        if (parts.length == 3 && parts[1].equals("2")) {
-            final Gem gem = parseGem(parts[2]);
-            final Map<Gem, Integer> selected = new HashMap<>();
-            selected.put(gem, 2);
-            return new Move(MoveType.TAKE_TWO_SAME, selected);
-        }
-        if (parts.length == 4) {
-            final Map<Gem, Integer> selected = new HashMap<>();
-            for (int i = 1; i <= 3; i++) {
-                final Gem gem = parseGem(parts[i]);
-                selected.merge(gem, 1, Integer::sum);
-            }
-            return new Move(MoveType.TAKE_THREE_DIFFERENT, selected);
-        }
-        throw new IllegalArgumentException("Invalid take command format");
-    }
-
-    private Move parseBuyMove(final String[] parts) {
-        if (parts.length == 2) {
-            final int cardId = Integer.parseInt(parts[1]);
-            return new Move(MoveType.BUY_CARD, cardId, false);
-        }
-        if (parts.length == 3 && parts[1].equals("reserved")) {
-            final int cardId = Integer.parseInt(parts[2]);
-            return new Move(MoveType.BUY_CARD, cardId, true);
-        }
-        throw new IllegalArgumentException("Invalid buy command format");
-    }
-
-    private Move parseReserveMove(final String[] parts) {
-        if (parts.length == 2) {
-            final int cardId = Integer.parseInt(parts[1]);
-            return new Move(MoveType.RESERVE_CARD, cardId, false);
-        }
-        if (parts.length == 3 && parts[1].equalsIgnoreCase("deck")) {
-            final int tier = Integer.parseInt(parts[2]);
-            return Move.reserveFromDeck(tier);
-        }
-        throw new IllegalArgumentException("Invalid reserve command format");
-    }
-
-    private Gem parseGem(final String token) {
-        final String normalized = token.trim().toUpperCase();
-        if (normalized.equals("W") || normalized.equals("WHITE")) {
-            return Gem.WHITE;
-        }
-        if (normalized.equals("B") || normalized.equals("BLUE")) {
-            return Gem.BLUE;
-        }
-        if (normalized.equals("G") || normalized.equals("GREEN")) {
-            return Gem.GREEN;
-        }
-        if (normalized.equals("R") || normalized.equals("RED")) {
-            return Gem.RED;
-        }
-        if (normalized.equals("K") || normalized.equals("BLACK")) {
-            return Gem.BLACK;
-        }
-        if (normalized.equals("AU") || normalized.equals("GOLD")) {
-            return Gem.GOLD;
-        }
-        throw new IllegalArgumentException("Unknown gem: " + token);
-    }
-
-    /**
-     * Parses user input into a list of gem selections.
-     *
-     * @param input Raw user input
-     * @return Parsed gem list
-     */
-    private List<Gem> parseGemSelection(final String input) {
-        final String trimmed = input == null ? "" : input.trim();
-        if (trimmed.isEmpty()) {
-            throw new IllegalArgumentException("Please enter at least one color");
-        }
-        final String normalized = trimmed.toUpperCase();
-        final String spaced = normalized.replaceAll("[^A-Z]+", " ").trim();
-        if (!spaced.isEmpty() && spaced.contains(" ")) {
-            final String[] parts = spaced.split("\\s+");
-            final List<Gem> gems = new ArrayList<>();
-            for (final String part : parts) {
-                gems.add(parseGem(part));
-            }
-            return gems;
-        }
-        final String compact = spaced.isEmpty() ? normalized.replaceAll("[^A-Z]+", "") : spaced;
-        return parseGemSequence(compact);
-    }
-
-    /**
-     * Parses a compact gem sequence (e.g., "RGB" or "AUW") into a gem list.
-     *
-     * @param input Compact gem sequence
-     * @return Parsed gem list
-     */
-    private List<Gem> parseGemSequence(final String input) {
-        final List<Gem> gems = new ArrayList<>();
-        int i = 0;
-        while (i < input.length()) {
-            if (i + 1 < input.length() && input.startsWith("AU", i)) {
-                gems.add(Gem.GOLD);
-                i += 2;
-                continue;
-            }
-            final char c = input.charAt(i);
-            gems.add(parseGem(String.valueOf(c)));
-            i += 1;
-        }
-        return gems;
-    }
-
     private String formatRequirements(final Map<Gem, Integer> requirements) {
         final List<String> parts = new ArrayList<>();
         for (final Map.Entry<Gem, Integer> entry : requirements.entrySet()) {
@@ -362,40 +251,13 @@ public class ConsoleView implements IGameView {
         return parts.isEmpty() ? "None" : String.join(" ", parts);
     }
 
-    private enum MenuAction {
-        TAKE_THREE,
-        TAKE_TWO,
-        RESERVE_VISIBLE,
-        RESERVE_DECK,
-        BUY_VISIBLE,
-        BUY_RESERVED
-    }
-
-    public List<String> buildMenuLines(final List<MenuOption> options) {
-        final List<String> lines = new ArrayList<>();
-        lines.add("Goal: 15 points");
-        lines.add("Pick one action (or 'Z' to Undo)");
-        for (final MenuOption option : options) {
-            final String base = option.getNumber() + ") " + option.getLabel() + ": ";
-            final String detail = option.getDetail();
-            final String reason = option.isAvailable() || option.getReason().isBlank() ? "" : " (" + option.getReason() + ")";
-            if (option.isAvailable()) {
-                lines.add(base + detail + reason);
-            } else {
-                final String plain = detail.replaceAll("\\u001B\\[[0-9;]*m", "");
-                lines.add(Colors.colorize(base + plain + reason, Colors.DIM));
-            }
-        }
-        return lines;
-    }
-
     private Move promptTakeThree(final MenuOption option) {
         System.out.println("Available colors: " + option.getDetail());
         final String input = inputResolver.promptForString("Pick 3 colors (Z to go back): ", 1, 30);
         if (input.equalsIgnoreCase("Z") || input.equalsIgnoreCase("UNDO")) {
             throw new IllegalArgumentException("BACK_TO_MENU");
         }
-        final List<Gem> parsed = parseGemSelection(input);
+        final List<Gem> parsed = GemParser.parseGemSelection(input);
         if (parsed.size() != 3) {
             throw new IllegalArgumentException("Please enter exactly 3 colors");
         }
@@ -412,7 +274,7 @@ public class ConsoleView implements IGameView {
         if (input.equalsIgnoreCase("Z") || input.equalsIgnoreCase("UNDO")) {
             throw new IllegalArgumentException("BACK_TO_MENU");
         }
-        final List<Gem> parsed = parseGemSelection(input);
+        final List<Gem> parsed = GemParser.parseGemSelection(input);
         if (parsed.size() != 1) {
             throw new IllegalArgumentException("Please enter exactly 1 color");
         }
@@ -494,82 +356,6 @@ public class ConsoleView implements IGameView {
             System.out.printf("  ID:%d | Pts:%d | Bonus:%s | Cost: %s %s%n",
                     card.getId(), card.getPoints(), bonus, costDisplay, status);
         }
-    }
-
-    private List<Integer> getVisibleCardIds(final Board board) {
-        final List<Integer> ids = new ArrayList<>();
-        for (int tier = 1; tier <= 3; tier++) {
-            for (final Card card : board.getAvailableCards(tier)) {
-                ids.add(card.getId());
-            }
-        }
-        return ids;
-    }
-
-    private void printSection(final String title, final List<String> lines, final String color) {
-        System.out.println(Colors.colorize(title, color));
-        if (lines.isEmpty()) {
-            System.out.println(Colors.colorize("None", color));
-            return;
-        }
-        for (final String line : lines) {
-            System.out.println(line);
-        }
-    }
-
-    private void addActionLine(final List<String> target, final String name, final String command, final String detail,
-            final boolean available, final String reason) {
-        String line = String.format("%-22s %-18s %s", name, command, detail);
-        if (!available && reason != null && !reason.isBlank()) {
-            line = line + " - " + reason;
-        }
-        target.add(available ? line : Colors.colorize(line, Colors.GRAY));
-    }
-
-
-    private String formatIdList(final List<Integer> ids, final int maxCount) {
-        if (ids.isEmpty()) {
-            return "-";
-        }
-        final StringJoiner joiner = new StringJoiner(", ");
-        final int limit = Math.min(ids.size(), maxCount);
-        for (int i = 0; i < limit; i++) {
-            joiner.add(String.valueOf(ids.get(i)));
-        }
-        if (ids.size() > maxCount) {
-            joiner.add("...");
-        }
-        return joiner.toString();
-    }
-
-    private String formatGemList(final List<Gem> gems) {
-        if (gems.isEmpty()) {
-            return "-";
-        }
-        final StringJoiner joiner = new StringJoiner(" ");
-        for (final Gem gem : gems) {
-            joiner.add(gemShort(gem));
-        }
-        return joiner.toString();
-    }
-
-    private String formatColoredGemList(final List<Gem> gems) {
-        if (gems.isEmpty()) {
-            return "None";
-        }
-        final StringJoiner joiner = new StringJoiner(" ");
-        for (final Gem gem : gems) {
-            joiner.add(Colors.colorize(gemShort(gem), Colors.getGemColor(gem)));
-        }
-        return joiner.toString();
-    }
-
-    private List<Integer> getReservedCardIds(final Player player) {
-        final List<Integer> ids = new ArrayList<>();
-        for (final Card card : player.getReservedCards()) {
-            ids.add(card.getId());
-        }
-        return ids;
     }
 
     private String gemShort(final Gem gem) {

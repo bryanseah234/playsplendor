@@ -10,9 +10,10 @@ package com.splendor.view;
 import com.splendor.model.*;
 import com.splendor.network.NetworkProtocol;
 import com.splendor.util.GameLogger;
+import com.splendor.util.GemParser;
+import com.splendor.util.MoveParser;
 import com.splendor.model.MenuOption;
 import com.splendor.model.Player;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,7 +86,7 @@ public class RemoteView implements IGameView {
             final String input = waitForResponse(120000);
             if (input == null) {
                 displayError("Timeout — no input received.");
-                return createDefaultMove();
+                return MoveParser.createDefaultMove();
             }
 
             final int choice;
@@ -122,7 +123,10 @@ public class RemoteView implements IGameView {
         switch (option.getAction()) {
             case TAKE_THREE: {
                 send("Available colors: " + option.getDetail() + "\nEnter 3 colors (e.g. R G B or RGB): ");
-                final List<Gem> gems = parseGems(waitForResponse(60000));
+                final String response = waitForResponse(60000);
+                final List<Gem> gems = response == null || response.trim().isEmpty()
+                        ? List.of()
+                        : GemParser.parseGemSelection(response);
                 if (gems.size() != 3) throw new IllegalArgumentException("Enter exactly 3 colors.");
                 final Map<Gem, Integer> selected = new HashMap<>();
                 for (final Gem g : gems) selected.merge(g, 1, Integer::sum);
@@ -130,7 +134,10 @@ public class RemoteView implements IGameView {
             }
             case TAKE_TWO: {
                 send("Available colors: " + option.getDetail() + "\nEnter 1 color to take 2 of (e.g. R): ");
-                final List<Gem> gems = parseGems(waitForResponse(60000));
+                final String response = waitForResponse(60000);
+                final List<Gem> gems = response == null || response.trim().isEmpty()
+                        ? List.of()
+                        : GemParser.parseGemSelection(response);
                 if (gems.size() != 1) throw new IllegalArgumentException("Enter exactly 1 color.");
                 final Map<Gem, Integer> selected = new HashMap<>();
                 selected.put(gems.get(0), 2);
@@ -157,38 +164,6 @@ public class RemoteView implements IGameView {
                 return new Move(MoveType.EXIT_GAME);
             default:
                 throw new IllegalArgumentException("Unknown action: " + option.getAction());
-        }
-    }
-
-    /** Parses gem letters/words from a string the same way ConsoleView does. */
-    private List<Gem> parseGems(final String input) {
-        if (input == null || input.trim().isEmpty()) return List.of();
-        final List<Gem> gems = new ArrayList<>();
-        final String upper = input.trim().toUpperCase().replaceAll("[^A-Z]+", " ").trim();
-        // Split on spaces if present, otherwise treat as compact sequence
-        final String[] parts = upper.contains(" ") ? upper.split("\\s+") : new String[]{upper};
-        for (final String part : parts) {
-            int i = 0;
-            while (i < part.length()) {
-                if (i + 1 < part.length() && part.startsWith("AU", i)) {
-                    gems.add(Gem.GOLD); i += 2;
-                } else {
-                    gems.add(parseGem(String.valueOf(part.charAt(i)))); i++;
-                }
-            }
-        }
-        return gems;
-    }
-
-    private Gem parseGem(final String token) {
-        switch (token.trim().toUpperCase()) {
-            case "W": case "WHITE": return Gem.WHITE;
-            case "B": case "BLUE":  return Gem.BLUE;
-            case "G": case "GREEN": return Gem.GREEN;
-            case "R": case "RED":   return Gem.RED;
-            case "K": case "BLACK": return Gem.BLACK;
-            case "AU": case "GOLD": return Gem.GOLD;
-            default: throw new IllegalArgumentException("Unknown gem: " + token);
         }
     }
 
@@ -221,7 +196,7 @@ public class RemoteView implements IGameView {
             return createDefaultDiscardMove(player, excessCount);
         }
 
-        return parseDiscardMoveFromResponse(response);
+        return MoveParser.parseDiscardMoveFromResponse(response);
     }
 
     @Override
@@ -350,16 +325,6 @@ public class RemoteView implements IGameView {
     }
 
     /**
-     * Creates a default move when client doesn't respond.
-     * 
-     * @return Default move
-     */
-    private Move createDefaultMove() {
-        // Default to taking 3 different gems (safest move)
-        return new Move(MoveType.TAKE_THREE_DIFFERENT);
-    }
-
-    /**
      * Creates a default discard move when client doesn't respond.
      * 
      * @param player      Player with excess tokens
@@ -372,129 +337,6 @@ public class RemoteView implements IGameView {
         discard.put(com.splendor.model.Gem.GOLD,
                 Math.min(player.getTokenCount(com.splendor.model.Gem.GOLD), excessCount));
         return new Move(MoveType.DISCARD_TOKENS, discard);
-    }
-
-    /**
-     * Parses a move from client response.
-     * 
-     * @param response Client response
-     * @return Parsed move
-     */
-    private Move parseMoveFromResponse(final String response) {
-        if (response == null) {
-            return createDefaultMove();
-        }
-        final String[] parts = response.split(":");
-        if (parts.length < 3 || !parts[0].equalsIgnoreCase("MOVE")) {
-            return createDefaultMove();
-        }
-        switch (parts[1].toUpperCase()) {
-            case "TAKE_3":  return parseTakeThreeMove(parts[2]);
-            case "TAKE_2":  return parseTakeTwoMove(parts[2]);
-            case "BUY":     return parseBuyMove(parts[2]);
-            case "RESERVE": return parseReserveMove(parts[2]);
-            default:        return createDefaultMove();
-        }
-    }
-
-    /**
-     * Parses a TAKE_3 move: exactly 3 different gem letters (e.g. "RGB").
-     * Gem codes: R=Red, G=Green, B=Blue, W=White, K=blacK
-     */
-    private Move parseTakeThreeMove(final String gemCodes) {
-        final Map<Gem, Integer> gems = new HashMap<>();
-        for (final char c : gemCodes.toUpperCase().toCharArray()) {
-            final Gem gem = parseGemCode(c);
-            if (gem == null) {
-                return createDefaultMove();
-            }
-            gems.merge(gem, 1, Integer::sum);
-        }
-        return new Move(MoveType.TAKE_THREE_DIFFERENT, gems);
-    }
-
-    /**
-     * Parses a TAKE_2 move: exactly 1 gem letter representing the color to take two of (e.g. "R").
-     * Gem codes: R=Red, G=Green, B=Blue, W=White, K=blacK
-     */
-    private Move parseTakeTwoMove(final String gemCode) {
-        if (gemCode.length() != 1) {
-            return createDefaultMove();
-        }
-        final Gem gem = parseGemCode(gemCode.toUpperCase().charAt(0));
-        if (gem == null) {
-            return createDefaultMove();
-        }
-        final Map<Gem, Integer> gems = new HashMap<>();
-        gems.put(gem, 2);
-        return new Move(MoveType.TAKE_TWO_SAME, gems);
-    }
-
-    /**
-     * Parses a BUY move. Prefix 'R' means the card is from the player's reserved hand.
-     * Examples: "42" → board card 42, "R42" → reserved card 42.
-     */
-    private Move parseBuyMove(final String param) {
-        final boolean isReserved = param.length() > 1
-                && param.toUpperCase().charAt(0) == 'R'
-                && Character.isDigit(param.charAt(1));
-        try {
-            final int cardId = Integer.parseInt(isReserved ? param.substring(1) : param);
-            return new Move(MoveType.BUY_CARD, cardId, isReserved);
-        } catch (final NumberFormatException e) {
-            return createDefaultMove();
-        }
-    }
-
-    /**
-     * Parses a RESERVE move. Prefix 'D' means reserve from a face-down deck tier.
-     * Examples: "42" → reserve board card 42, "D2" → reserve top card of deck tier 2.
-     */
-    private Move parseReserveMove(final String param) {
-        if (param.length() > 1 && param.toUpperCase().charAt(0) == 'D') {
-            try {
-                return Move.reserveFromDeck(Integer.parseInt(param.substring(1)));
-            } catch (final NumberFormatException e) {
-                return createDefaultMove();
-            }
-        }
-        try {
-            return new Move(MoveType.RESERVE_CARD, Integer.parseInt(param), false);
-        } catch (final NumberFormatException e) {
-            return createDefaultMove();
-        }
-    }
-
-    /**
-     * Parses a discard move from client response.
-     * Expected format: DISCARD:RRGBW  (gem letters repeated for quantity)
-     *
-     * @param response Client response
-     * @return Parsed discard move
-     */
-    private Move parseDiscardMoveFromResponse(final String response) {
-        if (response != null) {
-            final String[] parts = response.split(":");
-            if (parts.length >= 2 && parts[0].equalsIgnoreCase("DISCARD")) {
-                return parseTakeThreeMove(parts[1]);
-            }
-        }
-        return createDefaultDiscardMove(null, 0);
-    }
-
-    /**
-     * Maps a single character to its Gem type.
-     * R=Red, G=Green, B=Blue, W=White, K=blacK
-     */
-    private static Gem parseGemCode(final char code) {
-        switch (code) {
-            case 'R': return Gem.RED;
-            case 'G': return Gem.GREEN;
-            case 'B': return Gem.BLUE;
-            case 'W': return Gem.WHITE;
-            case 'K': return Gem.BLACK;
-            default:  return null;
-        }
     }
 
     /**
