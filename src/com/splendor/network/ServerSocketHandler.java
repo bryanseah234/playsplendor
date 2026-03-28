@@ -2,9 +2,6 @@
  * Handles network server functionality for remote client connections.
  * Manages client connections and message routing for multiplayer network play.
  * 
- * @author Splendor Development Team
- * @version 1.0
- * // Edited by AI; implemented concurrent client handling
  */
 package com.splendor.network;
 
@@ -12,13 +9,12 @@ import com.splendor.config.IConfigProvider;
 import com.splendor.exception.SplendorException;
 import com.splendor.util.Constants;
 import com.splendor.util.GameLogger;
-import com.splendor.view.RemoteView;
+import com.splendor.view.NetworkMessageHandler;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -31,7 +27,7 @@ import java.util.concurrent.TimeUnit;
  * Network server that handles remote client connections.
  * Uses thread-per-client model for concurrent player handling.
  */
-public class ServerSocketHandler implements RemoteView.NetworkMessageHandler {
+public class ServerSocketHandler implements NetworkMessageHandler {
     
     private final int serverPort;
     private final IConfigProvider configProvider;

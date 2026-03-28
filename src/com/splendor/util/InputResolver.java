@@ -2,8 +2,6 @@
  * Safe input parsing utility for handling user input.
  * Provides robust input validation and parsing to prevent crashes.
  * 
- * @author Splendor Development Team
- * @version 1.0
  */
 package com.splendor.util;
 
@@ -36,6 +34,20 @@ public class InputResolver {
         return promptForInt(prompt, minValue, maxValue, null);
     }
 
+    /**
+     * Prompts for and parses an integer with an optional callback invoked each time
+     * the user enters an out-of-range or non-numeric value.
+     *
+     * Entering "Z" or "UNDO" (case-insensitive) returns -1 immediately so callers
+     * can treat it as a back/undo signal without looping.
+     *
+     * @param prompt     Prompt text printed before every input attempt.
+     * @param minValue   Inclusive lower bound for accepted values.
+     * @param maxValue   Inclusive upper bound for accepted values.
+     * @param onInvalid  Optional Runnable called before re-printing the prompt after
+     *                   bad input (e.g., to re-render the game screen). May be null.
+     * @return Valid integer in [minValue, maxValue], or -1 for undo/back.
+     */
     public int promptForInt(final String prompt, final int minValue, final int maxValue, final Runnable onInvalid) {
         boolean firstPrompt = true;
         while (true) {
@@ -202,6 +214,15 @@ public class InputResolver {
         scanner.close();
     }
 
+    /**
+     * Strips invisible Unicode control characters (Unicode category Cc) from raw
+     * terminal input. This prevents issues caused by ANSI escape codes, null bytes,
+     * or other non-printable characters that some terminals inject into the input
+     * stream, which would otherwise break Integer.parseInt() and similar calls.
+     *
+     * @param input Raw string from the Scanner; may be null.
+     * @return Sanitized string with all control characters removed, or "" if null.
+     */
     private String sanitizeInput(final String input) {
         if (input == null) {
             return "";

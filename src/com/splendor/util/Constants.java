@@ -2,8 +2,6 @@
  * Application-wide constants and configuration values.
  * Centralizes commonly used constants to prevent magic numbers and strings.
  * 
- * @author Splendor Development Team
- * @version 1.0
  */
 package com.splendor.util;
 

@@ -2,8 +2,6 @@
  * Simple logging utility for application events and errors.
  * Provides basic logging functionality for debugging and monitoring.
  * 
- * @author Splendor Development Team
- * @version 1.0
  */
 package com.splendor.util;
 

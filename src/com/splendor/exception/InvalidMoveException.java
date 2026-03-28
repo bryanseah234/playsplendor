@@ -3,8 +3,6 @@
  * Used for move validation failures such as illegal token combinations
  * or attempting actions that violate game rules.
  * 
- * @author Splendor Development Team
- * @version 1.0
  */
 package com.splendor.exception;
 

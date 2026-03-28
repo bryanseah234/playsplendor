@@ -2,8 +2,6 @@
  * Represents a player in the Splendor game.
  * Tracks player state including tokens, cards, reserved cards, and score.
  * 
- * @author Splendor Development Team
- * @version 1.0
  */
 package com.splendor.model;
 
@@ -123,7 +121,11 @@ public class Player {
      * @return Total token count
      */
     public int getTotalTokenCount() {
-        return tokens.values().stream().mapToInt(Integer::intValue).sum();
+        int total = 0;
+        for (final int count : tokens.values()) {
+            total += count;
+        }
+        return total;
     }
     
     /**
@@ -195,8 +197,14 @@ public class Player {
      * @return Total points from cards and nobles
      */
     public int getTotalPoints() {
-        final int cardPoints = purchasedCards.stream().mapToInt(Card::getPoints).sum();
-        final int noblePoints = nobles.stream().mapToInt(Noble::getPoints).sum();
+        int cardPoints = 0;
+        for (final Card card : purchasedCards) {
+            cardPoints += card.getPoints();
+        }
+        int noblePoints = 0;
+        for (final Noble noble : nobles) {
+            noblePoints += noble.getPoints();
+        }
         return cardPoints + noblePoints;
     }
     
@@ -229,7 +237,8 @@ public class Player {
      * @param quantity Number of tokens to add
      */
     public void addTokens(final Gem gem, final int quantity) {
-        tokens.merge(gem, quantity, Integer::sum);
+        final int existing = tokens.getOrDefault(gem, 0);
+        tokens.put(gem, existing + quantity);
     }
     
     /**
@@ -291,15 +300,6 @@ public class Player {
      */
     public boolean canReserveCard() {
         return reservedCards.size() < 3;
-    }
-    
-    /**
-     * Checks if the player has any reserved cards.
-     * 
-     * @return true if player has reserved cards, false otherwise
-     */
-    public boolean hasReservedCards() {
-        return !reservedCards.isEmpty();
     }
     
     /**

@@ -2,8 +2,6 @@
  * Represents a development card in the Splendor game.
  * Contains card properties including cost, points, tier, and gem bonuses.
  * 
- * @author Splendor Development Team
- * @version 1.0
  */
 package com.splendor.model;
 
@@ -160,7 +158,11 @@ public class Card {
      * @return Total gem cost
      */
     public int getTotalCost() {
-        return cost.values().stream().mapToInt(Integer::intValue).sum();
+        int total = 0;
+        for (final int amount : cost.values()) {
+            total += amount;
+        }
+        return total;
     }
     
     /**

@@ -2,8 +2,6 @@
  * Base exception class for all Splendor-related exceptions.
  * Provides a common parent for all custom exceptions in the application.
  * 
- * @author Splendor Development Team
- * @version 1.0
  */
 package com.splendor.exception;
 

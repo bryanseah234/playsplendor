@@ -3,8 +3,6 @@
  * Used for actions that are not allowed in the current game state
  * or that violate basic game mechanics.
  * 
- * @author Splendor Development Team
- * @version 1.0
  */
 package com.splendor.exception;
 

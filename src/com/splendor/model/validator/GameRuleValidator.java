@@ -2,8 +2,6 @@
  * Validates game rules and state transitions.
  * Ensures game mechanics are properly enforced and state transitions are valid.
  * 
- * @author Splendor Development Team
- * @version 1.0
  */
 package com.splendor.model.validator;
 

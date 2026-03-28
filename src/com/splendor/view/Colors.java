@@ -61,6 +61,16 @@ public class Colors {
         return RESET;
     }
 
+    /**
+     * Determines at startup whether ANSI escape codes should be emitted.
+     *
+     * Resolution order (first match wins):
+     *   1. JVM system property "splendor.ansi" (true/false string).
+     *   2. Environment variable "SPLENDOR_ANSI" ("true", "1" = enabled).
+     *   3. Default: enabled (returns true).
+     *
+     * @return true if ANSI output is enabled, false if it should be suppressed.
+     */
     private static boolean detectAnsiSupport() {
         final String override = System.getProperty("splendor.ansi");
         if (override != null) {

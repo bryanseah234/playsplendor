@@ -1,0 +1,73 @@
+@startuml splendor_functional
+
+title Splendor Functional Flow
+
+autonumber
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+skinparam sequenceMessageAlign center
+skinparam ParticipantPadding 20
+
+actor User
+participant Main
+participant GameController
+participant IGameView as View
+participant MenuBuilder
+participant MoveValidator
+participant TurnController
+participant PlayerController
+participant Game
+participant Board
+
+== Startup ==
+User -> Main: launch app
+Main -> Main: resolve mode (console/server)
+Main -> GameController: initializeGame()
+GameController -> View: promptForPlayerCount()
+loop for each player
+  GameController -> View: promptForPlayerName()
+end
+GameController -> Game: new Game(players, config)
+
+== Main Game Loop ==
+Main -> GameController: startGame()
+loop until game finished
+  GameController -> Game: getCurrentPlayer()
+  GameController -> View: displayGameState(game)
+  GameController -> View: displayPlayerTurn(player)
+
+  alt Computer player
+    GameController -> MenuBuilder: buildMenuOptions(player, game)
+    GameController -> View: displayAvailableMoves(options, game)
+    GameController -> GameController: BotStrategy.chooseBotMove(...)
+  else Human player
+    GameController -> MenuBuilder: buildMenuOptions(player, game)
+    GameController -> View: promptForMove(player, game, options)
+  end
+
+  GameController -> MoveValidator: validateMove(move, player, game)
+  GameController -> TurnController: executeMove(move, player)
+  TurnController -> Game: mutate state
+  TurnController -> Board: take/add tokens, cards
+
+  GameController -> PlayerController: checkNobleVisits(player)
+  opt token limit exceeded
+    GameController -> View: promptForTokenDiscard(...)
+    GameController -> PlayerController: executeTokenDiscard(...)
+  end
+
+  GameController -> View: displayMessage("Move executed successfully!")
+  opt undo requested (human)
+    GameController -> Game: undo()
+    GameController -> View: displayNotification("Move undone!")
+  end
+
+  GameController -> Game: advanceToNextPlayer()
+end
+
+== Game End ==
+GameController -> Game: determine winner/final scores
+GameController -> View: displayWinner(winner, scores)
+GameController -> View: close()
+
+@enduml

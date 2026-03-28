@@ -2,9 +2,6 @@
  * Represents the complete game state including players, board, and game flow.
  * Central model class that coordinates all game components and enforces rules.
  * 
- * @author Splendor Development Team
- * @version 1.0
- * // Edited by AI; implemented core game state management
  */
 package com.splendor.model;
 
@@ -129,13 +126,27 @@ public class Game {
         this.undoHistory = new ArrayDeque<>();
     }
 
+    /**
+     * Captures a complete snapshot of the current game state and pushes it onto the
+     * undo history stack. The stack is capped at 10 entries; older snapshots are
+     * discarded to avoid unbounded memory growth.
+     * Must be called at the start of each turn, before any state mutation.
+     */
     public void saveUndoState() {
         undoHistory.push(new GameSnapshot(this));
         if (undoHistory.size() > 10) {
-            undoHistory.removeLast();
+            undoHistory.removeLast(); // drop the oldest snapshot to respect the cap
         }
     }
 
+    /**
+     * Reverts the game to the most recently saved snapshot, effectively undoing
+     * the last turn. Also clears the winner field so that a premature win
+     * detection during an undone turn does not persist.
+     *
+     * @return true if a snapshot was available and the revert succeeded;
+     *         false if the undo stack was empty (nothing to undo).
+     */
     public boolean undo() {
         if (undoHistory.isEmpty()) {
             return false;
@@ -209,6 +220,13 @@ public class Game {
         return maxTokens;
     }
 
+    /**
+     * Appends a formatted move-history entry to the scrolling log.
+     * The log is capped at 5 entries; the oldest is removed when the cap is exceeded.
+     * Blank or null entries are silently ignored.
+     *
+     * @param entry A formatted move string (from MoveFormatter) to add to the log.
+     */
     public void addRecentMove(final String entry) {
         if (entry == null || entry.isBlank()) {
             return;
@@ -219,6 +237,12 @@ public class Game {
         }
     }
 
+    /**
+     * Returns a snapshot copy of the recent-moves log (at most 5 entries).
+     * The view uses this list to populate the move-history panel each frame.
+     *
+     * @return A new list containing the current move-history entries in insertion order.
+     */
     public List<String> getRecentMoves() {
         return new ArrayList<>(recentMoves);
     }

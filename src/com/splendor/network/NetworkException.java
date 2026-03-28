@@ -2,8 +2,6 @@
  * Exception thrown for network-related errors.
  * Used for connection failures, protocol violations, and network communication issues.
  * 
- * @author Splendor Development Team
- * @version 1.0
  */
 package com.splendor.network;
 

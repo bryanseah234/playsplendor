@@ -2,8 +2,6 @@
  * Represents a noble tile in the Splendor game.
  * Nobles are automatically awarded to players who meet their gem requirements.
  * 
- * @author Splendor Development Team
- * @version 1.0
  */
 package com.splendor.model;
 
@@ -119,7 +117,11 @@ public class Noble {
      * @return Total gem requirement count
      */
     public int getTotalRequirementCount() {
-        return requirements.values().stream().mapToInt(Integer::intValue).sum();
+        int total = 0;
+        for (final int amount : requirements.values()) {
+            total += amount;
+        }
+        return total;
     }
     
     /**

@@ -3,8 +3,6 @@
  * Used for purchase attempts and other token-consuming actions where
  * the player doesn't have enough resources.
  * 
- * @author Splendor Development Team
- * @version 1.0
  */
 package com.splendor.exception;
 

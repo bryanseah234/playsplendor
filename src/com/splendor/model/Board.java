@@ -2,8 +2,6 @@
  * Represents the game board containing all shared game elements.
  * Manages the gem bank, card decks, and available nobles.
  * 
- * @author Splendor Development Team
- * @version 1.0
  */
 package com.splendor.model;
 
@@ -65,6 +63,12 @@ public class Board {
         return gemBank.getOrDefault(gem, 0);
     }
 
+    /**
+     * Replaces the entire gem bank with the provided map.
+     * Used exclusively by the undo/restore mechanism to reinstate a prior bank state.
+     *
+     * @param gemBank The gem bank snapshot to restore.
+     */
     public void setGemBank(final Map<Gem, Integer> gemBank) {
         this.gemBank.clear();
         this.gemBank.putAll(gemBank);
@@ -80,6 +84,12 @@ public class Board {
         return Collections.unmodifiableMap(availableCards);
     }
 
+    /**
+     * Replaces all face-up available cards with the provided tier-to-list map.
+     * Used by the undo/restore mechanism to reset the board face-up state.
+     *
+     * @param availableCards Snapshot map of tier (1–3) to list of face-up cards.
+     */
     public void setAvailableCards(final Map<Integer, List<Card>> availableCards) {
         this.availableCards.clear();
         for (final Map.Entry<Integer, List<Card>> entry : availableCards.entrySet()) {
@@ -98,6 +108,12 @@ public class Board {
         return Collections.unmodifiableList(availableCards.getOrDefault(tier, new ArrayList<>()));
     }
 
+    /**
+     * Returns the number of face-down cards remaining in the specified tier's deck.
+     *
+     * @param tier Deck tier to query (1, 2, or 3).
+     * @return Number of cards remaining; 0 if the tier is unknown or the deck is empty.
+     */
     public int getDeckSize(final int tier) {
         final Queue<Card> deck = cardDecks.get(tier);
         return deck == null ? 0 : deck.size();
@@ -112,6 +128,12 @@ public class Board {
         return Collections.unmodifiableList(availableNobles);
     }
 
+    /**
+     * Replaces the list of available noble tiles with the provided list.
+     * Used by the undo/restore mechanism to reset the noble state.
+     *
+     * @param availableNobles Snapshot list of noble tiles to restore.
+     */
     public void setAvailableNobles(final List<Noble> availableNobles) {
         this.availableNobles.clear();
         this.availableNobles.addAll(availableNobles);
@@ -172,6 +194,14 @@ public class Board {
         return newCard;
     }
 
+    /**
+     * Draws the top card from the specified tier's deck without placing it in the
+     * face-up slots. Used for blind deck-reserve moves where the player takes the
+     * card directly into their hand without it touching the board display.
+     *
+     * @param tier Deck tier to draw from (1, 2, or 3).
+     * @return The drawn card, or null if the deck is empty.
+     */
     public Card drawBlindCard(final int tier) {
         final Queue<Card> deck = cardDecks.get(tier);
         if (deck == null || deck.isEmpty()) {
@@ -208,6 +238,13 @@ public class Board {
         }
     }
 
+    /**
+     * Returns a shallow copy of the internal card decks as a tier-to-list map.
+     * Each list contains the remaining face-down cards in queue order.
+     * Used by the snapshot mechanism to capture deck state for undo.
+     *
+     * @return A new map containing copied lists of remaining cards per tier.
+     */
     public Map<Integer, List<Card>> copyDecks() {
         final Map<Integer, List<Card>> copy = new HashMap<>();
         for (final Map.Entry<Integer, Queue<Card>> entry : cardDecks.entrySet()) {
@@ -216,6 +253,13 @@ public class Board {
         return copy;
     }
 
+    /**
+     * Restores all tier decks from a previously captured snapshot map,
+     * rebuilding the internal LinkedList queues from the snapshot lists.
+     * Used by the undo/restore mechanism.
+     *
+     * @param decks Snapshot map of tier (1–3) to ordered card list.
+     */
     public void restoreDecks(final Map<Integer, List<Card>> decks) {
         for (final Map.Entry<Integer, List<Card>> entry : decks.entrySet()) {
             cardDecks.put(entry.getKey(), new LinkedList<>(entry.getValue()));

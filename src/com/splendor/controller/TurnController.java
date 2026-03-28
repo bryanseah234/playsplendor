@@ -2,8 +2,6 @@
  * Handles turn execution and move processing.
  * Manages the execution of individual player moves and their effects.
  * 
- * @author Splendor Development Team
- * @version 1.0
  */
 package com.splendor.controller;
 
@@ -97,7 +95,8 @@ public class TurnController {
      * @throws SplendorException if execution fails
      */
     private void executeTakeTwoSame(final Move move, final Player player) throws SplendorException {
-        final Map.Entry<Gem, Integer> entry = move.getSelectedGems().entrySet().iterator().next();
+        final Map<Gem, Integer> selectedGems = move.getSelectedGems();
+        final Map.Entry<Gem, Integer> entry = selectedGems.entrySet().iterator().next();
         final Gem gem = entry.getKey();
         final int quantity = entry.getValue();
         final Board board = game.getBoard();
@@ -329,12 +328,14 @@ public class TurnController {
             tokensToRemove.put(Gem.GOLD, totalGoldUsed);
         }
 
-        final Map<Gem, Integer> tokensToAdd = new HashMap<>();
+        // Step 1: Deduct each gem payment from the player's hand.
         for (final Map.Entry<Gem, Integer> entry : tokensToRemove.entrySet()) {
-            player.removeTokens(entry.getKey(), entry.getValue());
-            tokensToAdd.put(entry.getKey(), entry.getValue());
+            final Gem gem = entry.getKey();
+            final int amount = entry.getValue();
+            player.removeTokens(gem, amount);
         }
 
-        board.addGems(tokensToAdd);
+        // Step 2: Return those same tokens to the central bank.
+        board.addGems(tokensToRemove);
     }
 }

@@ -142,6 +142,19 @@ public class CardLoader {
         return nobles;
     }
 
+    /**
+     * Constructs a single Card from its raw parameters.
+     * Exists as a named factory to keep the card-list initialization code above readable;
+     * without it every line would call "new Card(...)" with five positional arguments
+     * making the intent harder to scan.
+     *
+     * @param id       Unique card identifier.
+     * @param tier     Deck tier the card belongs to (1, 2, or 3).
+     * @param points   Prestige points awarded when the card is purchased.
+     * @param bonusGem The gem color discount this card permanently grants its owner.
+     * @param cost     Map of gem type to quantity required to purchase the card.
+     * @return A new Card with the given attributes.
+     */
     private static Card createCard(int id, int tier, int points, Gem bonusGem, Map<Gem, Integer> cost) {
         return new Card(id, tier, points, bonusGem, cost);
     }

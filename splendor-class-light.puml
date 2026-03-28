@@ -1,0 +1,142 @@
+@startuml splendor_class_light
+
+title Splendor Class Diagram (Lightweight)
+
+left to right direction
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype polyline
+skinparam packageStyle rectangle
+skinparam monochrome false
+hide empty members
+
+package "com.splendor" {
+  class Main
+}
+
+package "com.splendor.config" {
+  interface IConfigProvider
+  class FileConfigProvider
+  class ConfigKeys
+  class ConfigException
+}
+
+package "com.splendor.exception" {
+  class SplendorException
+  class GameStateException
+  class InsufficientTokensException
+  class InvalidMoveException
+  class InvalidPlayerActionException
+}
+
+package "com.splendor.controller" {
+  class GameController
+  class TurnController
+  class PlayerController
+  class MenuBuilder
+}
+
+package "com.splendor.model" {
+  class Game
+  class Board
+  class Player
+  class ComputerPlayer
+  class Card
+  class Noble
+  class Move
+  class GameState
+  enum Gem
+  enum MoveType
+  enum MenuAction
+  class MenuOption
+  class BotStrategy
+}
+
+package "com.splendor.model.validator" {
+  class MoveValidator
+  class GameRuleValidator
+  class ValidationResult
+}
+
+package "com.splendor.view" {
+  interface IGameView
+  class Colors
+  class CardRenderer
+  class ConsoleView
+  class NetworkGameView
+  class RemoteView
+  interface NetworkMessageHandler
+  class GameRenderer
+}
+
+package "com.splendor.network" {
+  class ServerSocketHandler
+  class ClientHandler
+  class NetworkProtocol
+  class NetworkException
+}
+
+package "com.splendor.util" {
+  class Constants
+  class GameLogger
+  class AnsiUtils
+  class CardLoader
+  class GemParser
+  class InputResolver
+  class MoveFormatter
+  class MoveParser
+}
+
+' Core inheritance / interfaces
+FileConfigProvider ..|> IConfigProvider
+ComputerPlayer --|> Player
+ConsoleView ..|> IGameView
+NetworkGameView ..|> IGameView
+RemoteView ..|> IGameView
+ServerSocketHandler ..|> NetworkMessageHandler
+
+' Core model composition
+Game *-- Board
+Game *-- "many" Player
+Game *-- GameState
+Board *-- "many" Card
+Board *-- "many" Noble
+Player *-- "many" Card
+Player *-- "many" Noble
+Move --> MoveType
+Move --> Gem
+MenuOption --> MenuAction
+
+' Controller dependencies
+GameController --> IGameView
+GameController --> IConfigProvider
+GameController --> Game
+GameController --> MoveValidator
+GameController --> GameRuleValidator
+GameController --> TurnController
+GameController --> PlayerController
+GameController --> MenuBuilder
+
+TurnController --> Game
+TurnController --> IGameView
+PlayerController --> Game
+PlayerController --> IGameView
+MenuBuilder --> MoveValidator
+
+' View/network wiring
+NetworkGameView *-- "many" RemoteView
+RemoteView --> GameRenderer
+RemoteView --> NetworkMessageHandler
+
+' App entry wiring
+Main --> GameController
+Main --> IConfigProvider
+Main --> IGameView
+Main --> ServerSocketHandler
+
+' Network internals (high level)
+ServerSocketHandler *-- "many" ClientHandler
+ClientHandler --> ServerSocketHandler
+ClientHandler --> NetworkProtocol
+
+@enduml

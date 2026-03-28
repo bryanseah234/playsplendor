@@ -3,8 +3,6 @@
  * Used for state management errors such as attempting to start a game
  * that's already in progress or ending a game that hasn't started.
  * 
- * @author Splendor Development Team
- * @version 1.0
  */
 package com.splendor.exception;
 

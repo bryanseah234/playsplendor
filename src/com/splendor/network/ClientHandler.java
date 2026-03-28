@@ -2,13 +2,10 @@
  * Handles individual client connections in the network layer.
  * Manages communication with a single remote client.
  * 
- * @author Splendor Development Team
- * @version 1.0
  */
 package com.splendor.network;
 
 import com.splendor.config.IConfigProvider;
-import com.splendor.util.Constants;
 import com.splendor.util.GameLogger;
 import java.io.*;
 import java.net.Socket;
@@ -100,130 +97,26 @@ public class ClientHandler {
     }
     
     /**
-     * Processes a single client message.
-     * 
-     * @param message Message to process
+     * Processes a single client message by forwarding it to the server's response queue.
+     * A blank line (bare Enter keypress) is enqueued as "" to unblock waitForEnter().
+     * All other input is enqueued as-is for consumption by the game engine.
+     *
+     * @param message Message received from the client
      */
     private void processMessage(final String message) {
-        if (message == null || message.trim().isEmpty()) {
+        if (message == null) {
             return;
         }
-        
-        final String trimmedMessage = message.trim();
-        
-        // Handle different message types
-        if (trimmedMessage.startsWith(NetworkProtocol.MOVE_COMMAND + NetworkProtocol.FIELD_DELIMITER)) {
-            processMoveCommand(trimmedMessage);
-        } else if (trimmedMessage.startsWith(NetworkProtocol.QUERY_COMMAND + NetworkProtocol.FIELD_DELIMITER)) {
-            processQueryCommand(trimmedMessage);
-        } else if (trimmedMessage.equalsIgnoreCase(NetworkProtocol.DISCONNECT_COMMAND)) {
-            handleDisconnect();
-        } else {
-            // Plain response to a server prompt (e.g. player count, player name, noble choice)
-            serverHandler.enqueueClientResponse(clientId, trimmedMessage);
-        }
+        serverHandler.enqueueClientResponse(clientId, message.trim());
     }
-    
+
     /**
-     * Processes a move command from the client.
-     * Validates the action type then forwards the raw command to the game engine
-     * via the server's per-client response queue.
+     * Sends an error notification to the client.
      *
-     * @param command Move command (e.g. MOVE:TAKE:RGB, MOVE:BUY:42, MOVE:RESERVE:D2)
-     */
-    private void processMoveCommand(final String command) {
-        final String[] parts = command.split(Constants.PROTOCOL_DELIMITER);
-
-        if (parts.length < 3) {
-            sendError("Invalid move command. Usage: MOVE:<action>:<params>");
-            return;
-        }
-
-        final String action = parts[1].toUpperCase();
-
-        switch (action) {
-            case NetworkProtocol.ACTION_TAKE_3:
-            case NetworkProtocol.ACTION_TAKE_2:
-            case NetworkProtocol.ACTION_BUY:
-            case NetworkProtocol.ACTION_RESERVE:
-            case NetworkProtocol.ACTION_DISCARD:
-                serverHandler.enqueueClientResponse(clientId, command);
-                sendSuccess("Move received");
-                break;
-            default:
-                sendError("Unknown move action: " + action
-                        + ". Valid actions: TAKE_3, TAKE_2, BUY, RESERVE, DISCARD");
-        }
-    }
-    
-    /**
-     * Processes a query command from the client.
-     * 
-     * @param command Query command
-     */
-    private void processQueryCommand(final String command) {
-        // Parse query command format: QUERY:type
-        final String[] parts = command.split(Constants.PROTOCOL_DELIMITER);
-        
-        if (parts.length < 2) {
-            sendError("Invalid query command format");
-            return;
-        }
-        
-        final String queryType = parts[1];
-        
-        switch (queryType.toUpperCase()) {
-            case "STATE":
-                sendGameState();
-                break;
-            case "PLAYERS":
-                sendPlayerList();
-                break;
-            case "BOARD":
-                sendBoardState();
-                break;
-            default:
-                sendError("Unknown query type: " + queryType);
-        }
-    }
-    
-    /**
-     * Sends the current game state to the client.
-     */
-    private void sendGameState() {
-        sendMessage(NetworkProtocol.SUCCESS_RESPONSE + ":Game state data");
-    }
-    
-    /**
-     * Sends the player list to the client.
-     */
-    private void sendPlayerList() {
-        sendMessage(NetworkProtocol.SUCCESS_RESPONSE + ":Player list data");
-    }
-    
-    /**
-     * Sends the board state to the client.
-     */
-    private void sendBoardState() {
-        sendMessage(NetworkProtocol.SUCCESS_RESPONSE + ":Board state data");
-    }
-    
-    /**
-     * Sends a success response to the client.
-     * 
-     * @param message Success message
-     */
-    private void sendSuccess(final String message) {
-        sendMessage(NetworkProtocol.SUCCESS_RESPONSE + Constants.PROTOCOL_DELIMITER + message);
-    }
-    
-    /**
-     * Sends an error response to the client.
-     * 
      * @param errorMessage Error message
      */
     private void sendError(final String errorMessage) {
-        sendMessage(NetworkProtocol.ERROR_RESPONSE + Constants.PROTOCOL_DELIMITER + errorMessage);
+        sendMessage("ERROR: " + errorMessage);
     }
     
     /**
@@ -243,7 +136,6 @@ public class ClientHandler {
      */
     private void sendWelcomeMessage() {
         sendMessage("Welcome to Splendor Network Game!");
-        sendMessage("Commands: MOVE:action:params, QUERY:type, DISCONNECT");
     }
     
     /**

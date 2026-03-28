@@ -2,8 +2,6 @@
  * Exception thrown when configuration-related errors occur.
  * Used for configuration loading failures, missing properties, and invalid values.
  * 
- * @author Splendor Development Team
- * @version 1.0
  */
 package com.splendor.config;
 

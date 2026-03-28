@@ -2,8 +2,6 @@
  * Enumeration of move types available to players.
  * Defines all possible actions a player can take during their turn.
  * 
- * @author Splendor Development Team
- * @version 1.0
  */
 package com.splendor.model;
 

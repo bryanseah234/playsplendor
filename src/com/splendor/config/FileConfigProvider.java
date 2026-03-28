@@ -2,9 +2,6 @@
  * File-based configuration provider implementation.
  * Loads configuration properties from a properties file in the resources directory.
  * 
- * @author Splendor Development Team
- * @version 1.0
- * // Edited by AI; implemented safe file loading and exception handling
  */
 package com.splendor.config;
 

@@ -2,9 +2,6 @@
  * Console-based implementation of the game view.
  * Provides text-based display and user input handling for console gameplay.
  * 
- * @author Splendor Development Team
- * @version 2.0
- * // Edited by AI; implemented Tabular ASCII board, Status Bar, and robust input handling
  */
 package com.splendor.view;
 
@@ -85,12 +82,33 @@ public class ConsoleView implements IGameView {
         this.currentPlayer = player;
         while (true) {
             displayAvailableMoves(options, game);
-            final int maxOption = options.stream().mapToInt(MenuOption::getNumber).max().orElse(0);
-            final String availableNums = options.stream()
-                    .filter(MenuOption::isAvailable)
-                    .map(o -> String.valueOf(o.getNumber()))
-                    .reduce((a, b) -> a + ", " + b)
-                    .orElse("none");
+            if (currentPlayer != null && !currentPlayer.getReservedCards().isEmpty()) {
+                System.out.println("Your reserved cards:");
+                displayReservedCardDetails(currentPlayer);
+            }
+
+            // Find the highest option number to set the upper bound for input validation.
+            int maxOption = 0;
+            for (final MenuOption option : options) {
+                if (option.getNumber() > maxOption) {
+                    maxOption = option.getNumber();
+                }
+            }
+
+            // Build a comma-separated list of available option numbers for the prompt text.
+            final StringBuilder availableNumsBuilder = new StringBuilder();
+            for (final MenuOption option : options) {
+                if (option.isAvailable()) {
+                    if (availableNumsBuilder.length() > 0) {
+                        availableNumsBuilder.append(", ");
+                    }
+                    availableNumsBuilder.append(option.getNumber());
+                }
+            }
+            final String availableNums = availableNumsBuilder.length() > 0
+                    ? availableNumsBuilder.toString()
+                    : "none";
+
             final int choice = inputResolver.promptForInt(
                     "Select option (" + availableNums + "): ",
                     1,
@@ -100,10 +118,15 @@ public class ConsoleView implements IGameView {
                 displayNotification("Returning to menu...");
                 continue;
             }
-            final MenuOption selected = options.stream()
-                    .filter(option -> option.getNumber() == choice)
-                    .findFirst()
-                    .orElse(null);
+
+            // Find the MenuOption whose number matches what the player typed.
+            MenuOption selected = null;
+            for (final MenuOption option : options) {
+                if (option.getNumber() == choice) {
+                    selected = option;
+                    break;
+                }
+            }
             if (selected == null) {
                 displayError("Invalid selection");
                 continue;
@@ -170,7 +193,8 @@ public class ConsoleView implements IGameView {
                 if (player.getTokenCount(gem) < qty)
                     throw new IllegalArgumentException("Not enough tokens of that type.");
 
-                tokensToDiscard.merge(gem, qty, Integer::sum);
+                final int existing = tokensToDiscard.getOrDefault(gem, 0);
+                tokensToDiscard.put(gem, existing + qty);
                 remainingToDiscard -= qty;
 
             } catch (Exception e) {
@@ -190,9 +214,12 @@ public class ConsoleView implements IGameView {
                 + winner.getTotalPoints() + " points!");
         System.out.println("\nFinal Scores:");
 
-        finalScores.entrySet().stream()
-                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
-                .forEach(entry -> System.out.printf("  %-10s: %d points%n", entry.getKey(), entry.getValue()));
+        // Sort entries by score descending so the leaderboard reads highest-first.
+        final List<Map.Entry<String, Integer>> sortedEntries = new ArrayList<>(finalScores.entrySet());
+        sortedEntries.sort((a, b) -> b.getValue().compareTo(a.getValue()));
+        for (final Map.Entry<String, Integer> entry : sortedEntries) {
+            System.out.printf("  %-10s: %d points%n", entry.getKey(), entry.getValue());
+        }
 
         System.out.println("=".repeat(50));
     }
@@ -251,6 +278,16 @@ public class ConsoleView implements IGameView {
         return parts.isEmpty() ? "None" : String.join(" ", parts);
     }
 
+    /**
+     * Collects input for a take-three-different-gems move.
+     * Prints the available colors from the option detail, then reads a
+     * space-separated or concatenated gem-code string (e.g., "R G B" or "RGB").
+     * Throws IllegalArgumentException("BACK_TO_MENU") if the user enters Z/UNDO.
+     *
+     * @param option The TAKE_THREE MenuOption whose detail lists available colors.
+     * @return A TAKE_THREE_DIFFERENT Move containing the three chosen gems.
+     * @throws IllegalArgumentException if input is invalid or the user goes back.
+     */
     private Move promptTakeThree(final MenuOption option) {
         System.out.println("Available colors: " + option.getDetail());
         final String input = inputResolver.promptForString("Pick 3 colors (Z to go back): ", 1, 30);
@@ -263,11 +300,22 @@ public class ConsoleView implements IGameView {
         }
         final Map<Gem, Integer> selected = new HashMap<>();
         for (final Gem gem : parsed) {
-            selected.merge(gem, 1, Integer::sum);
+            final int existingCount = selected.getOrDefault(gem, 0);
+            selected.put(gem, existingCount + 1);
         }
         return new Move(MoveType.TAKE_THREE_DIFFERENT, selected);
     }
 
+    /**
+     * Collects input for a take-two-same-gems move.
+     * Prints the available colors from the option detail, then reads a single
+     * gem-code string and wraps it as a quantity-2 entry.
+     * Throws IllegalArgumentException("BACK_TO_MENU") if the user enters Z/UNDO.
+     *
+     * @param option The TAKE_TWO MenuOption whose detail lists eligible colors.
+     * @return A TAKE_TWO_SAME Move with the chosen gem and quantity 2.
+     * @throws IllegalArgumentException if input is invalid or the user goes back.
+     */
     private Move promptTakeTwo(final MenuOption option) {
         System.out.println("Available colors: " + option.getDetail());
         final String input = inputResolver.promptForString("Pick 1 color (Z to go back): ", 1, 10);
@@ -283,6 +331,15 @@ public class ConsoleView implements IGameView {
         return new Move(MoveType.TAKE_TWO_SAME, selected);
     }
 
+    /**
+     * Collects a card ID from the user for a reserve-visible-card move.
+     * Prints the list of visible card IDs from the option detail, then reads
+     * a numeric card ID. Throws IllegalArgumentException("BACK_TO_MENU") on Z/UNDO.
+     *
+     * @param option The RESERVE_VISIBLE MenuOption whose detail lists card IDs.
+     * @return A RESERVE_CARD Move targeting the chosen face-up card.
+     * @throws IllegalArgumentException if the user cancels back to the menu.
+     */
     private Move promptReserveVisible(final MenuOption option) {
         System.out.println("Visible card IDs: " + option.getDetail());
         final int cardId = inputResolver.promptForInt("Card ID (Z to go back): ", 1, 9999);
@@ -292,6 +349,16 @@ public class ConsoleView implements IGameView {
         return new Move(MoveType.RESERVE_CARD, cardId, false);
     }
 
+    /**
+     * Collects a deck tier from the user for a blind deck-reserve move.
+     * Parses the allowed tiers from the option detail (slash-separated, e.g., "1/2/3"),
+     * prompts for a tier number, and validates the selection against the allowed list.
+     * Throws IllegalArgumentException("BACK_TO_MENU") on Z/UNDO.
+     *
+     * @param option The RESERVE_DECK MenuOption whose detail lists non-empty tier numbers.
+     * @return A RESERVE_CARD Move targeting the specified face-down deck.
+     * @throws IllegalArgumentException if the tier is invalid or the user cancels.
+     */
     private Move promptReserveDeck(final MenuOption option) {
         System.out.println("Available tiers: " + option.getDetail());
         final String[] allowed = option.getDetail().split("/");
@@ -310,6 +377,15 @@ public class ConsoleView implements IGameView {
         return Move.reserveFromDeck(tier);
     }
 
+    /**
+     * Collects a card ID from the user for a buy-visible-card move.
+     * Prints the list of affordable card IDs from the option detail, then reads
+     * a numeric card ID. Throws IllegalArgumentException("BACK_TO_MENU") on Z/UNDO.
+     *
+     * @param option The BUY_VISIBLE MenuOption whose detail lists affordable card IDs.
+     * @return A BUY_CARD Move targeting the chosen face-up card.
+     * @throws IllegalArgumentException if the user cancels back to the menu.
+     */
     private Move promptBuyVisible(final MenuOption option) {
         System.out.println("Affordable IDs: " + option.getDetail());
         final int cardId = inputResolver.promptForInt("Card ID (Z to go back): ", 1, 9999);
@@ -319,6 +395,16 @@ public class ConsoleView implements IGameView {
         return new Move(MoveType.BUY_CARD, cardId, false);
     }
 
+    /**
+     * Collects a reserved card ID for a buy-reserved-card move.
+     * Calls displayReservedCardDetails to show a detailed table of the player's
+     * reserved hand (including affordability status), then reads a numeric card ID.
+     * Throws IllegalArgumentException("BACK_TO_MENU") on Z/UNDO.
+     *
+     * @param option The BUY_RESERVED MenuOption whose detail lists affordable reserved IDs.
+     * @return A BUY_CARD Move with isReservedCard=true targeting the chosen card.
+     * @throws IllegalArgumentException if the user cancels back to the menu.
+     */
     private Move promptBuyReserved(final MenuOption option) {
         System.out.println("Your reserved cards:");
         if (currentPlayer != null) {
@@ -332,6 +418,14 @@ public class ConsoleView implements IGameView {
         return new Move(MoveType.BUY_CARD, cardId, true);
     }
 
+    /**
+     * Prints a one-line summary for each reserved card in the player's hand.
+     * Each line shows the card ID, prestige points, bonus gem color, gem cost,
+     * and an ANSI-colored "[CAN BUY]" or "[NOT AFFORDABLE]" status tag so the
+     * player can identify which reserved cards they can currently purchase.
+     *
+     * @param player The player whose reserved cards are displayed.
+     */
     private void displayReservedCardDetails(final Player player) {
         final List<Card> reserved = player.getReservedCards();
         if (reserved.isEmpty()) {
@@ -358,6 +452,13 @@ public class ConsoleView implements IGameView {
         }
     }
 
+    /**
+     * Returns a short one- or two-character label for a gem color used in compact
+     * card display lines (W, B, G, R, K, Au). Mirrors GemParser's format table.
+     *
+     * @param gem The gem type to abbreviate.
+     * @return Short label string, or "" for unknown gem types.
+     */
     private String gemShort(final Gem gem) {
         if (gem == Gem.WHITE) {
             return "W";

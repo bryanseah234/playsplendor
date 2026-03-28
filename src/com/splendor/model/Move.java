@@ -2,8 +2,6 @@
  * Represents a player move in the game.
  * Encapsulates all information about a player's action during their turn.
  * 
- * @author Splendor Development Team
- * @version 1.0
  */
 package com.splendor.model;
 
@@ -70,6 +68,14 @@ public class Move {
         this.deckTier = deckTier;
     }
 
+    /**
+     * Factory method for a blind deck-reserve move.
+     * The resulting Move has no cardId (the specific card is unknown until drawn)
+     * and carries the deck tier so the board knows which pile to draw from.
+     *
+     * @param tier The deck tier to draw from (1, 2, or 3).
+     * @return A RESERVE_CARD Move targeting a face-down deck card.
+     */
     public static Move reserveFromDeck(final int tier) {
         return new Move(MoveType.RESERVE_CARD, new HashMap<>(), null, false, tier);
     }
@@ -110,10 +116,15 @@ public class Move {
         return isReservedCard;
     }
 
+    /**
+     * Returns the deck tier targeted by a blind deck-reserve move.
+     *
+     * @return The tier (1–3) if this is a deck reserve; null for all other move types.
+     */
     public Integer getDeckTier() {
         return deckTier;
     }
-    
+
     /**
      * Checks if this move involves card selection.
      * 
@@ -123,6 +134,12 @@ public class Move {
         return cardId != null;
     }
 
+    /**
+     * Returns true when this is a blind deck-reserve move (i.e. a deck tier was specified
+     * rather than a specific visible card ID).
+     *
+     * @return true if a deck tier is set; false otherwise.
+     */
     public boolean hasDeckSelection() {
         return deckTier != null;
     }

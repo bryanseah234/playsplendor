@@ -2,9 +2,6 @@
  * Main entry point for the Splendor game application.
  * Supports both console and server modes based on command line arguments.
  * 
- * @author Splendor Development Team
- * @version 1.0
- * // Edited by AI; implemented CLI argument parsing and server mode initialization
  */
 package com.splendor;
 
@@ -17,6 +14,7 @@ import com.splendor.util.Constants;
 import com.splendor.view.ConsoleView;
 import com.splendor.view.IGameView;
 import com.splendor.view.NetworkGameView;
+import com.splendor.view.NetworkMessageHandler;
 import com.splendor.view.RemoteView;
 import java.util.ArrayList;
 import java.util.List;
@@ -111,7 +109,7 @@ public class Main {
         acceptThread.setDaemon(true);
         acceptThread.start();
 
-        final RemoteView.NetworkMessageHandler messageHandler = new RemoteView.NetworkMessageHandler() {
+        final NetworkMessageHandler messageHandler = new NetworkMessageHandler() {
             @Override
             public void sendToClient(final String id, final String message) {
                 serverHandler.sendToClient(id, message);

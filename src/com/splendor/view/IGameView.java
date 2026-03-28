@@ -2,8 +2,6 @@
  * Interface for game view implementations.
  * Defines the contract for displaying game state and receiving user input.
  * 
- * @author Splendor Development Team
- * @version 1.0
  */
 package com.splendor.view;
 
@@ -69,6 +67,16 @@ public interface IGameView {
      */
     String promptForCommand(Player player, Game game);
 
+    /**
+     * Displays the menu, prompts the active player to choose an action, collects
+     * any follow-up input (gem colors, card IDs, deck tier), and returns the
+     * fully-constructed Move ready for validation and execution.
+     *
+     * @param player  The player whose turn it is.
+     * @param game    The current game state (used for context and re-rendering).
+     * @param options The ordered list of MenuOptions built by MenuBuilder.
+     * @return A Move encapsulating the player's chosen action and parameters.
+     */
     Move promptForMove(Player player, Game game, List<MenuOption> options);
 
     /**
@@ -101,6 +109,14 @@ public interface IGameView {
      */
     void displayAvailableMoves(List<MenuOption> options, Game game);
 
+    /**
+     * When a player qualifies for more than one noble at the end of their turn,
+     * asks them to pick which noble tile to claim.
+     *
+     * @param player The player who qualifies for a noble visit.
+     * @param nobles The subset of nobles the player can currently claim (size >= 1).
+     * @return The Noble the player has chosen to take.
+     */
     Noble promptForNobleChoice(Player player, List<Noble> nobles);
 
     /**

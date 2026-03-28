@@ -2,8 +2,6 @@
  * Configuration property keys used throughout the application.
  * Centralizes all configuration key names to prevent typos and ensure consistency.
  * 
- * @author Splendor Development Team
- * @version 1.0
  */
 package com.splendor.config;
 

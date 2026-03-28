@@ -2,8 +2,6 @@
  * Configuration provider interface for dependency injection and testability.
  * Defines the contract for loading and accessing configuration properties.
  * 
- * @author Splendor Development Team
- * @version 1.0
  */
 package com.splendor.config;
 

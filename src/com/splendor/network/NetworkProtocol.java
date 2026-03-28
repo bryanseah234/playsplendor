@@ -2,8 +2,6 @@
  * Defines the network communication protocol between server and clients.
  * Specifies message formats and command structures for network gameplay.
  * 
- * @author Splendor Development Team
- * @version 1.0
  */
 package com.splendor.network;
 

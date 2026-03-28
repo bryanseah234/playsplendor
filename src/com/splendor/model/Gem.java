@@ -2,8 +2,6 @@
  * Enumeration of gem types in the Splendor game.
  * Defines the five standard gem colors plus gold (wild card).
  * 
- * @author Splendor Development Team
- * @version 1.0
  */
 package com.splendor.model;
 

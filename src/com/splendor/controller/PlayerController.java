@@ -2,8 +2,6 @@
  * Manages player-specific operations and state updates.
  * Handles player actions such as noble visits and token management.
  * 
- * @author Splendor Development Team
- * @version 1.0
  */
 package com.splendor.controller;
 
@@ -69,9 +67,12 @@ public class PlayerController {
             return;
         }
         
-        final Noble selectedNoble = qualifyingNobles.size() == 1
-            ? qualifyingNobles.get(0)
-            : gameView.promptForNobleChoice(player, qualifyingNobles);
+        final Noble selectedNoble;
+        if (qualifyingNobles.size() == 1) {
+            selectedNoble = qualifyingNobles.get(0);
+        } else {
+            selectedNoble = gameView.promptForNobleChoice(player, qualifyingNobles);
+        }
         assignNobleToPlayer(player, selectedNoble);
     }
     
@@ -139,6 +140,13 @@ public class PlayerController {
         }
     }
 
+    /**
+     * Formats a gem-discount map into a human-readable "GEM=count" string for logging.
+     * Entries with a count of zero are omitted. Returns "None" if no discounts are active.
+     *
+     * @param discounts Map of gem type to discount count from purchased cards.
+     * @return Comma-separated discount summary, or "None" if all counts are zero.
+     */
     private String formatDiscounts(final Map<Gem, Integer> discounts) {
         final StringBuilder sb = new StringBuilder();
         for (final Map.Entry<Gem, Integer> entry : discounts.entrySet()) {
@@ -167,7 +175,10 @@ public class PlayerController {
         
         // Calculate required discard count
         final int requiredDiscard = player.getTotalTokenCount() - game.getMaxTokens();
-        final int actualDiscard = tokensToDiscard.values().stream().mapToInt(Integer::intValue).sum();
+        int actualDiscard = 0;
+        for (final int quantity : tokensToDiscard.values()) {
+            actualDiscard += quantity;
+        }
         
         // Guard clause: Check discard quantity
         if (actualDiscard != requiredDiscard) {

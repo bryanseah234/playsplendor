@@ -2,20 +2,13 @@
  * Validates player moves according to game rules.
  * Centralized validation logic for all move types to ensure rule compliance.
  * 
- * @author Splendor Development Team
- * @version 1.0
  */
 package com.splendor.model.validator;
 
-import com.splendor.model.*;
-import com.splendor.exception.InvalidMoveException;
 import com.splendor.exception.InsufficientTokensException;
-
+import com.splendor.exception.InvalidMoveException;
+import com.splendor.model.*;
 import java.util.Map;
-
-import javax.swing.plaf.basic.BasicInternalFrameTitlePane.MoveAction;
-
-import java.util.HashMap;
 
 /**
  * Validates player moves to ensure they comply with game rules.
@@ -88,7 +81,10 @@ public class MoveValidator {
         }
 
         // Guard clause: Check total quantity
-        final int totalQuantity = selectedGems.values().stream().mapToInt(Integer::intValue).sum();
+        int totalQuantity = 0;
+        for (final int qty : selectedGems.values()) {
+            totalQuantity += qty;
+        }
         if (totalQuantity != 3) {
             throw new InvalidMoveException("Total gem quantity must be exactly 3");
         }
@@ -242,7 +238,10 @@ public class MoveValidator {
         }
 
         // Guard clause: Check discard quantity
-        final int discardCount = selectedGems.values().stream().mapToInt(Integer::intValue).sum();
+        int discardCount = 0;
+        for (final int qty : selectedGems.values()) {
+            discardCount += qty;
+        }
         final int excessTokens = player.getTotalTokenCount() - game.getMaxTokens();
 
         if (discardCount != excessTokens) {
@@ -278,7 +277,8 @@ public class MoveValidator {
         int goldRemaining = tokens.getOrDefault(Gem.GOLD, 0);
 
         // Calculate effective cost after discounts
-        for (final Map.Entry<Gem, Integer> costEntry : card.getCost().entrySet()) {
+        final Map<Gem, Integer> cardCost = card.getCost();
+        for (final Map.Entry<Gem, Integer> costEntry : cardCost.entrySet()) {
             final Gem gem = costEntry.getKey();
             final int required = costEntry.getValue();
             final int discount = discounts.getOrDefault(gem, 0);
@@ -299,6 +299,13 @@ public class MoveValidator {
         return true;
     }
 
+    /**
+     * Searches all three board tiers for a face-up card with the given ID.
+     *
+     * @param board  The current game board.
+     * @param cardId The ID of the card to find.
+     * @return The matching Card, or null if no face-up card has that ID.
+     */
     private Card findAvailableCardById(final Board board, final int cardId) {
         for (int tier = 1; tier <= 3; tier++) {
             for (final Card card : board.getAvailableCards(tier)) {
@@ -310,6 +317,13 @@ public class MoveValidator {
         return null;
     }
 
+    /**
+     * Searches the player's reserved-card hand for a card with the given ID.
+     *
+     * @param player The player whose reserved cards are searched.
+     * @param cardId The ID of the card to find.
+     * @return The matching Card, or null if the player has no reserved card with that ID.
+     */
     private Card findReservedCardById(final Player player, final int cardId) {
         for (final Card card : player.getReservedCards()) {
             if (card.getId() == cardId) {
@@ -319,7 +333,16 @@ public class MoveValidator {
         return null;
     }
 
-    // Inside MoveValidator.java
+    /**
+     * Validates the specific "take 2 of the same gem" rule and returns a human-readable
+     * ValidationResult rather than throwing an exception. Used to display a friendly
+     * explanation to the player before their move is submitted.
+     *
+     * @param gem   The gem colour the player wants to take two of.
+     * @param board The current game board.
+     * @return A passing ValidationResult if the take-two is legal; a failing one with
+     *         a rule-violation explanation otherwise.
+     */
     public ValidationResult validateTakeTwo(Gem gem, Board board) {
         int countInBank = board.getGemCount(gem);
 
@@ -335,7 +358,21 @@ public class MoveValidator {
         return ValidationResult.ok();
     }
 
-    // KEEP YOUR OLD CODE, JUST ADD THIS AT THE BOTTOM
+    /**
+     * Returns a ValidationResult with a plain-language explanation of why a move is or
+     * is not permitted, without throwing an exception.
+     *
+     * Unlike validateMove(), this method is specifically designed for display: the
+     * message it returns is shown directly to the human player so they understand the
+     * rule they would violate. It currently checks the two most common confusion points
+     * (take-two bank requirement and buy-card affordability); other move types fall
+     * through to an implicit ok() result.
+     *
+     * @param move   The move the player intends to make.
+     * @param player The player attempting the move.
+     * @param game   The current game state.
+     * @return A ValidationResult whose message is suitable for display to the player.
+     */
     public ValidationResult getRuleExplanation(Move move, Player player, Game game) {
         Board board = game.getBoard();
 
@@ -355,25 +392,22 @@ public class MoveValidator {
 
         // 2. Rule for buying a card
         if (move.getMoveType() == MoveType.BUY_CARD) {
-            Card cardToBuy = null;
-            // Search tiers 1-3 to find the card
-            for (int tier = 1; tier <= 3; tier++) {
-                for (Card c : board.getAvailableCards(tier)) {
-                    if (c.getId() == move.getCardId()) {
-                        cardToBuy = c;
-                        break;
-                    }
+            Card cardToBuy;
+            if (move.isReservedCard()) {
+                cardToBuy = findReservedCardById(player, move.getCardId());
+                if (cardToBuy == null) {
+                    return ValidationResult.fail("Card #" + move.getCardId() + " is not in your reserved cards.");
+                }
+            } else {
+                cardToBuy = findAvailableCardById(board, move.getCardId());
+                if (cardToBuy == null) {
+                    return ValidationResult.fail("Card #" + move.getCardId() + " is not on the board.");
                 }
             }
 
-            if (cardToBuy != null) {
-                // Use 'this' instead of 'moveValidator' because we are inside the class
-                if (!this.canPlayerAffordCard(player, cardToBuy)) {
-                    return ValidationResult.fail("You cannot afford Card #" + move.getCardId() +
-                            ". Check your tokens and bonuses.");
-                }
-            } else {
-                return ValidationResult.fail("Card #" + move.getCardId() + " is not on the board.");
+            if (!this.canPlayerAffordCard(player, cardToBuy)) {
+                return ValidationResult.fail("You cannot afford Card #" + move.getCardId() +
+                        ". Check your tokens and bonuses.");
             }
         }
 

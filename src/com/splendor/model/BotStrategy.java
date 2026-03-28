@@ -1,3 +1,19 @@
+/**
+ * Stateless AI strategy for CPU-controlled players.
+ *
+ * Chooses moves by following a fixed priority ladder:
+ *   1. Buy the best visible card whose bonus gem advances a noble requirement.
+ *   2. Buy a reserved card that also advances a noble requirement.
+ *   3. Buy any affordable visible card (highest prestige points first).
+ *   4. Buy any affordable reserved card.
+ *   5. Take gems that reduce the deficit toward noble-contributing cards.
+ *   6. Fall back to generic gem-taking (3 different, then 2 same, then deck reserve).
+ *
+ * Noble importance is weighted: nobles the player is closest to finishing count
+ * more heavily, so the bot naturally focuses on the most reachable noble.
+ *
+ * All public methods are static; the class cannot be instantiated.
+ */
 package com.splendor.model;
 
 import com.splendor.model.validator.MoveValidator;
@@ -91,18 +107,24 @@ public final class BotStrategy {
             gemValue.put(gem, importance.getOrDefault(gem, 0.0));
         }
 
-        // Sort non-gold gems by value ascending (discard least valuable first)
-        final List<Gem> gemsByValue = new ArrayList<>(gemValue.keySet());
-        gemsByValue.removeIf(g -> player.getTokenCount(g) == 0);
-        gemsByValue.sort(Comparator.comparingDouble(g -> gemValue.getOrDefault(g, 0.0)));
-        // Gold is most valuable (wild) — discard last
+        // Build list of non-gold gems the player currently holds, sorted least-valuable first.
+        final List<Gem> gemsToConsider = new ArrayList<>();
+        for (final Gem g : gemValue.keySet()) {
+            if (player.getTokenCount(g) > 0) {
+                gemsToConsider.add(g);
+            }
+        }
+        final Comparator<Gem> byValueAscending = (a, b) ->
+                Double.compare(gemValue.getOrDefault(a, 0.0), gemValue.getOrDefault(b, 0.0));
+        gemsToConsider.sort(byValueAscending);
+        // Gold is the wild token — always discard it last.
         if (player.getTokenCount(Gem.GOLD) > 0) {
-            gemsByValue.add(Gem.GOLD);
+            gemsToConsider.add(Gem.GOLD);
         }
 
         final Map<Gem, Integer> discardMap = new HashMap<>();
         int leftToDiscard = excessCount;
-        for (final Gem gem : gemsByValue) {
+        for (final Gem gem : gemsToConsider) {
             if (leftToDiscard <= 0) break;
             final int count = player.getTokenCount(gem);
             final int toDiscard = Math.min(count, leftToDiscard);
@@ -138,7 +160,10 @@ public final class BotStrategy {
             for (final Map.Entry<Gem, Integer> req : noble.getRequirements().entrySet()) {
                 final int still = Math.max(0, req.getValue() - discounts.getOrDefault(req.getKey(), 0));
                 if (still > 0) {
-                    importance.merge(req.getKey(), weight * still, Double::sum);
+                    final Gem reqGem = req.getKey();
+                    final double contribution = weight * still;
+                    final double currentImportance = importance.getOrDefault(reqGem, 0.0);
+                    importance.put(reqGem, currentImportance + contribution);
                 }
             }
         }
@@ -167,7 +192,10 @@ public final class BotStrategy {
                 }
             }
         }
-        return best != null ? best.getId() : null;
+        if (best == null) {
+            return null;
+        }
+        return best.getId();
     }
 
     /**
@@ -187,7 +215,10 @@ public final class BotStrategy {
                 best = card;
             }
         }
-        return best != null ? best.getId() : null;
+        if (best == null) {
+            return null;
+        }
+        return best.getId();
     }
 
     /**
@@ -203,7 +234,10 @@ public final class BotStrategy {
                 }
             }
         }
-        return best != null ? best.getId() : null;
+        if (best == null) {
+            return null;
+        }
+        return best.getId();
     }
 
     // --- Gem taking helper ---
@@ -230,20 +264,31 @@ public final class BotStrategy {
                     final int have = player.getTokenCount(gem);
                     final int deficit = Math.max(0, effectiveCost - have);
                     if (deficit > 0) {
-                        gemDeficit.merge(gem, deficit * imp, Double::sum);
+                        final double weightedDeficit = deficit * imp;
+                        final double currentDeficit = gemDeficit.getOrDefault(gem, 0.0);
+                        gemDeficit.put(gem, currentDeficit + weightedDeficit);
                     }
                 }
             }
         }
 
-        // Keep only gems available on the board
-        gemDeficit.entrySet().removeIf(e -> board.getGemCount(e.getKey()) <= 0);
+        // Remove gems that have no supply in the bank — we cannot take them.
+        final Iterator<Map.Entry<Gem, Double>> deficitIterator = gemDeficit.entrySet().iterator();
+        while (deficitIterator.hasNext()) {
+            final Map.Entry<Gem, Double> deficitEntry = deficitIterator.next();
+            final int bankCount = board.getGemCount(deficitEntry.getKey());
+            if (bankCount <= 0) {
+                deficitIterator.remove();
+            }
+        }
 
         if (gemDeficit.isEmpty()) return null;
 
-        // Sort by weighted deficit descending
+        // Sort gems by weighted deficit descending — most-needed gem first.
         final List<Gem> sortedNeeded = new ArrayList<>(gemDeficit.keySet());
-        sortedNeeded.sort((a, b) -> Double.compare(gemDeficit.get(b), gemDeficit.get(a)));
+        final Comparator<Gem> byDeficitDescending = (a, b) ->
+                Double.compare(gemDeficit.get(b), gemDeficit.get(a));
+        sortedNeeded.sort(byDeficitDescending);
 
         // Take 2 of the same if the top gem has large deficit and enough supply
         final Gem mostNeeded = sortedNeeded.get(0);
@@ -253,9 +298,10 @@ public final class BotStrategy {
             return new Move(MoveType.TAKE_TWO_SAME, gems);
         }
 
-        // Otherwise take up to 3 different most-needed gems
+        // Otherwise take up to 3 different most-needed gems.
+        final int gemsToTake = Math.min(3, sortedNeeded.size());
         final Map<Gem, Integer> gems = new HashMap<>();
-        for (int i = 0; i < Math.min(3, sortedNeeded.size()); i++) {
+        for (int i = 0; i < gemsToTake; i++) {
             gems.put(sortedNeeded.get(i), 1);
         }
         return new Move(MoveType.TAKE_THREE_DIFFERENT, gems);
@@ -263,6 +309,12 @@ public final class BotStrategy {
 
     // --- Original helpers ---
 
+    /**
+     * Returns the card IDs of all reserved cards the player can currently afford.
+     *
+     * @param player The player whose reserved hand is checked.
+     * @return List of affordable reserved card IDs (may be empty).
+     */
     private static List<Integer> getAffordableReservedIds(final Player player) {
         final List<Integer> ids = new ArrayList<>();
         for (final Card card : player.getReservedCards()) {
@@ -271,6 +323,13 @@ public final class BotStrategy {
         return ids;
     }
 
+    /**
+     * Returns all non-gold gem types that have at least one token in the bank.
+     * Used when building a take-three-different move as a fallback.
+     *
+     * @param board The current game board.
+     * @return List of gem types with supply > 0, excluding GOLD.
+     */
     private static List<Gem> getAvailableDifferentGems(final Board board) {
         final List<Gem> gems = new ArrayList<>();
         for (final Gem gem : Gem.values()) {
@@ -279,6 +338,13 @@ public final class BotStrategy {
         return gems;
     }
 
+    /**
+     * Returns all non-gold gem types that have at least four tokens in the bank,
+     * satisfying the take-two-same rule minimum supply requirement.
+     *
+     * @param board The current game board.
+     * @return List of gem types with supply >= 4, excluding GOLD.
+     */
     private static List<Gem> getAvailableTwoSameGems(final Board board) {
         final List<Gem> gems = new ArrayList<>();
         for (final Gem gem : Gem.values()) {
