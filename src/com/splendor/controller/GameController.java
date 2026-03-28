@@ -6,6 +6,7 @@ import com.splendor.exception.*;
 import com.splendor.model.*;
 import com.splendor.model.validator.GameRuleValidator;
 import com.splendor.model.validator.MoveValidator;
+import com.splendor.model.validator.ValidationResult;
 import com.splendor.util.MoveFormatter;
 import com.splendor.view.IGameView;
 import java.util.*;
@@ -60,8 +61,10 @@ public class GameController {
             boolean hasYeowLeong = false;
             boolean hasLayFoo = false;
             for (final Player p : game.getPlayers()) {
-                if (p.getName().equalsIgnoreCase("bot yeow leong")) hasYeowLeong = true;
-                if (p.getName().equalsIgnoreCase("bot lay foo")) hasLayFoo = true;
+                if (p.getName().equalsIgnoreCase("bot yeow leong"))
+                    hasYeowLeong = true;
+                if (p.getName().equalsIgnoreCase("bot lay foo"))
+                    hasLayFoo = true;
             }
             if (hasYeowLeong && hasLayFoo) {
                 gameView.displayNotification("\n=======================================================");
@@ -97,7 +100,7 @@ public class GameController {
             }
             displayGameResults();
         } catch (final SplendorException e) {
-            throw e; 
+            throw e;
         } catch (final Exception e) {
             throw new SplendorException("Game execution failed: " + e.getMessage(), e);
         } finally {
@@ -106,8 +109,9 @@ public class GameController {
     }
 
     /**
-     * Helper method to handle Undos. 
-     * If reverting a turn lands on a bot, it keeps undoing until it's a human's turn.
+     * Helper method to handle Undos.
+     * If reverting a turn lands on a bot, it keeps undoing until it's a human's
+     * turn.
      */
     private boolean performUndo() {
         boolean success = game.undo();
@@ -141,25 +145,29 @@ public class GameController {
                 // Human turn: Call the view method that includes the Undo prompt
                 final String input = gameView.displayMessage("Move executed successfully!");
                 if (input != null && (input.equalsIgnoreCase("Z") || input.equalsIgnoreCase("UNDO"))) {
-                    if (performUndo()) { 
+                    if (performUndo()) {
                         gameView.displayNotification("Move undone!");
-                        return; 
+                        return;
                     } else {
                         gameView.displayError("Nothing to undo!");
                     }
                 }
             } else {
-                gameView.displayNotification(currentPlayer.getName() + " finished their turn. Press Enter to continue...");
-                try { 
+                gameView.displayNotification(
+                        currentPlayer.getName() + " finished their turn. Press Enter to continue...");
+                try {
                     // Flush any garbage typed while the bot was thinking
-                    while (System.in.available() > 0) { System.in.read(); }
+                    while (System.in.available() > 0) {
+                        System.in.read();
+                    }
                     // Now block and wait for a real Enter key
-                    System.in.read(); 
-                } catch (Exception e) {}
+                    System.in.read();
+                } catch (Exception e) {
+                }
             }
 
             game.advanceToNextPlayer();
-    
+
         } catch (final GameStateException e) {
             if ("UNDO_SIGNAL".equals(e.getMessage())) {
                 gameView.displayNotification("Turn reverted!");
@@ -168,8 +176,9 @@ public class GameController {
             throw e;
         } catch (final InvalidMoveException | InsufficientTokensException e) {
             final String input = gameView.displayError(e.getMessage());
-            if (!(currentPlayer instanceof ComputerPlayer) && input != null && (input.equalsIgnoreCase("Z") || input.equalsIgnoreCase("UNDO"))) {
-                if (performUndo()) { 
+            if (!(currentPlayer instanceof ComputerPlayer) && input != null
+                    && (input.equalsIgnoreCase("Z") || input.equalsIgnoreCase("UNDO"))) {
+                if (performUndo()) {
                     gameView.displayNotification("Turn reverted!");
                     return;
                 }
@@ -181,7 +190,7 @@ public class GameController {
         while (true) {
             try {
                 final List<MenuOption> options = MenuBuilder.buildMenuOptions(player, game);
-                
+
                 if (player instanceof ComputerPlayer) {
                     gameView.displayAvailableMoves(options, game);
                     gameView.displayNotification(player.getName() + " is calculating a move...");
@@ -192,19 +201,26 @@ public class GameController {
 
                 // Human logic
                 final Move move = gameView.promptForMove(player, game, options);
-                moveValidator.validateMove(move, player, game);
-                return move;
+                // NEW CODE
+                ValidationResult explanation = moveValidator.getRuleExplanation(move, player, game);
+
+                if (!explanation.isValid()) {
+                    gameView.displayError(explanation.getMessage()); // Tells the user WHY
+                    continue; // Restarts the loop to ask for a new move
+                }
+
+                return move; // Only returns if the rule explanation says it's okay
 
             } catch (final InvalidMoveException | InsufficientTokensException e) {
                 if (player instanceof ComputerPlayer) {
                     // If bot fails, force a basic reserve to prevent infinite loops
-                    return Move.reserveFromDeck(1); 
+                    return Move.reserveFromDeck(1);
                 }
-                
+
                 final String input = gameView.displayError(e.getMessage());
                 if (input != null && (input.equalsIgnoreCase("Z") || input.equalsIgnoreCase("UNDO"))) {
                     if (performUndo()) { // <-- Uses smart undo
-                        throw new GameStateException("UNDO_SIGNAL"); 
+                        throw new GameStateException("UNDO_SIGNAL");
                     }
                 }
             } catch (final Exception e) {
@@ -233,14 +249,15 @@ public class GameController {
 
     private void createPlayers(final int playerCount) {
         players.clear();
-        
+
         // Let the players know the secret to creating a CPU!
         gameView.displayNotification("\n--- PLAYER SETUP ---");
-        gameView.displayNotification("Include 'bot' in a player's name (e.g., 'Bot1' or 'AngryBot') to make them a computer player!");
-        
+        gameView.displayNotification(
+                "Include 'bot' in a player's name (e.g., 'Bot1' or 'AngryBot') to make them a computer player!");
+
         for (int i = 1; i <= playerCount; i++) {
             final String playerName = gameView.promptForPlayerName(i, playerCount);
-            
+
             // Type "Bot" as a player name to make them AI!
             if (playerName.toLowerCase().contains("bot")) {
                 players.add(new ComputerPlayer(playerName));
@@ -272,7 +289,11 @@ public class GameController {
         gameView.displayWinner(game.getWinner(), finalScores);
     }
 
-    public Game getGame() { return game; }
+    public Game getGame() {
+        return game;
+    }
 
-    public List<Player> getPlayers() { return Collections.unmodifiableList(players); }
+    public List<Player> getPlayers() {
+        return Collections.unmodifiableList(players);
+    }
 }
