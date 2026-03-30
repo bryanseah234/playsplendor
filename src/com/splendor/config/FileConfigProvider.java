@@ -87,7 +87,11 @@ public class FileConfigProvider implements IConfigProvider {
             ConfigKeys.SETUP_2P_GEMS,
             ConfigKeys.SETUP_3P_GEMS,
             ConfigKeys.SETUP_4P_GEMS,
-            ConfigKeys.SETUP_NOBLES_ADD
+            ConfigKeys.SETUP_NOBLES_ADD,
+            ConfigKeys.FILE_CARDS_DATA,
+            ConfigKeys.TIER1_CARD_COUNT,
+            ConfigKeys.TIER2_CARD_COUNT,
+            ConfigKeys.TIER3_CARD_COUNT
         };
         
         for (final String property : requiredProperties) {

@@ -27,6 +27,12 @@ public final class ConfigKeys {
     // Network configuration
     public static final String MAX_CLIENTS = "network.max_clients";
     public static final String CONNECTION_TIMEOUT = "network.connection_timeout";
+
+    // Card Data configuration
+    public static final String FILE_CARDS_DATA = "file.cards.data";
+    public static final String TIER1_CARD_COUNT = "game.tier1.card_count";
+    public static final String TIER2_CARD_COUNT = "game.tier2.card_count";
+    public static final String TIER3_CARD_COUNT = "game.tier3.card_count";
     
     /**
      * Private constructor to prevent instantiation of utility class.

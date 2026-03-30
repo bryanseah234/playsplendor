@@ -1,161 +1,147 @@
 package com.splendor.util;
 
-import com.splendor.model.Card;
-import com.splendor.model.Gem;
-import com.splendor.model.Noble;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import com.splendor.config.*;
+import com.splendor.model.*;
+import java.io.*;
+import java.util.*;
 
-/**
- * Utility class to load initial game data (cards and nobles).
- */
 public class CardLoader {
 
-    /**
-     * Generates a deck of cards for the specified tier.
-     *
-     * @param tier The tier of cards to generate (1, 2, or 3)
-     * @return A shuffled list of cards
-     */
+    public CardLoader() {
+    }
+
+    // ── Public API ────────────────────────────────────────────────────────────
+
     public static List<Card> loadCards(int tier) {
-        List<Card> cards = new ArrayList<>();
-        int idStart = (tier - 1) * 40 + 1; // ID offset for tiers
+        // 1. Get our new config provider
+        IConfigProvider config = getConfigProvider();
 
-        switch (tier) {
-            case 1:
-                // Tier 1: Low cost, low points (mostly 0, some 1)
-                cards.add(createCard(idStart++, 1, 0, Gem.BLACK, Map.of(Gem.BLUE, 1, Gem.GREEN, 1, Gem.RED, 1, Gem.WHITE, 1)));
-                cards.add(createCard(idStart++, 1, 0, Gem.BLUE, Map.of(Gem.BLACK, 1, Gem.GREEN, 1, Gem.RED, 1, Gem.WHITE, 1)));
-                cards.add(createCard(idStart++, 1, 0, Gem.WHITE, Map.of(Gem.BLUE, 1, Gem.GREEN, 1, Gem.RED, 1, Gem.BLACK, 1)));
-                cards.add(createCard(idStart++, 1, 0, Gem.GREEN, Map.of(Gem.BLUE, 1, Gem.BLACK, 1, Gem.RED, 1, Gem.WHITE, 1)));
-                cards.add(createCard(idStart++, 1, 0, Gem.RED, Map.of(Gem.BLUE, 1, Gem.GREEN, 1, Gem.BLACK, 1, Gem.WHITE, 1)));
+        // 2. Ask the provider for the file path (no more Properties!)
+        String cardsFilePath = config.getStringProperty(ConfigKeys.FILE_CARDS_DATA, null);
+        if (cardsFilePath == null) {
+            throw new RuntimeException("Missing config key: " + ConfigKeys.FILE_CARDS_DATA);
+        }
+
+        // 3. Ask the provider for the integer directly (no more Integer.parseInt!)
+        int targetCount = switch (tier) {
+            case 1 -> config.getIntProperty(ConfigKeys.TIER1_CARD_COUNT, 40);
+            case 2 -> config.getIntProperty(ConfigKeys.TIER2_CARD_COUNT, 30);
+            case 3 -> config.getIntProperty(ConfigKeys.TIER3_CARD_COUNT, 20);
+            default -> 0;
+        };
+
+        List<Card> tierCards = new ArrayList<>();
+        
+        try (BufferedReader reader = new BufferedReader(new FileReader(cardsFilePath))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
                 
-                cards.add(createCard(idStart++, 1, 0, Gem.BLACK, Map.of(Gem.WHITE, 3)));
-                cards.add(createCard(idStart++, 1, 0, Gem.BLUE, Map.of(Gem.BLACK, 3)));
-                cards.add(createCard(idStart++, 1, 0, Gem.WHITE, Map.of(Gem.BLUE, 3)));
-                cards.add(createCard(idStart++, 1, 0, Gem.GREEN, Map.of(Gem.RED, 3)));
-                cards.add(createCard(idStart++, 1, 0, Gem.RED, Map.of(Gem.WHITE, 3)));
-
-                cards.add(createCard(idStart++, 1, 1, Gem.BLACK, Map.of(Gem.BLUE, 4)));
-                cards.add(createCard(idStart++, 1, 1, Gem.BLUE, Map.of(Gem.RED, 4)));
-                cards.add(createCard(idStart++, 1, 1, Gem.WHITE, Map.of(Gem.GREEN, 4)));
-                cards.add(createCard(idStart++, 1, 1, Gem.GREEN, Map.of(Gem.BLACK, 4)));
-                cards.add(createCard(idStart++, 1, 1, Gem.RED, Map.of(Gem.WHITE, 4)));
-                break;
-
-            case 2:
-                // Tier 2: Medium cost, 1-3 points
-                cards.add(createCard(idStart++, 2, 1, Gem.BLACK, Map.of(Gem.BLUE, 3, Gem.GREEN, 2, Gem.RED, 2)));
-                cards.add(createCard(idStart++, 2, 1, Gem.BLUE, Map.of(Gem.BLACK, 3, Gem.GREEN, 2, Gem.WHITE, 2)));
-                cards.add(createCard(idStart++, 2, 1, Gem.WHITE, Map.of(Gem.RED, 3, Gem.BLACK, 2, Gem.BLUE, 2)));
-                cards.add(createCard(idStart++, 2, 1, Gem.GREEN, Map.of(Gem.WHITE, 3, Gem.BLUE, 2, Gem.RED, 2)));
-                cards.add(createCard(idStart++, 2, 1, Gem.RED, Map.of(Gem.BLACK, 3, Gem.WHITE, 2, Gem.GREEN, 2)));
-
-                cards.add(createCard(idStart++, 2, 2, Gem.BLACK, Map.of(Gem.WHITE, 5)));
-                cards.add(createCard(idStart++, 2, 2, Gem.BLUE, Map.of(Gem.BLUE, 5)));
-                cards.add(createCard(idStart++, 2, 2, Gem.WHITE, Map.of(Gem.RED, 5)));
-                cards.add(createCard(idStart++, 2, 2, Gem.GREEN, Map.of(Gem.GREEN, 5)));
-                cards.add(createCard(idStart++, 2, 2, Gem.RED, Map.of(Gem.BLACK, 5)));
-
-                cards.add(createCard(idStart++, 2, 3, Gem.BLACK, Map.of(Gem.WHITE, 6)));
-                cards.add(createCard(idStart++, 2, 3, Gem.BLUE, Map.of(Gem.BLUE, 6)));
-                cards.add(createCard(idStart++, 2, 3, Gem.WHITE, Map.of(Gem.RED, 6)));
-                cards.add(createCard(idStart++, 2, 3, Gem.GREEN, Map.of(Gem.GREEN, 6)));
-                cards.add(createCard(idStart++, 2, 3, Gem.RED, Map.of(Gem.BLACK, 6)));
-                break;
-
-            case 3:
-                // Tier 3: High cost, 3-5 points
-                cards.add(createCard(idStart++, 3, 3, Gem.BLACK, Map.of(Gem.WHITE, 3, Gem.BLUE, 3, Gem.GREEN, 5, Gem.RED, 3)));
-                cards.add(createCard(idStart++, 3, 3, Gem.BLUE, Map.of(Gem.WHITE, 3, Gem.BLACK, 3, Gem.RED, 5, Gem.GREEN, 3)));
-                cards.add(createCard(idStart++, 3, 3, Gem.WHITE, Map.of(Gem.BLACK, 3, Gem.BLUE, 3, Gem.RED, 3, Gem.GREEN, 5)));
-                cards.add(createCard(idStart++, 3, 3, Gem.GREEN, Map.of(Gem.WHITE, 5, Gem.BLUE, 3, Gem.RED, 3, Gem.BLACK, 3)));
-                cards.add(createCard(idStart++, 3, 3, Gem.RED, Map.of(Gem.WHITE, 3, Gem.BLUE, 5, Gem.GREEN, 3, Gem.BLACK, 3)));
-
-                cards.add(createCard(idStart++, 3, 4, Gem.BLACK, Map.of(Gem.RED, 7)));
-                cards.add(createCard(idStart++, 3, 4, Gem.BLUE, Map.of(Gem.WHITE, 7)));
-                cards.add(createCard(idStart++, 3, 4, Gem.WHITE, Map.of(Gem.BLACK, 7)));
-                cards.add(createCard(idStart++, 3, 4, Gem.GREEN, Map.of(Gem.BLUE, 7)));
-                cards.add(createCard(idStart++, 3, 4, Gem.RED, Map.of(Gem.GREEN, 7)));
-
-                cards.add(createCard(idStart++, 3, 5, Gem.BLACK, Map.of(Gem.RED, 7, Gem.BLACK, 3)));
-                cards.add(createCard(idStart++, 3, 5, Gem.BLUE, Map.of(Gem.WHITE, 7, Gem.BLUE, 3)));
-                cards.add(createCard(idStart++, 3, 5, Gem.WHITE, Map.of(Gem.BLACK, 7, Gem.WHITE, 3)));
-                cards.add(createCard(idStart++, 3, 5, Gem.GREEN, Map.of(Gem.BLUE, 7, Gem.GREEN, 3)));
-                cards.add(createCard(idStart++, 3, 5, Gem.RED, Map.of(Gem.GREEN, 7, Gem.RED, 3)));
-                break;
+                if (line.isEmpty() || line.startsWith("#") || !line.startsWith("CARD")) {
+                    continue;
+                }
+                
+                Card c = parseCard(line);
+                if (c.getTier() == tier) {
+                    tierCards.add(c);
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read cards file: " + cardsFilePath, e);
         }
 
-        final int targetCount;
-        switch (tier) {
-            case 1:
-                targetCount = 40;
-                break;
-            case 2:
-                targetCount = 30;
-                break;
-            case 3:
-                targetCount = 20;
-                break;
-            default:
-                targetCount = cards.size();
-                break;
-        }
-        if (cards.size() < targetCount) {
-            final List<Card> baseCards = new ArrayList<>(cards);
-            int id = idStart;
-            int index = 0;
-            while (cards.size() < targetCount) {
-                final Card base = baseCards.get(index % baseCards.size());
-                cards.add(createCard(id++, tier, base.getPoints(), base.getBonusGem(), base.getCost()));
-                index++;
+        if (tierCards.size() < targetCount && !tierCards.isEmpty()) {
+            List<Card> base = new ArrayList<>(tierCards);
+            int id = nextIdAfter(tierCards);
+            for (int i = 0; tierCards.size() < targetCount; i++) {
+                Card b = base.get(i % base.size());
+                tierCards.add(new Card(id++, tier, b.getPoints(), b.getBonusGem(), b.getCost()));
             }
         }
 
-        Collections.shuffle(cards);
-        return cards;
+        Collections.shuffle(tierCards);
+        return tierCards;
     }
 
-    /**
-     * Generates a list of Nobles.
-     *
-     * @return A shuffled list of nobles
-     */
     public static List<Noble> loadNobles() {
-        List<Noble> nobles = new ArrayList<>();
-        int id = 1;
+        IConfigProvider config = getConfigProvider();
+        
+        // Grab the exact same file path used for cards
+        String dataFilePath = config.getStringProperty(ConfigKeys.FILE_CARDS_DATA, null);
+        if (dataFilePath == null) {
+            throw new RuntimeException("Missing config key: " + ConfigKeys.FILE_CARDS_DATA);
+        }
 
-        nobles.add(new Noble(id++, 3, Map.of(Gem.RED, 4, Gem.GREEN, 4)));
-        nobles.add(new Noble(id++, 3, Map.of(Gem.BLACK, 4, Gem.WHITE, 4)));
-        nobles.add(new Noble(id++, 3, Map.of(Gem.BLUE, 4, Gem.GREEN, 4)));
-        nobles.add(new Noble(id++, 3, Map.of(Gem.RED, 4, Gem.BLACK, 4)));
-        nobles.add(new Noble(id++, 3, Map.of(Gem.BLUE, 4, Gem.WHITE, 4)));
-        nobles.add(new Noble(id++, 3, Map.of(Gem.RED, 3, Gem.GREEN, 3, Gem.BLUE, 3)));
-        nobles.add(new Noble(id++, 3, Map.of(Gem.BLACK, 3, Gem.WHITE, 3, Gem.RED, 3)));
-        nobles.add(new Noble(id++, 3, Map.of(Gem.BLUE, 3, Gem.GREEN, 3, Gem.WHITE, 3)));
-        nobles.add(new Noble(id++, 3, Map.of(Gem.GREEN, 4, Gem.WHITE, 4)));
-        nobles.add(new Noble(id++, 3, Map.of(Gem.BLUE, 4, Gem.BLACK, 4)));
+        List<Noble> nobles = new ArrayList<>();
+        
+        try (BufferedReader reader = new BufferedReader(new FileReader(dataFilePath))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+                
+                if (line.isEmpty() || line.startsWith("#") || !line.startsWith("NOBLE")) {
+                    continue;
+                }
+                
+                nobles.add(parseNoble(line));
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read nobles from file: " + dataFilePath, e);
+        }
         
         Collections.shuffle(nobles);
         return nobles;
     }
 
-    /**
-     * Constructs a single Card from its raw parameters.
-     * Exists as a named factory to keep the card-list initialization code above readable;
-     * without it every line would call "new Card(...)" with five positional arguments
-     * making the intent harder to scan.
-     *
-     * @param id       Unique card identifier.
-     * @param tier     Deck tier the card belongs to (1, 2, or 3).
-     * @param points   Prestige points awarded when the card is purchased.
-     * @param bonusGem The gem color discount this card permanently grants its owner.
-     * @param cost     Map of gem type to quantity required to purchase the card.
-     * @return A new Card with the given attributes.
-     */
-    private static Card createCard(int id, int tier, int points, Gem bonusGem, Map<Gem, Integer> cost) {
+    // ── Parsers ───────────────────────────────────────────────────────────────
+
+    private static Card parseCard(String value) {
+        String[] parts = value.split("\\|");
+        int id       = Integer.parseInt(parts[1].strip());
+        int tier     = Integer.parseInt(parts[2].strip());
+        int points   = Integer.parseInt(parts[3].strip());
+        Gem bonusGem = Gem.valueOf(parts[4].strip());
+        Map<Gem, Integer> cost = parseCost(parts[5].strip());
         return new Card(id, tier, points, bonusGem, cost);
+    }
+
+    private static Noble parseNoble(String value) {
+        String[] parts = value.split("\\|");
+        int id     = Integer.parseInt(parts[1].strip());
+        int points = Integer.parseInt(parts[2].strip());
+        Map<Gem, Integer> cost = parseCost(parts[3].strip());
+        return new Noble(id, points, cost);
+    }
+
+    private static Map<Gem, Integer> parseCost(String costStr) {
+        Map<Gem, Integer> cost = new HashMap<>();
+        for (String entry : costStr.split(",")) {
+            entry = entry.strip();
+            if (entry.isEmpty()) continue;
+            String[] kv = entry.split(":");
+            cost.put(Gem.valueOf(kv[0].strip()), Integer.parseInt(kv[1].strip()));
+        }
+        return cost;
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /**
+     * Instantiates and loads the new Configuration Provider.
+     */
+    private static IConfigProvider getConfigProvider() {
+        IConfigProvider provider = new FileConfigProvider();
+        try {
+            // This triggers the file reading AND the validation checks!
+            provider.loadConfiguration();
+        } catch (ConfigException e) {
+            // We catch your custom exception and wrap it so the program stops safely
+            throw new RuntimeException("CRITICAL: Failed to initialize game configuration!", e);
+        }
+        return provider;
+    }
+
+    private static int nextIdAfter(List<Card> cards) {
+        return cards.stream().mapToInt(Card::getId).max().orElse(0) + 1;
     }
 }
