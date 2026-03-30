@@ -509,38 +509,35 @@ classDiagram
     direction LR
     
     class Exception {
-        (Java Standard)
+        Java Standard
     }
     
     class SplendorException {
-        SplendorException(msg)
-        SplendorException(msg, cause)
+        Base game exception
     }
     
     class GameStateException {
-        GameStateException(msg)
+        State errors
     }
     
     class InvalidMoveException {
-        InvalidMoveException(msg)
+        Move errors
     }
     
     class InsufficientTokensException {
-        InsufficientTokensException(msg)
+        Token errors
     }
     
     class InvalidPlayerActionException {
-        InvalidPlayerActionException(msg)
+        Action errors
     }
     
     class NetworkException {
-        NetworkException(msg)
-        NetworkException(msg, cause)
+        Network errors
     }
     
     class ConfigException {
-        ConfigException(msg)
-        ConfigException(msg, cause)
+        Config errors
     }
     
     Exception <|-- SplendorException
