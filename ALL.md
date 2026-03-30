@@ -2,30 +2,51 @@
 
 ---
 
+## Table of Contents
+1. [High-Level Architecture](#1-high-level-architecture)
+2. [Complete Class List by Package](#2-complete-class-list-by-package)
+3. [Six Category Diagrams](#3-six-category-diagrams)
+   - 3.1 [Domain (Data Structure)](#31-domain-data-structure)
+   - 3.2 [Controllers (Business Logic)](#32-controllers-business-logic)
+   - 3.3 [Validators (Rule Checking)](#33-validators-rule-checking)
+   - 3.4 [Network (Multiplayer)](#34-network-multiplayer)
+   - 3.5 [Views (User Interface)](#35-views-user-interface)
+   - 3.6 [Exceptions (Error Handling)](#36-exceptions-error-handling)
+4. [How the Game Flows](#4-how-the-game-flows)
+5. [Summary Table](#5-summary-table)
+6. [Design Patterns](#6-design-patterns)
+7. [Class Count Summary](#7-class-count-summary)
+
+---
+
 ## 1. High-Level Architecture
 
-This project follows a strict **MVC (Model-View-Controller)** architecture with clear separation of concerns:
+This project follows a strict **MVC (Model-View-Controller)** architecture:
 
 ```mermaid
-flowchart TD
+flowchart LR
     subgraph Domain[Domain Model]
-        D[Game, Player, Board, Card, Noble, Move, Gem]
+        D[Game, Player, Board,<br/>Card, Noble, Move, Gem]
     end
     
     subgraph Controllers[Controllers]
-        C[GameController, TurnController, PlayerController, MenuBuilder]
+        C[GameController,<br/>TurnController,<br/>PlayerController,<br/>MenuBuilder]
     end
     
     subgraph Validators[Validators]
-        V[MoveValidator, GameRuleValidator, ValidationResult]
+        V[MoveValidator,<br/>GameRuleValidator]
     end
     
     subgraph Views[Views]
-        VI[ConsoleView, RemoteView, NetworkGameView, GameRenderer]
+        VI[ConsoleView,<br/>RemoteView,<br/>GameRenderer]
     end
     
     subgraph Network[Network]
-        N[ServerSocketHandler, ClientHandler, NetworkProtocol]
+        N[ServerSocketHandler,<br/>ClientHandler]
+    end
+    
+    subgraph Exceptions[Exceptions]
+        E[SplendorException<br/>Hierarchy]
     end
     
     C --> D
@@ -33,14 +54,18 @@ flowchart TD
     C --> VI
     VI --> C
     N --> VI
+    C -.-> E
+    V -.-> E
+    N -.-> E
 ```
 
-**Five Main Portions:**
-1. **Domain (Data Structure)** - Game entities and state
-2. **Controllers (Business Logic)** - Game flow orchestration
-3. **Validators (Rule Checking)** - Move and rule validation
-4. **Views (UI)** - Display and user interaction
-5. **Network (Multiplayer Infrastructure)** - Online multiplayer support
+**Six Main Portions:**
+1. **Domain** - Game entities and state
+2. **Controllers** - Game flow orchestration
+3. **Validators** - Move and rule validation
+4. **Network** - Online multiplayer support
+5. **Views** - Display and user interaction
+6. **Exceptions** - Error handling hierarchy
 
 ---
 
@@ -49,15 +74,15 @@ flowchart TD
 ### 📦 **com.splendor** (Entry Point)
 | Class | Description |
 |-------|-------------|
-| `Main` | Application entry point, starts console or server mode |
+| `Main` | Application entry point |
 
 ### 📦 **com.splendor.config** (Configuration)
 | Class | Type | Description |
 |-------|------|-------------|
-| `IConfigProvider` | Interface | Configuration reader interface |
-| `FileConfigProvider` | Class | Loads settings from properties file |
-| `ConfigKeys` | Class | Constants for config property names |
-| `ConfigException` | Exception | Configuration loading errors |
+| `IConfigProvider` | Interface | Config reader interface |
+| `FileConfigProvider` | Class | Loads from properties file |
+| `ConfigKeys` | Class | Config key constants |
+| `ConfigException` | Exception | Config loading errors |
 
 ### 📦 **com.splendor.exception** (Error Handling)
 | Class | Extends | Description |
@@ -66,82 +91,84 @@ flowchart TD
 | `GameStateException` | `SplendorException` | Invalid state transitions |
 | `InvalidMoveException` | `SplendorException` | Illegal player moves |
 | `InsufficientTokensException` | `SplendorException` | Not enough gems |
-| `InvalidPlayerActionException` | `SplendorException` | Invalid player actions |
+| `InvalidPlayerActionException` | `SplendorException` | Invalid actions |
 
 ### 📦 **com.splendor.model** (Domain/Data)
 | Class | Type | Description |
 |-------|------|-------------|
-| `Gem` | Enum | Token colors (RED, GREEN, BLUE, WHITE, BLACK, GOLD) |
-| `MoveType` | Enum | Action types (TAKE_THREE, TAKE_TWO, RESERVE, BUY, etc.) |
-| `MenuAction` | Enum | Menu option types |
-| `GameState` | Enum | Game phases (ONGOING, FINAL_ROUND, FINISHED) |
-| `Card` | Class | Development cards with cost, bonus, and points |
-| `Noble` | Class | Noble visitors with requirements |
-| `Player` | Class | Player with tokens, cards, and nobles |
-| `ComputerPlayer` | Class | Extends Player for AI opponents |
-| `Board` | Class | Game board with gem bank and card displays |
-| `Game` | Class | Main game session manager |
-| `Move` | Class | Represents a player action |
-| `MenuOption` | Class | Menu item with availability status |
-| `BotStrategy` | Class | AI decision-making logic |
+| `Gem` | Enum | Token colors (6 types) |
+| `MoveType` | Enum | Action types (6 types) |
+| `MenuAction` | Enum | Menu options (7 types) |
+| `GameState` | Enum | Game phases (3 types) |
+| `Card` | Class | Development cards |
+| `Noble` | Class | Noble visitors |
+| `Player` | Class | Player data |
+| `ComputerPlayer` | Class | AI player |
+| `Board` | Class | Game board |
+| `Game` | Class | Game session |
+| `Move` | Class | Player actions |
+| `MenuOption` | Class | Menu items |
+| `BotStrategy` | Class | AI logic |
 
-### 📦 **com.splendor.model.validator** (Rule Validation)
+### 📦 **com.splendor.model.validator** (Validators)
 | Class | Description |
 |-------|-------------|
-| `MoveValidator` | Validates if moves are legal |
-| `GameRuleValidator` | Validates game-level rules |
-| `ValidationResult` | Container for validation results |
+| `MoveValidator` | Validates moves |
+| `GameRuleValidator` | Validates game rules |
+| `ValidationResult` | Validation results |
 
-### 📦 **com.splendor.controller** (Business Logic)
+### 📦 **com.splendor.controller** (Controllers)
 | Class | Description |
 |-------|-------------|
-| `GameController` | Main orchestrator for game flow |
-| `TurnController` | Executes player moves |
-| `PlayerController` | Handles noble visits and token discarding |
-| `MenuBuilder` | Builds dynamic menu options |
+| `GameController` | Main orchestrator |
+| `TurnController` | Executes moves |
+| `PlayerController` | Player logic |
+| `MenuBuilder` | Builds menus |
 
 ### 📦 **com.splendor.network** (Multiplayer)
 | Class | Description |
 |-------|-------------|
-| `ServerSocketHandler` | TCP server accepting client connections |
-| `ClientHandler` | Handles individual client communication |
-| `NetworkProtocol` | Message protocol definitions |
-| `NetworkException` | Network-specific errors |
+| `ServerSocketHandler` | TCP server |
+| `ClientHandler` | Client manager |
+| `NetworkProtocol` | Message protocol |
+| `NetworkException` | Network errors |
 
 ### 📦 **com.splendor.util** (Utilities)
 | Class | Description |
 |-------|-------------|
-| `Constants` | Game-wide constants |
-| `GameLogger` | Logging utility |
-| `AnsiUtils` | ANSI color code handling |
-| `CardLoader` | Loads cards from resources |
-| `GemParser` | Parses gem input |
-| `InputResolver` | User input handling |
-| `MoveFormatter` | Formats moves for display |
-| `MoveParser` | Parses move commands |
+| `Constants` | Game constants |
+| `GameLogger` | Logging |
+| `AnsiUtils` | ANSI colors |
+| `CardLoader` | Load cards |
+| `GemParser` | Parse gems |
+| `InputResolver` | Input handling |
+| `MoveFormatter` | Format moves |
+| `MoveParser` | Parse moves |
 
-### 📦 **com.splendor.view** (User Interface)
+### 📦 **com.splendor.view** (Views)
 | Class | Type | Description |
 |-------|------|-------------|
-| `IGameView` | Interface | View operations contract |
-| `ConsoleView` | Class | Local console UI |
-| `RemoteView` | Class | Network client view |
-| `NetworkGameView` | Class | Multiplayer view coordinator |
-| `GameRenderer` | Class | ASCII game state renderer |
-| `CardRenderer` | Class | ASCII card renderer |
-| `Colors` | Class | Color code constants |
-| `NetworkMessageHandler` | Interface | Network message interface |
+| `IGameView` | Interface | View contract |
+| `ConsoleView` | Class | Console UI |
+| `RemoteView` | Class | Network client UI |
+| `NetworkGameView` | Class | Multiplayer coordinator |
+| `GameRenderer` | Class | ASCII renderer |
+| `CardRenderer` | Class | Card renderer |
+| `Colors` | Class | Color codes |
+| `NetworkMessageHandler` | Interface | Network interface |
 
 ---
 
-## 3. Five Category Diagrams
+## 3. Six Category Diagrams
 
-### 3.1 Domain (Data Structure) - Model Layer
+### 3.1 Domain (Data Structure)
 
-The core game entities and their relationships:
+Core game entities and their relationships:
 
 ```mermaid
 classDiagram
+    direction LR
+    
     class Gem {
         RED
         GREEN
@@ -152,12 +179,12 @@ classDiagram
     }
     
     class MoveType {
-        TAKE_THREE_DIFFERENT
-        TAKE_TWO_SAME
-        RESERVE_CARD
-        BUY_CARD
-        DISCARD_TOKENS
-        EXIT_GAME
+        TAKE_THREE
+        TAKE_TWO
+        RESERVE
+        BUY
+        DISCARD
+        EXIT
     }
     
     class GameState {
@@ -167,295 +194,275 @@ classDiagram
     }
     
     class Card {
-        int id
-        int tier
-        int points
-        Gem bonusGem
+        id
+        tier
+        points
+        bonusGem
+        cost
     }
     
     class Noble {
-        int id
-        int points
+        id
+        points
+        requirements
     }
     
     class Player {
-        String name
+        name
+        tokens
+        purchasedCards
+        reservedCards
+        nobles
     }
     
-    class ComputerPlayer {
-    }
+    class ComputerPlayer
     
     class Board {
-        int maxPlayers
+        gemBank
+        cardDecks
+        availableCards
+        availableNobles
     }
     
     class Game {
-        int winningPoints
-        int maxTokens
-        int currentPlayerIndex
+        players
+        board
+        currentState
+        currentPlayerIndex
+        winningPoints
+        maxTokens
     }
     
     class Move {
-        MoveType moveType
-        Integer cardId
-        boolean isReservedCard
-        Integer deckTier
+        moveType
+        selectedGems
+        cardId
+        isReservedCard
+        deckTier
     }
     
     ComputerPlayer --|> Player
-    Game *-- Board
-    Game *-- Player
-    Game *-- GameState
-    Board *-- Card
-    Board *-- Noble
-    Player *-- Card
-    Player *-- Noble
+    Game "1" *-- "1" Board
+    Game "1" *-- "2..4" Player
+    Game "1" *-- "1" GameState
+    Board "1" *-- "*" Card
+    Board "1" *-- "*" Noble
+    Player "1" *-- "*" Card : purchased
+    Player "1" *-- "*" Card : reserved
+    Player "1" *-- "*" Noble
     Card --> Gem
     Noble --> Gem
     Move --> MoveType
     Move --> Gem
 ```
 
-**Key Concepts:**
-- **Game** is the root containing Board and 2-4 Players
-- **Board** manages the gem bank, card decks, and available nobles
-- **Player** owns tokens, purchased cards, reserved cards, and attracted nobles
-- **Card** and **Noble** are placed on the Board and collected by Players
-- **Move** represents actions players can take
+**Key Relationships:**
+- Game contains Board and 2-4 Players
+- Board contains Cards and Nobles
+- Player owns tokens, cards (purchased/reserved), and nobles
+- Cards and Nobles reference Gem types
 
 ---
 
 ### 3.2 Controllers (Business Logic)
 
-Orchestrates game flow and coordinates actions:
+Game flow orchestration:
 
 ```mermaid
 classDiagram
+    direction LR
+    
     class GameController {
         initializeGame()
         startGame()
         processTurn()
-        getPlayerMove(Player player)
-        handleTokenLimit(Player player)
-        checkNobleVisits(Player player)
-        displayGameResults()
+        getPlayerMove()
+        handleTokenLimit()
+        checkNobleVisits()
+        displayResults()
     }
     
     class TurnController {
-        executeMove(Move move, Player player)
-        executeTakeThreeDifferent()
-        executeTakeTwoSame()
-        executeReserveCard()
-        executeBuyCard()
-        executeDiscardTokens()
-        calculateEffectiveCost()
-        processCardPayment()
+        executeMove()
+        executeTakeThree()
+        executeTakeTwo()
+        executeReserve()
+        executeBuy()
+        executeDiscard()
+        calculateCost()
+        processPayment()
     }
     
     class PlayerController {
-        checkNobleVisits(Player player)
-        assignNobleToPlayer()
-        executeTokenDiscard()
-        validateTokenDiscard()
+        checkNobleVisits()
+        assignNoble()
+        executeDiscard()
+        validateDiscard()
     }
     
     class MenuBuilder {
         buildMenuOptions()
-        getAvailableDifferentGems()
-        getAvailableTwoSameGems()
-        getAffordableVisibleIds()
-        getAffordableReservedIds()
+        getAvailableGems()
+        getAffordableCards()
+        getReservedCards()
     }
     
-    GameController --> TurnController
-    GameController --> PlayerController
-    GameController --> MenuBuilder
+    GameController --> TurnController : delegates
+    GameController --> PlayerController : delegates
+    GameController --> MenuBuilder : uses
 ```
 
 **Responsibilities:**
-- **GameController**: Main orchestrator - manages game lifecycle, turns, and coordinates other controllers
-- **TurnController**: Executes specific move types (take gems, reserve card, buy card)
-- **PlayerController**: Handles player-specific logic (noble visits, token discarding)
-- **MenuBuilder**: Dynamically builds available menu options based on game state
+- **GameController**: Main orchestrator, manages game lifecycle
+- **TurnController**: Executes specific move types
+- **PlayerController**: Handles noble visits and token limits
+- **MenuBuilder**: Builds dynamic menu options
 
 ---
 
 ### 3.3 Validators (Rule Checking)
 
-Ensures all moves and game transitions follow the rules:
+Rule enforcement:
 
 ```mermaid
 classDiagram
+    direction LR
+    
     class MoveValidator {
         validateMove()
-        validateTakeThreeDifferent()
-        validateTakeTwoSame()
-        validateReserveCard()
-        validateBuyCard()
-        validateDiscardTokens()
-        canPlayerAffordCard()
+        validateTakeThree()
         validateTakeTwo()
+        validateReserve()
+        validateBuy()
+        validateDiscard()
+        canAffordCard()
         getRuleExplanation()
     }
     
     class GameRuleValidator {
         validateGameStart()
         validateStateTransition()
-        validateFromOngoing()
-        validateFromFinalRound()
         validatePlayerTurn()
         validateNobleAssignment()
     }
     
     class ValidationResult {
-        boolean valid
-        String message
+        valid
+        message
         isValid()
         getMessage()
         ok()
         fail()
     }
     
-    MoveValidator --> ValidationResult
-    MoveValidator --> Move
-    MoveValidator --> Player
-    MoveValidator --> Game
-    MoveValidator --> Board
-    MoveValidator --> Card
-    MoveValidator --> Gem
-    
-    GameRuleValidator --> GameState
-    GameRuleValidator --> Game
-    GameRuleValidator --> Player
-    GameRuleValidator --> Noble
+    MoveValidator --> ValidationResult : creates
+    MoveValidator ..> InvalidMoveException : throws
+    GameRuleValidator ..> GameStateException : throws
 ```
 
-**Validation Rules:**
-- **MoveValidator**: Checks if specific moves are legal (can afford card? enough gems in bank? valid gem selection?)
-- **GameRuleValidator**: Validates game-level rules (valid player count, state transitions, noble assignments)
-- **ValidationResult**: Returns validation status with human-readable messages
+**Validation Types:**
+- **MoveValidator**: Checks specific move legality
+- **GameRuleValidator**: Validates game-level rules
+- **ValidationResult**: Returns validation status
 
 ---
 
-### 3.4 Network (Multiplayer Infrastructure)
+### 3.4 Network (Multiplayer)
 
-Enables online multiplayer gameplay:
+Online multiplayer infrastructure:
 
 ```mermaid
 classDiagram
+    direction LR
+    
     class ServerSocketHandler {
-        int serverPort
-        ServerSocket serverSocket
-        boolean isRunning
+        serverPort
+        serverSocket
+        isRunning
         startServer()
-        acceptClientConnections()
-        handleClientConnection()
-        waitForClients()
-        broadcastToAllClients()
+        acceptConnections()
+        broadcast()
         sendToClient()
         stopServer()
-        getConnectedClientCount()
     }
     
     class ClientHandler {
-        String clientId
-        Socket clientSocket
-        boolean isConnected
+        clientId
+        clientSocket
+        isConnected
         handleClient()
-        initializeStreams()
-        processClientMessages()
-        processMessage()
+        processMessages()
         sendMessage()
         disconnect()
-        getClientId()
-        getClientAddress()
     }
     
     class NetworkProtocol {
-        String MOVE_COMMAND
-        String QUERY_COMMAND
-        String DISCONNECT_COMMAND
+        MOVE_COMMAND
+        QUERY_COMMAND
+        DISCONNECT_COMMAND
         isValidMessage()
         createMessage()
         parseMessage()
-        getCommandType()
     }
     
-    class NetworkException {
-        NetworkException(String message)
-        NetworkException(String message, Throwable cause)
-    }
+    class NetworkException
     
-    ServerSocketHandler "1" *-- "many" ClientHandler
-    ClientHandler --> ServerSocketHandler
-    ClientHandler --> NetworkProtocol
+    ServerSocketHandler "1" *-- "*" ClientHandler : manages
+    ClientHandler --> ServerSocketHandler : references
+    ClientHandler --> NetworkProtocol : uses
     NetworkException --|> SplendorException
-    ServerSocketHandler ..|> NetworkMessageHandler
 ```
 
 **Network Flow:**
-1. **ServerSocketHandler** starts and listens for connections
-2. **ClientHandler** manages each connected client in a separate thread
-3. **NetworkProtocol** defines message formats (MOVE:BUY_CARD:42, QUERY:state, etc.)
-4. **NetworkException** handles network-specific errors
+1. ServerSocketHandler listens for connections
+2. ClientHandler manages each client thread
+3. NetworkProtocol defines message formats
+4. NetworkException handles errors
 
 ---
 
 ### 3.5 Views (User Interface)
 
-Handles all display and user interaction:
+Display and interaction:
 
 ```mermaid
 classDiagram
+    direction LR
+    
     class IGameView {
         displayGameState()
         displayPlayerTurn()
         displayMessage()
-        displayNotification()
         displayError()
         promptForMove()
-        promptForTokenDiscard()
+        promptForDiscard()
         displayWinner()
-        clearDisplay()
-        promptForPlayerName()
+        promptForName()
         close()
     }
     
     class ConsoleView {
-        displayGameState()
-        promptForMove()
-        promptTakeThree()
-        promptTakeTwo()
-        promptReserveVisible()
-        promptReserveDeck()
-        promptBuyVisible()
-        promptBuyReserved()
+        scanner
+        inputResolver
+        renderer
     }
     
     class RemoteView {
-        String clientId
-        displayGameState()
-        promptForMove()
-        send()
-        waitForResponse()
-        buildMoveFromOption()
+        clientId
+        messageHandler
+        renderer
     }
     
     class NetworkGameView {
-        int playerCount
-        displayGameState()
-        promptForMove()
-        broadcast()
-        viewForPlayer()
+        playerViews
+        playerCount
     }
     
     class GameRenderer {
+        moveValidator
         displayGameState()
         displayBoard()
         renderToString()
-        renderCardTiersList()
-        renderNoblesHorizontal()
-        renderPlayersTrackBoxes()
     }
     
     class CardRenderer {
@@ -463,129 +470,181 @@ classDiagram
     }
     
     class Colors {
-        String RED
-        String GREEN
-        String BLUE
-        String GOLD
+        RED, GREEN, BLUE
         colorize()
         getGemColor()
     }
     
     class NetworkMessageHandler {
         sendToClient()
-        waitForClientResponse()
+        waitForResponse()
     }
     
     IGameView <|.. ConsoleView
     IGameView <|.. RemoteView
     IGameView <|.. NetworkGameView
-    NetworkGameView "1" *-- "many" RemoteView
+    NetworkGameView "1" *-- "*" RemoteView
     ConsoleView --> GameRenderer
-    ConsoleView --> InputResolver
-    ConsoleView --> MoveValidator
     RemoteView --> GameRenderer
     RemoteView --> NetworkMessageHandler
-    GameRenderer --> Board
-    GameRenderer --> Player
-    GameRenderer --> Card
-    GameRenderer --> MoveValidator
-    CardRenderer --> Card
-    CardRenderer --> Gem
+    GameRenderer --> CardRenderer
     CardRenderer --> Colors
-    Colors --> Gem
 ```
 
 **View Types:**
-- **ConsoleView**: Local single-player console interface
-- **RemoteView**: View for a network-connected client
-- **NetworkGameView**: Manages multiple RemoteViews for multiplayer
-- **GameRenderer**: Renders ASCII art game board and state
-- **CardRenderer**: Renders individual cards as ASCII art
-- **Colors**: Provides ANSI color codes
+- **ConsoleView**: Local console interface
+- **RemoteView**: Network client view
+- **NetworkGameView**: Multiplayer coordinator
+- **GameRenderer**: ASCII game board
+- **CardRenderer**: ASCII cards
+
+---
+
+### 3.6 Exceptions (Error Handling)
+
+Exception hierarchy:
+
+```mermaid
+classDiagram
+    direction LR
+    
+    class Exception {
+        (Java Standard)
+    }
+    
+    class SplendorException {
+        SplendorException(msg)
+        SplendorException(msg, cause)
+    }
+    
+    class GameStateException {
+        GameStateException(msg)
+    }
+    
+    class InvalidMoveException {
+        InvalidMoveException(msg)
+    }
+    
+    class InsufficientTokensException {
+        InsufficientTokensException(msg)
+    }
+    
+    class InvalidPlayerActionException {
+        InvalidPlayerActionException(msg)
+    }
+    
+    class NetworkException {
+        NetworkException(msg)
+        NetworkException(msg, cause)
+    }
+    
+    class ConfigException {
+        ConfigException(msg)
+        ConfigException(msg, cause)
+    }
+    
+    Exception <|-- SplendorException
+    Exception <|-- ConfigException
+    SplendorException <|-- GameStateException
+    SplendorException <|-- InvalidMoveException
+    SplendorException <|-- InsufficientTokensException
+    SplendorException <|-- InvalidPlayerActionException
+    SplendorException <|-- NetworkException
+```
+
+**Exception Usage:**
+- **SplendorException**: Base for all game errors
+- **GameStateException**: Invalid state transitions
+- **InvalidMoveException**: Illegal moves (thrown by MoveValidator)
+- **InsufficientTokensException**: Not enough gems
+- **InvalidPlayerActionException**: Invalid player actions
+- **NetworkException**: Network errors (extends SplendorException)
+- **ConfigException**: Configuration errors (separate hierarchy)
 
 ---
 
 ## 4. How the Game Flows
 
-### **Startup Flow**
+### Startup Flow
 
 ```
-Main.java
-  └── FileConfigProvider (load config.properties)
+Main
+  └── FileConfigProvider
        └── GameController.initializeGame()
             ├── Create Players (2-4)
-            ├── Create Board (load cards/nobles)
+            ├── Create Board
             └── GameController.startGame()
 ```
 
-### **Turn Processing Flow**
+### Turn Processing Flow
 
 ```
 GameController.processTurn()
-  ├── MenuBuilder.buildMenuOptions()      // What can player do?
-  ├── IGameView.promptForMove()           // Get player choice
-  ├── MoveValidator.validateMove()        // Is it legal?
-  ├── TurnController.executeMove()        // Execute the action
-  ├── PlayerController.checkNobleVisits() // Did noble visit?
-  ├── PlayerController.handleTokenDiscard() // Too many tokens?
-  └── GameFlowController.updateState()    // Check for winner
+  ├── MenuBuilder.buildMenuOptions()
+  ├── IGameView.promptForMove()
+  ├── MoveValidator.validateMove()
+  ├── TurnController.executeMove()
+  ├── PlayerController.checkNobleVisits()
+  ├── PlayerController.handleTokenDiscard()
+  └── Update game state
 ```
 
-### **Network Multiplayer Flow**
+### Network Multiplayer Flow
 
 ```
-ServerSocketHandler (accepts connections)
-  ├── Creates ClientHandler per client
-  ├── ClientHandler.processMessage()
-  │     └── Parses MOVE commands
-  ├── ServerSocketHandler broadcasts updates
-  └── NetworkGameView coordinates all RemoteViews
+ServerSocketHandler
+  ├── Accept connections
+  ├── Create ClientHandler per client
+  ├── Parse MOVE commands
+  ├── Broadcast updates
+  └── NetworkGameView coordinates views
 ```
 
 ---
 
 ## 5. Summary Table
 
-| Category | Package(s) | Key Classes | Responsibility |
-|----------|------------|-------------|---------------|
-| **Domain** | `model` | Game, Board, Player, Card, Noble, Move, Gem, BotStrategy | Game entities and state |
-| **Controllers** | `controller` | GameController, TurnController, PlayerController, MenuBuilder | Game flow orchestration |
-| **Validators** | `model.validator` | MoveValidator, GameRuleValidator, ValidationResult | Rule enforcement |
-| **Views** | `view` | ConsoleView, RemoteView, NetworkGameView, GameRenderer, CardRenderer | Display and input |
-| **Network** | `network` | ServerSocketHandler, ClientHandler, NetworkProtocol | Online multiplayer |
-| **Config** | `config` | FileConfigProvider, ConfigKeys | Settings management |
-| **Exception** | `exception` | SplendorException hierarchy | Error handling |
-| **Util** | `util` | CardLoader, InputResolver, MoveParser, GameLogger | Helper utilities |
+| Category | Classes | Responsibility |
+|----------|---------|---------------|
+| **Domain** | 13 | Game entities and state |
+| **Controllers** | 4 | Game flow orchestration |
+| **Validators** | 3 | Rule enforcement |
+| **Network** | 4 | Online multiplayer |
+| **Views** | 8 | Display and input |
+| **Exceptions** | 7 | Error handling |
+| **Config** | 4 | Settings management |
+| **Util** | 8 | Helper utilities |
+| **Total** | **51** | |
 
 ---
 
-## 6. Design Patterns Used
+## 6. Design Patterns
 
-| Pattern | Where Used |
-|---------|------------|
-| **MVC** | Separation of Model, View, Controller |
-| **Strategy** | BotStrategy for AI decision-making |
-| **Factory** | CardLoader creates Card/Noble objects |
-| **Template Method** | IGameView interface with multiple implementations |
-| **Observer** | NetworkGameView coordinates multiple RemoteViews |
-| **Command** | Move objects encapsulate player actions |
-| **Singleton-like** | Constants class with static fields |
+| Pattern | Implementation |
+|---------|---------------|
+| **MVC** | Model-View-Controller separation |
+| **Strategy** | BotStrategy for AI |
+| **Factory** | CardLoader creates entities |
+| **Template Method** | IGameView interface |
+| **Observer** | NetworkGameView coordination |
+| **Command** | Move objects |
 
 ---
 
 ## 7. Class Count Summary
 
-| Category | Classes/Interfaces |
-|----------|-------------------|
-| Domain | 12 (Game, Board, Player, ComputerPlayer, Card, Noble, Move, MenuOption, BotStrategy + 4 enums) |
-| Controllers | 4 (GameController, TurnController, PlayerController, MenuBuilder) |
-| Validators | 3 (MoveValidator, GameRuleValidator, ValidationResult) |
-| Network | 4 (ServerSocketHandler, ClientHandler, NetworkProtocol, NetworkException) |
-| Views | 8 (IGameView, ConsoleView, RemoteView, NetworkGameView, GameRenderer, CardRenderer, Colors, NetworkMessageHandler) |
-| **Total Core** | **31 classes** |
-| Supporting | 14 (config, exception, util, Main) |
-| **Grand Total** | **~45 classes** |
+| Layer | Count |
+|-------|-------|
+| Domain + Enums | 13 |
+| Controllers | 4 |
+| Validators | 3 |
+| Network | 4 |
+| Views | 8 |
+| Exceptions | 7 |
+| Config | 4 |
+| Util | 8 |
+| **Total** | **51** |
 
 ---
 
-*Generated for educational purposes - Splendor Java Implementation*
+*Splendor Java Implementation - Complete Architecture Documentation*
