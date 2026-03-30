@@ -506,12 +506,13 @@ public class GameRenderer {
      * Converts a list of MenuOption objects into a list of display strings for the
      * menu panel. Unavailable options are rendered in dim colour with their reason.
      *
-     * @param options The menu options built by MenuBuilder for the current turn.
+     * @param options       The menu options built by MenuBuilder for the current turn.
+     * @param winningPoints Current game winning-point threshold from configuration.
      * @return List of formatted strings ready to be passed to setMenuLines().
      */
-    public List<String> buildMenuLines(final List<MenuOption> options) {
+    public List<String> buildMenuLines(final List<MenuOption> options, final int winningPoints) {
         final List<String> lines = new ArrayList<>();
-        lines.add("Goal: 15 points");
+        lines.add("Goal: " + winningPoints + " points");
         lines.add("Pick one action (or 'Z' to Undo)");
         for (final MenuOption option : options) {
             final String detail = option.getDetail();

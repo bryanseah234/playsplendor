@@ -425,7 +425,7 @@ public class RemoteView implements IGameView {
      */
     @Override
     public void displayAvailableMoves(final List<MenuOption> options, final Game game) {
-        renderer.setMenuLines(renderer.buildMenuLines(options));
+        renderer.setMenuLines(renderer.buildMenuLines(options, game.getWinningPoints()));
         messageHandler.sendToClient(clientId, renderer.renderToString(game));
     }
 
