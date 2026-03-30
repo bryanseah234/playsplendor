@@ -68,12 +68,14 @@ package "com.splendor.config" {
 
     ConfigException --|> Exception
     FileConfigProvider ..|> IConfigProvider
+    FileConfigProvider --> ConfigKeys
+    FileConfigProvider --> ConfigException
 }
 
 ' ─────────────────────────────────────────────
 '  PACKAGE: com.splendor.exception
 ' ─────────────────────────────────────────────
-package "com.splendor.exception" {
+package "com.splendor.exception" as excpkg {
 
     class SplendorException {
         + SplendorException(message : String)
@@ -374,6 +376,15 @@ package "com.splendor.model" {
     Move --> MoveType
     Move --> Gem
     MenuOption --> MenuAction
+    Board --> Gem
+    BotStrategy --> Player
+    BotStrategy --> Game
+    BotStrategy --> Board
+    BotStrategy --> Move
+    BotStrategy --> Gem
+    BotStrategy --> Card
+    BotStrategy --> MoveType
+    BotStrategy --> Noble
 }
 
 ' ─────────────────────────────────────────────
@@ -430,6 +441,7 @@ package "com.splendor.model.validator" {
     MoveValidator --> Card
     MoveValidator --> Gem
     MoveValidator --> ValidationResult
+    MoveValidator --> MoveType
 }
 
 ' ─────────────────────────────────────────────
@@ -523,18 +535,31 @@ package "com.splendor.controller" {
     GameController --> TurnController
     GameController --> PlayerController
     GameController --> MenuBuilder
+    GameController --> Board
+    GameController --> Card
+    GameController --> ComputerPlayer
+    GameController --> MoveFormatter
+    GameController --> MoveType
+    GameController --> ValidationResult
     MenuBuilder --> Player
     MenuBuilder --> Board
     MenuBuilder --> Game
     MenuBuilder --> Gem
     MenuBuilder --> MoveValidator
     MenuBuilder --> MenuOption
+    MenuBuilder --> Card
+    MenuBuilder --> ComputerPlayer
+    MenuBuilder --> MenuAction
+    MenuBuilder --> Colors
     PlayerController --> Game
     PlayerController --> Player
     PlayerController --> Noble
     PlayerController --> Move
     PlayerController --> IGameView
     PlayerController --> GameRuleValidator
+    PlayerController --> Board
+    PlayerController --> Gem
+    PlayerController --> MoveType
     TurnController --> Game
     TurnController --> Player
     TurnController --> Move
@@ -542,6 +567,7 @@ package "com.splendor.controller" {
     TurnController --> Card
     TurnController --> Gem
     TurnController --> IGameView
+    TurnController --> MoveType
 }
 
 ' ─────────────────────────────────────────────
@@ -645,6 +671,10 @@ package "com.splendor.network" {
     ClientHandler --> ServerSocketHandler
     ClientHandler --> IConfigProvider
     ClientHandler --> NetworkProtocol
+    ClientHandler --> GameLogger
+    ServerSocketHandler --> IConfigProvider
+    ServerSocketHandler --> GameLogger
+    ServerSocketHandler --> Constants
 }
 
 ' ─────────────────────────────────────────────
@@ -759,9 +789,13 @@ package "com.splendor.util" {
     MoveFormatter --> Player
     MoveFormatter --> Move
     MoveFormatter --> Gem
+    MoveFormatter --> MoveType
+    MoveFormatter --> Colors
     MoveParser --> Move
     MoveParser --> Gem
     MoveParser --> GemParser
+    MoveParser --> MoveType
+    GameLogger --> Constants
 }
 
 ' ─────────────────────────────────────────────
@@ -962,16 +996,50 @@ package "com.splendor.view" {
     ConsoleView --> GameRenderer
     ConsoleView --> InputResolver
     ConsoleView --> MoveValidator
+    ConsoleView --> Game
+    ConsoleView --> Player
+    ConsoleView --> Move
+    ConsoleView --> Noble
+    ConsoleView --> Gem
+    ConsoleView --> MenuOption
+    ConsoleView --> MoveType
+    ConsoleView --> GemParser
+    ConsoleView --> Colors
     RemoteView --> GameRenderer
     RemoteView --> NetworkMessageHandler
+    RemoteView --> Game
+    RemoteView --> Player
+    RemoteView --> Move
+    RemoteView --> Noble
+    RemoteView --> Gem
+    RemoteView --> MenuOption
+    RemoteView --> MoveType
+    RemoteView --> Card
+    RemoteView --> GameLogger
+    RemoteView --> GemParser
+    RemoteView --> MoveParser
+    RemoteView --> Colors
     GameRenderer --> Board
     GameRenderer --> Player
     GameRenderer --> Card
     GameRenderer --> MoveValidator
+    GameRenderer --> Gem
+    GameRenderer --> Game
+    GameRenderer --> Noble
+    GameRenderer --> AnsiUtils
+    GameRenderer --> CardRenderer
+    GameRenderer --> Colors
+    GameRenderer --> MenuOption
+    NetworkGameView --> Game
+    NetworkGameView --> Player
+    NetworkGameView --> Move
+    NetworkGameView --> Noble
+    NetworkGameView --> MenuOption
     Colors --> Gem
     CardRenderer --> Card
     CardRenderer --> Gem
     CardRenderer --> Colors
+    CardRenderer --> AnsiUtils
 }
 
 ' ─────────────────────────────────────────────
@@ -982,5 +1050,22 @@ Main --> GameController
 Main --> IConfigProvider
 Main --> ServerSocketHandler
 Main --> IGameView
+Main --> ConsoleView
+Main --> FileConfigProvider
+Main --> NetworkGameView
+Main --> RemoteView
+Main --> Constants
+Board --> CardLoader
+BotStrategy --> MoveValidator
+
+' Exception package usage (package-level dependency)
+GameController ..> excpkg : <<throws>>
+TurnController ..> excpkg : <<throws>>
+PlayerController ..> excpkg : <<throws>>
+MoveValidator ..> excpkg : <<throws>>
+GameRuleValidator ..> excpkg : <<throws>>
+ServerSocketHandler ..> excpkg : <<throws>>
+ClientHandler ..> excpkg : <<throws>>
+Main ..> excpkg : <<throws>>
 
 @enduml

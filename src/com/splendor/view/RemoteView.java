@@ -8,7 +8,6 @@ package com.splendor.view;
 import com.splendor.model.*;
 import com.splendor.util.GameLogger;
 import com.splendor.util.GemParser;
-import com.splendor.util.MoveParser;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -126,7 +125,7 @@ public class RemoteView implements IGameView {
             final String input = waitForResponse(120000);
             if (input == null) {
                 displayError("Timeout — no input received.");
-                return MoveParser.createDefaultMove();
+                return new Move(MoveType.TAKE_THREE_DIFFERENT);
             }
 
             final int choice;
@@ -333,7 +332,60 @@ public class RemoteView implements IGameView {
             return createDefaultDiscardMove(player, excessCount);
         }
 
-        return MoveParser.parseDiscardMoveFromResponse(response);
+        return parseDiscardMove(response);
+    }
+
+    /**
+     * Parses discard input from remote clients.
+     *
+     * Supported formats:
+     * 1) Legacy protocol: DISCARD:R B
+     * 2) Prompt format: R 1 B 1
+     */
+    private Move parseDiscardMove(final String rawResponse) {
+        String payload = rawResponse == null ? "" : rawResponse.trim();
+        final int separatorIndex = payload.indexOf(':');
+        if (separatorIndex > 0 && payload.substring(0, separatorIndex).equalsIgnoreCase("DISCARD")) {
+            payload = payload.substring(separatorIndex + 1).trim();
+        }
+
+        if (payload.isEmpty()) {
+            return new Move(MoveType.DISCARD_TOKENS, new HashMap<>());
+        }
+
+        final String normalized = payload.replace(",", " ").trim();
+        final String[] tokens = normalized.split("\\s+");
+        final Map<Gem, Integer> gemMap = new HashMap<>();
+
+        boolean parsedAsPairs = tokens.length >= 2 && tokens.length % 2 == 0;
+        if (parsedAsPairs) {
+            for (int i = 0; i < tokens.length; i += 2) {
+                try {
+                    final Gem gem = GemParser.parseGem(tokens[i]);
+                    final int quantity = Integer.parseInt(tokens[i + 1]);
+                    if (quantity <= 0) {
+                        parsedAsPairs = false;
+                        break;
+                    }
+                    final int existing = gemMap.getOrDefault(gem, 0);
+                    gemMap.put(gem, existing + quantity);
+                } catch (final RuntimeException e) {
+                    parsedAsPairs = false;
+                    break;
+                }
+            }
+        }
+
+        if (parsedAsPairs && !gemMap.isEmpty()) {
+            return new Move(MoveType.DISCARD_TOKENS, gemMap);
+        }
+
+        // Backward compatibility for plain gem lists (e.g., "R B").
+        final List<Gem> gems = GemParser.parseGemSelection(payload);
+        for (final Gem gem : gems) {
+            gemMap.put(gem, gemMap.getOrDefault(gem, 0) + 1);
+        }
+        return new Move(MoveType.DISCARD_TOKENS, gemMap);
     }
 
     /**

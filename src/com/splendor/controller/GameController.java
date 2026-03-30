@@ -302,16 +302,14 @@ public class GameController {
         } catch (final InvalidMoveException | InsufficientTokensException e) {
             /*
              * A move-level validation failure (invalid move or not enough tokens)
-             * should not crash the game. Display the reason and offer undo to
-             * human players so they can try a different action.
+             * should not crash the game. Revert the turn snapshot so partial
+             * state changes (for example, taking gems before a bad discard)
+             * do not leak into the next retry.
              */
-            final String input = gameView.displayError(e.getMessage());
-            final boolean isHumanPlayer = !(currentPlayer instanceof ComputerPlayer);
-            if (isHumanPlayer && isUndoInput(input)) {
-                if (performUndo()) {
-                    gameView.displayNotification("Turn reverted!");
-                    return;
-                }
+            final boolean reverted = game.undo();
+            gameView.displayError(e.getMessage());
+            if (reverted) {
+                gameView.displayNotification("Turn reverted due to invalid action.");
             }
         } catch (final IllegalArgumentException e) {
             // Convert model/runtime argument failures into user-facing move errors.

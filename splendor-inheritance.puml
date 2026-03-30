@@ -1,6 +1,6 @@
-@startuml splendor_class_light
+@startuml splendor_inheritance
 
-title Splendor Class Diagram (Lightweight)
+title Splendor Class Diagram — Inheritance & Interfaces
 
 left to right direction
 skinparam classAttributeIconSize 0
@@ -87,17 +87,24 @@ package "com.splendor.util" {
   class MoveParser
 }
 
-' Core inheritance / interfaces
+' ── Config ──────────────────────────────────────
 FileConfigProvider ..|> IConfigProvider
-FileConfigProvider --> ConfigKeys
-FileConfigProvider --> ConfigException
-ComputerPlayer --|> Player
-ConsoleView ..|> IGameView
-NetworkGameView ..|> IGameView
-RemoteView ..|> IGameView
-ServerSocketHandler ..|> NetworkMessageHandler
+ConfigException --|> Exception
 
-' Core model composition
+' ── Exception hierarchy ─────────────────────────
+SplendorException --|> Exception
+GameStateException --|> SplendorException
+InsufficientTokensException --|> SplendorException
+InvalidMoveException --|> SplendorException
+InvalidPlayerActionException --|> SplendorException
+
+' ── Network ─────────────────────────────────────
+NetworkException --|> SplendorException
+ServerSocketHandler ..|> NetworkMessageHandler
+ServerSocketHandler *-- "many" ClientHandler
+
+' ── Model hierarchy & composition ───────────────
+ComputerPlayer --|> Player
 Game *-- Board
 Game *-- "many" Player
 Game *-- GameState
@@ -105,54 +112,11 @@ Board *-- "many" Card
 Board *-- "many" Noble
 Player *-- "many" Card
 Player *-- "many" Noble
-Move --> MoveType
-Move --> Gem
-MenuOption --> MenuAction
-Board --> Gem
-BotStrategy --> Player
-BotStrategy --> Game
-BotStrategy --> Board
-BotStrategy --> Move
-BotStrategy --> Gem
-BotStrategy --> Card
-BotStrategy --> MoveType
-BotStrategy --> Noble
-BotStrategy --> MoveValidator
 
-' Controller dependencies
-GameController --> IGameView
-GameController --> IConfigProvider
-GameController --> Game
-GameController --> MoveValidator
-GameController --> GameRuleValidator
-GameController --> TurnController
-GameController --> PlayerController
-GameController --> MenuBuilder
-
-TurnController --> Game
-TurnController --> IGameView
-PlayerController --> Game
-PlayerController --> IGameView
-MenuBuilder --> MoveValidator
-
-' View/network wiring
+' ── View implementations ─────────────────────────
+ConsoleView ..|> IGameView
+NetworkGameView ..|> IGameView
+RemoteView ..|> IGameView
 NetworkGameView *-- "many" RemoteView
-RemoteView --> GameRenderer
-RemoteView --> NetworkMessageHandler
-Colors --> Gem
-CardRenderer --> Card
-CardRenderer --> Gem
-CardRenderer --> Colors
-
-' App entry wiring
-Main --> GameController
-Main --> IConfigProvider
-Main --> IGameView
-Main --> ServerSocketHandler
-
-' Network internals (high level)
-ServerSocketHandler *-- "many" ClientHandler
-ClientHandler --> ServerSocketHandler
-ClientHandler --> NetworkProtocol
 
 @enduml
