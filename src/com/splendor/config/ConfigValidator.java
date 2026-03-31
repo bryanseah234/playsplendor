@@ -10,7 +10,6 @@ import com.splendor.data.DataLoadException;
 import com.splendor.model.Card;
 import com.splendor.model.Gem;
 import com.splendor.model.Noble;
-import com.splendor.util.Constants;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
@@ -35,8 +34,6 @@ public final class ConfigValidator {
     private static final String FILE_PROPERTY = "file.cards.data";
     private static final String WINNING_POINTS_PROPERTY = "game.points.win";
     private static final String MAX_TOKENS_PROPERTY = "game.max_tokens";
-    private static final String SERVER_PORT_PROPERTY = "server.port";
-    
     /**
      * Private constructor to prevent instantiation.
      */
@@ -82,13 +79,6 @@ public final class ConfigValidator {
         if (maxTokens < 3 || maxTokens > 20) {
             throw new ConfigException(String.format(
                 "Invalid max tokens value: %d. Must be between 3 and 20.", maxTokens));
-        }
-        
-        // Validate server port
-        final int serverPort = configProvider.getIntProperty(SERVER_PORT_PROPERTY, -1);
-        if (serverPort < 1 || serverPort > 65535) {
-            throw new ConfigException(String.format(
-                "Invalid server port: %d. Must be between 1 and 65535.", serverPort));
         }
         
         // Validate tier card counts

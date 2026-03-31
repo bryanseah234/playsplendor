@@ -5,6 +5,8 @@
  */
 package com.splendor.model.validator;
 
+import com.splendor.config.ConfigKeys;
+import com.splendor.config.IConfigProvider;
 import com.splendor.exception.InsufficientTokensException;
 import com.splendor.exception.InvalidMoveException;
 import com.splendor.model.*;
@@ -16,9 +18,21 @@ import java.util.Map;
  */
 public class MoveValidator {
 
-    private static final int MAX_RESERVED_CARDS = 3;
-    private static final int MIN_GEMS_FOR_TWO_SAME = 4;
-    private static final int MAX_GEMS_PER_TURN = 3;
+    private final int MAX_RESERVED_CARDS;
+    private final int MIN_GEMS_FOR_TWO_SAME;
+    private final int MAX_GEMS_PER_TURN;
+
+    public MoveValidator() {
+        this.MAX_RESERVED_CARDS = 3;
+        this.MIN_GEMS_FOR_TWO_SAME = 4;
+        this.MAX_GEMS_PER_TURN = 3;
+    }
+
+    public MoveValidator(final IConfigProvider config) {
+        this.MAX_RESERVED_CARDS = config.getIntProperty(ConfigKeys.MAX_RESERVED_CARDS, 3);
+        this.MIN_GEMS_FOR_TWO_SAME = config.getIntProperty(ConfigKeys.MIN_GEMS_FOR_TWO_SAME, 4);
+        this.MAX_GEMS_PER_TURN = config.getIntProperty(ConfigKeys.MAX_GEMS_PER_TURN, 3);
+    }
 
     /**
      * Validates if a player can perform the specified move.
@@ -76,8 +90,8 @@ public class MoveValidator {
         final Board board = game.getBoard();
 
         // Guard clause: Check gem count
-        if (selectedGems.size() != 3) {
-            throw new InvalidMoveException("Must select exactly 3 different gems");
+        if (selectedGems.size() != MAX_GEMS_PER_TURN) {
+            throw new InvalidMoveException("Must select exactly %d different gems", MAX_GEMS_PER_TURN);
         }
 
         // Guard clause: Check total quantity
@@ -85,8 +99,8 @@ public class MoveValidator {
         for (final int qty : selectedGems.values()) {
             totalQuantity += qty;
         }
-        if (totalQuantity != 3) {
-            throw new InvalidMoveException("Total gem quantity must be exactly 3");
+        if (totalQuantity != MAX_GEMS_PER_TURN) {
+            throw new InvalidMoveException("Total gem quantity must be exactly %d", MAX_GEMS_PER_TURN);
         }
 
         // Validate each selected gem

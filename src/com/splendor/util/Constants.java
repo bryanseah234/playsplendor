@@ -31,7 +31,6 @@ public final class Constants {
     
     // Server configuration
     public static final String SERVER_MODE_FLAG = "--server";
-    public static final int DEFAULT_SERVER_PORT = 8080;
     public static final int MAX_CLIENT_CONNECTIONS = 10;
     public static final int CONNECTION_TIMEOUT_MS = 30000;
     

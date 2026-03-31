@@ -112,9 +112,10 @@ public class Game {
      * @param winningPoints Points required to win
      * @param maxTokens Maximum tokens allowed per player
      */
-    public Game(final List<Player> players, final int winningPoints, final int maxTokens) {
+    public Game(final List<Player> players, final int winningPoints, final int maxTokens,
+            final com.splendor.config.IConfigProvider config) {
         this.players = new ArrayList<>(players);
-        this.board = new Board(players.size());
+        this.board = new Board(players.size(), config);
         this.winningPoints = winningPoints;
         this.maxTokens = maxTokens;
         this.currentState = GameState.ONGOING;

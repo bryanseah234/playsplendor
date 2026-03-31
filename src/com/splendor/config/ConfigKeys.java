@@ -21,9 +21,11 @@ public final class ConfigKeys {
     public static final String SETUP_4P_GEMS = "game.setup.4p.gems";
     public static final String SETUP_NOBLES_ADD = "game.setup.nobles.add";
     
-    // Server configuration
-    public static final String SERVER_PORT = "server.port";
-    
+    // Game rule configuration
+    public static final String MAX_RESERVED_CARDS = "game.max_reserved_cards";
+    public static final String MIN_GEMS_FOR_TWO_SAME = "game.min_gems_for_two_same";
+    public static final String MAX_GEMS_PER_TURN = "game.max_gems_per_turn";
+
     // Network configuration
     public static final String MAX_CLIENTS = "network.max_clients";
     public static final String CONNECTION_TIMEOUT = "network.connection_timeout";

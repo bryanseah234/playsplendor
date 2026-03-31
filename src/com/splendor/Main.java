@@ -107,8 +107,7 @@ public class Main {
     private static void startServerMode(final IConfigProvider configProvider) throws SplendorException {
         System.out.println("Starting Splendor in server mode...");
 
-        final int serverPort = configProvider.getIntProperty("server.port", Constants.DEFAULT_SERVER_PORT);
-        final ServerSocketHandler serverHandler = new ServerSocketHandler(serverPort, configProvider);
+        final ServerSocketHandler serverHandler = new ServerSocketHandler(0, configProvider);
 
         // Accept connections in a background thread
         final Thread acceptThread = new Thread(() -> {

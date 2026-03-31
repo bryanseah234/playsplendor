@@ -27,7 +27,6 @@ import java.util.List;
  * 
  * @see CardDataProvider Interface for custom data providers
  * @see CsvCardParser Default CSV implementation
- * @see CustomCardDeckProvider Custom deck injection
  */
 public final class CardLoader {
     
@@ -77,36 +76,6 @@ public final class CardLoader {
             return provider.loadNobles();
         } catch (final DataLoadException e) {
             throw new RuntimeException("Failed to load nobles", e);
-        }
-    }
-    
-    /**
-     * Sets a custom card data provider.
-     * 
-     * Use this method to inject custom decks at runtime. The provider
-     * will be used for all subsequent card and noble loading operations.
-     * 
-     * @param provider Custom data provider to use
-     * @throws IllegalArgumentException if provider is null
-     */
-    public static void setCustomProvider(final CardDataProvider provider) {
-        if (provider == null) {
-            throw new IllegalArgumentException("CardDataProvider cannot be null");
-        }
-        synchronized (LOCK) {
-            instance = provider;
-        }
-    }
-    
-    /**
-     * Resets the data provider to the default CSV parser.
-     * 
-     * Use this method to clear any custom provider and return to
-     * standard CSV-based data loading.
-     */
-    public static void resetToDefault() {
-        synchronized (LOCK) {
-            instance = null;
         }
     }
     

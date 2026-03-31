@@ -61,7 +61,7 @@ public class GameController {
     public GameController(final IGameView gameView, final IConfigProvider configProvider) {
         this.gameView = Objects.requireNonNull(gameView, "Game view cannot be null");
         this.configProvider = Objects.requireNonNull(configProvider, "Config provider cannot be null");
-        this.moveValidator = new MoveValidator();       // stateless validator, safe to share across turns
+        this.moveValidator = new MoveValidator(configProvider);
         this.gameRuleValidator = new GameRuleValidator(); // validates game-start constraints only
         this.players = new ArrayList<>();               // populated by createPlayers()
     }
@@ -96,7 +96,7 @@ public class GameController {
             gameRuleValidator.validateGameStart(playerCount, winningPoints, maxTokens);
 
             createPlayers(playerCount); // populates this.players
-            game = new Game(players, winningPoints, maxTokens);
+            game = new Game(players, winningPoints, maxTokens, configProvider);
 
             gameView.displayNotification("Game initialized successfully!");
 

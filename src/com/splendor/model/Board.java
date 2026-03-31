@@ -5,6 +5,8 @@
  */
 package com.splendor.model;
 
+import com.splendor.config.ConfigKeys;
+import com.splendor.config.IConfigProvider;
 import com.splendor.data.CardLoader;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,14 +27,17 @@ public class Board {
     private final Map<Integer, List<Card>> availableCards; // Tier -> Available cards
     private final List<Noble> availableNobles;
     private final int maxPlayers;
-    
+    private final IConfigProvider config;
+
     /**
      * Creates a new board for the specified number of players.
-     * 
+     *
      * @param maxPlayers Maximum number of players (2-4)
+     * @param config     Configuration provider for gem counts and noble setup
      */
-    public Board(final int maxPlayers) {
+    public Board(final int maxPlayers, final IConfigProvider config) {
         this.maxPlayers = maxPlayers;
+        this.config = config;
         this.gemBank = new HashMap<>();
         this.cardDecks = new HashMap<>();
         this.availableCards = new HashMap<>();
@@ -324,7 +329,7 @@ public class Board {
      */
     private void initializeNobles() {
         List<Noble> allNobles = CardLoader.loadNobles();
-        int nobleCount = maxPlayers + 1;
+        int nobleCount = maxPlayers + config.getIntProperty(ConfigKeys.SETUP_NOBLES_ADD, 1);
         // Take the first N nobles
         if (allNobles.size() > nobleCount) {
             availableNobles.addAll(allNobles.subList(0, nobleCount));
@@ -342,13 +347,13 @@ public class Board {
     private int getBaseGemCountForPlayers(final int playerCount) {
         switch (playerCount) {
             case 2:
-                return 4;
+                return config.getIntProperty(ConfigKeys.SETUP_2P_GEMS, 4);
             case 3:
-                return 5;
+                return config.getIntProperty(ConfigKeys.SETUP_3P_GEMS, 5);
             case 4:
-                return 7;
+                return config.getIntProperty(ConfigKeys.SETUP_4P_GEMS, 7);
             default:
-                return 4; // Default to 2-player setup
+                return config.getIntProperty(ConfigKeys.SETUP_2P_GEMS, 4);
         }
     }
     

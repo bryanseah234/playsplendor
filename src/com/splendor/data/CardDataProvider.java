@@ -22,7 +22,6 @@ import java.util.List;
  * - Proper shuffling and deck composition
  * 
  * @see CsvCardParser Default CSV-based implementation
- * @see CustomCardDeckProvider Custom deck injection implementation
  */
 public interface CardDataProvider {
     

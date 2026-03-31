@@ -35,7 +35,6 @@ import java.util.Map;
  * - Backward compatible: can fall back to legacy format if needed
  * 
  * @see CardDataProvider Interface this implements
- * @see CustomCardDeckProvider Custom deck injection
  */
 public class CsvCardParser implements CardDataProvider {
     
@@ -46,8 +45,8 @@ public class CsvCardParser implements CardDataProvider {
     private static final String CSV_HEADER_TIER = "tier";
     private static final String CSV_HEADER_POINTS = "points";
     private static final String CSV_HEADER_BONUS_GEM = "bonus_gem";
-    private static final String CSV_HEADER_COST = "cost";
-    private static final String CSV_HEADER_REQUIREMENTS = "requirements";
+    private static final Gem[] CARD_COST_COLUMNS  = { Gem.BLACK, Gem.WHITE, Gem.RED, Gem.BLUE, Gem.GREEN };
+    private static final Gem[] NOBLE_REQ_COLUMNS  = { Gem.BLACK, Gem.WHITE, Gem.RED, Gem.BLUE, Gem.GREEN };
     
     private final IConfigProvider configProvider;
     private final List<Card> allCards;
@@ -226,30 +225,30 @@ public class CsvCardParser implements CardDataProvider {
      * @throws DataLoadException if parsing fails
      */
     private Card parseCardRow(final String[] parts, final int lineNumber) throws DataLoadException {
-        if (parts.length < 6) {
+        final int minCols = 5 + CARD_COST_COLUMNS.length;
+        if (parts.length < minCols) {
             throw new DataLoadException(String.format(
-                "Line %d: CARD requires at least 6 columns, found %d", lineNumber, parts.length));
+                "Line %d: CARD requires at least %d columns, found %d", lineNumber, minCols, parts.length));
         }
-        
+
         final int id = Integer.parseInt(parts[1].trim());
         final int tier = Integer.parseInt(parts[2].trim());
         final int points = Integer.parseInt(parts[3].trim());
         final String bonusGemStr = parts[4].trim();
-        final String costStr = parts[5].trim().replace("\"", "");
-        
+
         if (tier < 1 || tier > 3) {
             throw new DataLoadException(String.format(
                 "Line %d: Invalid tier %d. Must be 1, 2, or 3.", lineNumber, tier));
         }
-        
+
         if (points < 0 || points > 5) {
             throw new DataLoadException(String.format(
                 "Line %d: Invalid points %d. Must be 0-5.", lineNumber, points));
         }
-        
+
         final Gem bonusGem = bonusGemStr.isEmpty() ? null : Gem.valueOf(bonusGemStr.toUpperCase());
-        final Map<Gem, Integer> cost = parseCostMap(costStr);
-        
+        final Map<Gem, Integer> cost = parseCostColumns(parts, 5, CARD_COST_COLUMNS, lineNumber);
+
         return new Card(id, tier, points, bonusGem, cost);
     }
     
@@ -262,76 +261,45 @@ public class CsvCardParser implements CardDataProvider {
      * @throws DataLoadException if parsing fails
      */
     private Noble parseNobleRow(final String[] parts, final int lineNumber) throws DataLoadException {
-        if (parts.length < 4) {
+        final int minCols = 3 + NOBLE_REQ_COLUMNS.length;
+        if (parts.length < minCols) {
             throw new DataLoadException(String.format(
-                "Line %d: NOBLE requires at least 4 columns, found %d", lineNumber, parts.length));
+                "Line %d: NOBLE requires at least %d columns, found %d", lineNumber, minCols, parts.length));
         }
-        
+
         final int id = Integer.parseInt(parts[1].trim());
-        final int points = Integer.parseInt(parts[3].trim());
-        
-        // Requirements may be in column 4 (cost column) or column 6 (requirements column)
-        String requirementsStr = "";
-        if (parts.length >= 7 && !parts[6].trim().isEmpty()) {
-            requirementsStr = parts[6].trim().replace("\"", "");
-        } else if (parts.length >= 4 && !parts[3].trim().isEmpty()) {
-            // Legacy format: requirements in points column position (shifted)
-            requirementsStr = parts[3].trim().replace("\"", "");
-        }
-        
+        final int points = Integer.parseInt(parts[2].trim());
+
         if (points != 3) {
             throw new DataLoadException(String.format(
                 "Line %d: Noble points must be 3, found %d.", lineNumber, points));
         }
-        
-        final Map<Gem, Integer> requirements = parseCostMap(requirementsStr);
-        
+
+        final Map<Gem, Integer> requirements = parseCostColumns(parts, 3, NOBLE_REQ_COLUMNS, lineNumber);
+
         return new Noble(id, points, requirements);
     }
-    
-    /**
-     * Parses a cost/requirements string into a Gem-to-quantity map.
-     * 
-     * Format: "GEM1:amount1,GEM2:amount2,..."
-     * Example: "BLUE:1,GREEN:1,RED:1,WHITE:1"
-     * 
-     * @param costStr The cost string to parse
-     * @return Map of gems to required quantities
-     * @throws IllegalArgumentException if format is invalid
-     */
-    private Map<Gem, Integer> parseCostMap(final String costStr) {
+
+    private Map<Gem, Integer> parseCostColumns(final String[] parts, final int startCol,
+            final Gem[] gems, final int lineNumber) throws DataLoadException {
         final Map<Gem, Integer> cost = new HashMap<>();
-        if (costStr == null || costStr.isEmpty()) {
-            return cost;
-        }
-        
-        final String[] entries = costStr.split(",");
-        for (String entry : entries) {
-            entry = entry.trim();
-            if (entry.isEmpty()) {
-                continue;
-            }
-            
-            final String[] kv = entry.split(":");
-            if (kv.length != 2) {
-                throw new IllegalArgumentException(
-                    String.format("Invalid cost format: '%s'. Expected GEM:amount", entry));
-            }
-            
-            final Gem gem = Gem.valueOf(kv[0].trim().toUpperCase());
-            final int amount = Integer.parseInt(kv[1].trim());
-            
+        for (int i = 0; i < gems.length; i++) {
+            final int col = startCol + i;
+            if (col >= parts.length) break;
+            final String val = parts[col].trim();
+            if (val.isEmpty()) continue;
+            final int amount = Integer.parseInt(val);
             if (amount < 0) {
-                throw new IllegalArgumentException(
-                    String.format("Negative gem amount for %s: %d", gem, amount));
+                throw new DataLoadException(String.format(
+                    "Line %d: Negative gem amount for %s: %d", lineNumber, gems[i], amount));
             }
-            
-            cost.put(gem, amount);
+            if (amount > 0) {
+                cost.put(gems[i], amount);
+            }
         }
-        
         return cost;
     }
-    
+
     /**
      * Gets the target card count for a specific tier from configuration.
      * 

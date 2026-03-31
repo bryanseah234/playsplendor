@@ -27,7 +27,6 @@ package com.splendor.data;
  * </ul>
  * 
  * @see CsvCardParser
- * @see CustomCardDeckProvider
  * @see CardLoader
  */
 public class DataLoadException extends Exception {
