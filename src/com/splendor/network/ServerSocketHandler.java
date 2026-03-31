@@ -218,8 +218,10 @@ public class ServerSocketHandler implements NetworkMessageHandler {
         if (gameStarted) {
             GameLogger.info("Player disconnected mid-game. Terminating game for all players.");
             broadcastToAllClients("A player has disconnected. Game is over.");
+            // Graceful shutdown - notify all clients and stop accepting new connections
             stopServer();
-            System.exit(1);
+            // Throw a runtime exception to propagate to Main which can handle cleanup
+            throw new RuntimeException("Player disconnected mid-game. Server terminated.");
         }
     }
     
