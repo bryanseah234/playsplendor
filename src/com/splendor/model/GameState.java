@@ -1,13 +1,31 @@
 /**
  * Enumeration of game states for proper end-game handling.
  * Manages the game flow from ongoing play through final round to finished state.
- * 
  */
 package com.splendor.model;
 
 /**
- * Represents the current state of the game.
- * Used to manage game flow and ensure proper end-game handling.
+ * Represents the current phase of a Splendor game's lifecycle.
+ * 
+ * A Splendor game progresses through three distinct phases:
+ * <ol>
+ *   <li>{@link Phase#ONGOING} - Normal gameplay; no player has reached the winning point threshold</li>
+ *   <li>{@link Phase#FINAL_ROUND} - Triggered when a player reaches the winning threshold; all other
+ *       players get one final turn to try to win</li>
+ *   <li>{@link Phase#FINISHED} - All players have completed their final turn; the winner is determined</li>
+ * </ol>
+ * 
+ * <p>This class uses the Singleton pattern with predefined instances ({@link #ONGOING},
+ * {@link #FINAL_ROUND}, {@link #FINISHED}) to ensure consistent state objects throughout
+ * the application.
+ * 
+ * <p>The state transitions are strictly unidirectional:
+ * ONGOING → FINAL_ROUND → FINISHED
+ * 
+ * <p>State transition validation is handled by {@link com.splendor.model.validator.GameRuleValidator}.
+ * 
+ * @see Game#isGameFinished() For checking if the game has ended
+ * @see com.splendor.model.validator.GameRuleValidator#validateStateTransition(GameState, GameState)
  */
 public class GameState {
     public static final GameState ONGOING = new GameState(Phase.ONGOING);

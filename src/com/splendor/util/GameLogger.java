@@ -1,7 +1,6 @@
 /**
  * Simple logging utility for application events and errors.
  * Provides basic logging functionality for debugging and monitoring.
- * 
  */
 package com.splendor.util;
 
@@ -9,8 +8,33 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Simple logging utility for application events.
- * Provides timestamped logging with different severity levels.
+ * Centralized logging facility for the Splendor game application.
+ * 
+ * This utility class provides timestamped logging with multiple severity levels
+ * (INFO, ERROR, DEBUG, WARN) to help track application behavior during both
+ * development and runtime. All log messages are prefixed with a timestamp and
+ * log level for easy filtering and debugging.
+ * 
+ * <p>Key features:
+ * <ul>
+ *   <li>Timestamped log entries with configurable severity levels</li>
+ *   <li>Optional debug mode for verbose output including stack traces</li>
+ *   <li>Specialized logging methods for game state, player actions, and network events</li>
+ *   <li>Consistent log format across the entire application</li>
+ * </ul>
+ * 
+ * <p>Usage example:
+ * <pre>
+ *   GameLogger.info("Game started");
+ *   GameLogger.error("Failed to load configuration", exception);
+ *   GameLogger.debug("Detailed trace information");
+ * </pre>
+ * 
+ * <p>This class is thread-safe and designed to be used throughout the application
+ * without instantiation.
+ * 
+ * @see Constants#LOG_FORMAT For the log message format template
+ * @see Constants#LOG_LEVEL_INFO For standard log level identifiers
  */
 public class GameLogger {
     

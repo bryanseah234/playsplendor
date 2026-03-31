@@ -3,7 +3,37 @@ package com.splendor.view;
 import com.splendor.model.Gem;
 
 /**
- * ANSI Color Constants for terminal output.
+ * Centralized ANSI color constants and colorization utilities for terminal output.
+ * 
+ * This utility class provides a consistent color scheme across the entire Splendor
+ * console interface. Each gem type, UI element, and game component has an associated
+ * color to improve visual clarity and user experience.
+ * 
+ * <p>Color assignments:
+ * <ul>
+ *   <li>{@link #RED}, {@link #GREEN}, {@link #BLUE}, {@link #WHITE}, {@link #BLACK} - Gem colors</li>
+ *   <li>{@link #GOLD} - Gold token (wild card) color</li>
+ *   <li>{@link #CYAN} - Player names and important information</li>
+ *   <li>{@link #PURPLE} - Noble tiles</li>
+ *   <li>{@link #GRAY} - Disabled options and secondary information</li>
+ *   <li>{@link #DIM} - Unaffordable cards and inaccessible elements</li>
+ * </ul>
+ * 
+ * <p>ANSI support is automatically detected at startup via the {@link #detectAnsiSupport()}
+ * method, which checks JVM system properties and environment variables. This ensures
+ * compatibility with terminals that don't support ANSI escape codes.
+ * 
+ * <p>All colorization methods automatically append the {@link #RESET} code after the
+ * colored text to prevent color bleeding into subsequent output.
+ * 
+ * <p>Usage example:
+ * <pre>
+ *   String redText = Colors.colorize("Red Gem", Colors.RED);
+ *   String gemColor = Colors.getGemColor(Gem.BLUE);
+ * </pre>
+ * 
+ * @see Gem For gem type to color mapping
+ * @see AnsiUtils For ANSI-aware string manipulation
  */
 public class Colors {
     public static final String RESET = "\u001B[0m";

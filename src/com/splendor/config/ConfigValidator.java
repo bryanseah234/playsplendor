@@ -137,8 +137,8 @@ public final class ConfigValidator {
      * 
      * This performs an actual load of card data to ensure the format is correct
      * and the data is complete. It uses the CardLoader which will throw
-     * DataLoadException if there are any parsing or format issues.
-     * 
+     * RuntimeException if there are any parsing or format issues.
+     *
      * @throws ConfigException if data loading fails or data is incomplete
      */
     private static void validateDataIntegrity() throws ConfigException {
@@ -150,28 +150,29 @@ public final class ConfigValidator {
                     throw new ConfigException(
                         String.format("No cards loaded for tier %d. Check data file format.", tier));
                 }
-                
+
                 // Validate each card has required properties
                 for (final Card card : cards) {
                     validateCard(card, tier);
                 }
             }
-            
+
             // Validate nobles can be loaded
             final List<Noble> nobles = CardLoader.loadNobles();
             if (nobles == null || nobles.isEmpty()) {
                 throw new ConfigException("No nobles loaded. Check data file format.");
             }
-            
+
             // Validate each noble has required properties
             for (final Noble noble : nobles) {
                 validateNoble(noble);
             }
-        } catch (final DataLoadException e) {
-            throw new ConfigException("Failed to load card data: " + e.getMessage(), e);
         } catch (final RuntimeException e) {
             if (e.getCause() instanceof ConfigException) {
                 throw (ConfigException) e.getCause();
+            }
+            if (e.getCause() instanceof DataLoadException) {
+                throw new ConfigException("Failed to load card data: " + e.getCause().getMessage(), e);
             }
             throw new ConfigException("Unexpected error during data validation: " + e.getMessage(), e);
         }

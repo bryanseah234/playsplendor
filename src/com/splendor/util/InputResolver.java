@@ -1,15 +1,39 @@
 /**
  * Safe input parsing utility for handling user input.
  * Provides robust input validation and parsing to prevent crashes.
- * 
  */
 package com.splendor.util;
 
 import java.util.Scanner;
 
 /**
- * Utility class for safe input parsing and validation.
- * Prevents crashes from invalid user input and provides helpful error messages.
+ * Robust input parsing and validation utility for console-based user interaction.
+ * 
+ * This class provides a safe wrapper around {@link Scanner} to handle user input
+ * with comprehensive validation, error recovery, and helpful error messages. It
+ * prevents common input-related crashes such as {@link java.util.InputMismatchException}
+ * and {@link java.util.NoSuchElementException}.
+ * 
+ * <p>Key features:
+ * <ul>
+ *   <li>Range-bounded integer input with automatic re-prompting</li>
+ *   <li>String length validation with min/max constraints</li>
+ *   <li>Yes/no confirmation prompts with flexible input parsing</li>
+ *   <li>Undo/back signal support via "Z" or "UNDO" keywords</li>
+ *   <li>Invisible Unicode control character sanitization</li>
+ *   <li>Optional callback on invalid input for UI refresh</li>
+ * </ul>
+ * 
+ * <p>All prompting methods handle the full input loop internally, continuing to
+ * prompt until valid input is received or an undo signal is given.
+ * 
+ * <p>Example usage:
+ * <pre>
+ *   InputResolver resolver = new InputResolver();
+ *   int choice = resolver.promptForInt("Enter choice (1-4): ", 1, 4);
+ *   String name = resolver.promptForString("Enter name: ", 1, 20);
+ *   boolean confirmed = resolver.promptForConfirmation("Confirm?");
+ * </pre>
  */
 public class InputResolver {
 

@@ -1,7 +1,6 @@
 /**
  * Interface for game view implementations.
  * Defines the contract for displaying game state and receiving user input.
- * 
  */
 package com.splendor.view;
 
@@ -10,14 +9,42 @@ import com.splendor.model.Move;
 import com.splendor.model.Noble;
 import com.splendor.model.Player;
 import com.splendor.model.MenuOption;
-import com.splendor.model.Player;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Interface for game view implementations.
- * Supports different view types (console, network, GUI) through a common
- * interface.
+ * Contract for all view implementations in the Splendor game's MVC architecture.
+ * 
+ * This interface defines the complete set of operations required to render the game
+ * state and collect user input. It supports multiple implementation strategies:
+ * <ul>
+ *   <li>{@link ConsoleView} - Local terminal-based console interface</li>
+ *   <li>{@link RemoteView} - Network client view for remote players</li>
+ *   <li>{@link NetworkGameView} - Server-side view that routes to multiple clients</li>
+ * </ul>
+ * 
+ * <p>The view layer is responsible for:
+ * <ul>
+ *   <li>Rendering the game board, player states, and available actions</li>
+ *   <li>Prompting users for input and validating basic format</li>
+ *   <li>Displaying messages, errors, and notifications</li>
+ *   <li>Managing the user interaction flow during each turn</li>
+ * </ul>
+ * 
+ * <p>All view implementations must be stateless with respect to game logic;
+ * they should only handle presentation and input collection. The controller
+ * layer ({@link com.splendor.controller.GameController}) is responsible for
+ * interpreting input and updating the model.
+ * 
+ * <p>Typical turn flow:
+ * <ol>
+ *   <li>{@link #displayGameState(Game)} - Show current board state</li>
+ *   <li>{@link #promptForMove(Player, Game, List)} - Collect player's action choice</li>
+ *   <li>{@link #displayNotification(String)} - Show result of action</li>
+ * </ol>
+ * 
+ * @see com.splendor.controller.GameController For the controller that uses this view
+ * @see ConsoleView Default console implementation
  */
 public interface IGameView {
 

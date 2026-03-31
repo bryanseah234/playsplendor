@@ -1,13 +1,31 @@
 /**
  * Application-wide constants and configuration values.
  * Centralizes commonly used constants to prevent magic numbers and strings.
- * 
  */
 package com.splendor.util;
 
 /**
- * Application constants used throughout the codebase.
- * Provides centralized access to commonly used values.
+ * Central registry of application-wide constants used throughout the Splendor game.
+ * 
+ * This utility class provides centralized access to configuration values, game rules,
+ * network settings, and logging constants. By consolidating these values in one place,
+ * we ensure consistency across the codebase and make configuration changes easier.
+ * 
+ * <p>Constants are organized into logical groups:
+ * <ul>
+ *   <li>Server configuration - network mode settings</li>
+ *   <li>Game configuration - player counts, winning conditions, token limits</li>
+ *   <li>Card tiers - tier numbering and display settings</li>
+ *   <li>Gem configuration - token counts and action requirements</li>
+ *   <li>Input validation - name length limits and retry counts</li>
+ *   <li>Network protocol - message delimiters and status codes</li>
+ *   <li>Logging - format strings and log level identifiers</li>
+ * </ul>
+ * 
+ * <p>This class cannot be instantiated; all members are static final constants.
+ * 
+ * @see com.splendor.config.IConfigProvider For runtime-configurable values
+ * @see com.splendor.config.ConfigKeys For configuration property keys
  */
 public final class Constants {
     

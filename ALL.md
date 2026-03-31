@@ -110,12 +110,12 @@ flowchart LR
 | Domain + Enums | Game, Board, Player, ComputerPlayer, Card, Noble, Move, MenuOption, BotStrategy, Gem, MoveType, MenuAction, GameState | 13 |
 | Controllers | GameController, TurnController, PlayerController, MenuBuilder | 4 |
 | Validators | MoveValidator, GameRuleValidator, ValidationResult | 3 |
-| Network | ServerSocketHandler, ClientHandler, NetworkProtocol, NetworkException | 4 |
+| Network | ServerSocketHandler, ClientHandler, NetworkException | 3 |
 | Views | IGameView, ConsoleView, RemoteView, NetworkGameView, GameRenderer, CardRenderer, Colors, NetworkMessageHandler | 8 |
 | Exceptions | SplendorException, GameStateException, InvalidMoveException, InsufficientTokensException, InvalidPlayerActionException, NetworkException, ConfigException | 7 |
 | Config | IConfigProvider, FileConfigProvider, ConfigKeys, ConfigException | 4 |
-| Util | Constants, GameLogger, AnsiUtils, CardLoader, GemParser, InputResolver, MoveFormatter, MoveParser | 8 |
-| **Total** | | **51** |
+| Data | CardDataProvider, CardLoader, CsvCardParser, CustomCardDeckProvider, DataLoadException | 5 |`n| Util | Constants, GameLogger, AnsiUtils, GemParser, InputResolver, MoveFormatter | 6 |
+| **Total** | | **53** |
 
 ---
 
