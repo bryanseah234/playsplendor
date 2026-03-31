@@ -5,6 +5,8 @@
  */
 package com.splendor;
 
+import com.splendor.config.ConfigException;
+import com.splendor.config.ConfigValidator;
 import com.splendor.config.FileConfigProvider;
 import com.splendor.config.IConfigProvider;
 import com.splendor.controller.GameController;
@@ -35,11 +37,21 @@ public class Main {
             final IConfigProvider configProvider = new FileConfigProvider();
             configProvider.loadConfiguration();
             
+            // Fail-fast validation: halt immediately if config or data is invalid
+            System.out.println("Validating game configuration...");
+            ConfigValidator.validateAll(configProvider);
+            System.out.println("Configuration validated successfully.");
+            
             if (isServerMode(args)) {
                 startServerMode(configProvider);
             } else {
                 startConsoleMode(configProvider);
             }
+        } catch (ConfigException e) {
+            System.err.println("CRITICAL: Configuration validation failed!");
+            System.err.println("  " + e.getMessage());
+            System.err.println("\nPlease fix the configuration and try again.");
+            System.exit(1);
         } catch (SplendorException e) {
             System.err.println("Failed to start application: " + e.getMessage());
             System.exit(1);

@@ -5,7 +5,7 @@
  */
 package com.splendor.model;
 
-import com.splendor.util.CardLoader;
+import com.splendor.data.CardLoader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
