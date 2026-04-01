@@ -7,6 +7,7 @@ package com.splendor.controller;
 
 import com.splendor.exception.*;
 import com.splendor.model.*;
+import com.splendor.model.validator.MoveValidator;
 import com.splendor.model.validator.GameRuleValidator;
 import com.splendor.view.IGameView;
 
@@ -24,17 +25,20 @@ public class PlayerController {
     private final Game game;
     private final IGameView gameView;
     private final GameRuleValidator gameRuleValidator;
-    
+    private final MoveValidator moveValidator;
+
     /**
      * Creates a new PlayerController with the specified game and view.
-     * 
-     * @param game Current game state
-     * @param gameView Game view for user interaction
+     *
+     * @param game          Current game state
+     * @param gameView      Game view for user interaction
+     * @param moveValidator Validator used for move and reserve checks
      */
-    public PlayerController(final Game game, final IGameView gameView) {
+    public PlayerController(final Game game, final IGameView gameView, final MoveValidator moveValidator) {
         this.game = game;
         this.gameView = gameView;
         this.gameRuleValidator = new GameRuleValidator();
+        this.moveValidator = moveValidator;
     }
     
     /**
@@ -230,7 +234,7 @@ public class PlayerController {
     public boolean canPlayerTakeAction(final Player player, final String actionType) {
         switch (actionType.toLowerCase()) {
             case "reserve":
-                return player.canReserveCard();
+                return player.canReserveCard(moveValidator.getMaxReservedCards());
             case "buy":
                 return !player.getReservedCards().isEmpty() || hasAvailableCards();
             case "discard":

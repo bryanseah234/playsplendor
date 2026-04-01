@@ -22,21 +22,19 @@ public class MoveValidator {
     private final int MIN_GEMS_FOR_TWO_SAME;
     private final int MAX_GEMS_PER_TURN;
 
-    public MoveValidator() {
-        this.MAX_RESERVED_CARDS = 3;
+    public MoveValidator(final IConfigProvider config) {
+        this.MAX_RESERVED_CARDS = config.getIntProperty(ConfigKeys.MAX_RESERVED_CARDS, 3);
         this.MIN_GEMS_FOR_TWO_SAME = 4;
         this.MAX_GEMS_PER_TURN = 3;
     }
 
-    public MoveValidator(final IConfigProvider config) {
-        this.MAX_RESERVED_CARDS = config.getIntProperty(ConfigKeys.MAX_RESERVED_CARDS, 3);
-        this.MIN_GEMS_FOR_TWO_SAME = config.getIntProperty(ConfigKeys.MIN_GEMS_FOR_TWO_SAME, 4);
-        this.MAX_GEMS_PER_TURN = config.getIntProperty(ConfigKeys.MAX_GEMS_PER_TURN, 3);
+    public int getMaxReservedCards() {
+        return MAX_RESERVED_CARDS;
     }
 
     /**
      * Validates if a player can perform the specified move.
-     * 
+     *
      * @param move   Move to validate
      * @param player Player attempting the move
      * @param game   Current game state
@@ -180,7 +178,7 @@ public class MoveValidator {
             throws InvalidMoveException {
 
         // Guard clause: Check reserved card limit
-        if (!player.canReserveCard()) {
+        if (!player.canReserveCard(MAX_RESERVED_CARDS)) {
             throw new InvalidMoveException("Cannot reserve more than %d cards", MAX_RESERVED_CARDS);
         }
 
