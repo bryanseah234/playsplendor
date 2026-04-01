@@ -70,9 +70,9 @@ private static final String FILE_PROPERTY = "file.cards.data";
             throws ConfigException {
         // Validate winning points
         final int winningPoints = configProvider.getIntProperty(WINNING_POINTS_PROPERTY, -1);
-        if (winningPoints < 1 || winningPoints > 100) {
+        if (winningPoints < 5 || winningPoints > 50) {
             throw new ConfigException(String.format(
-                "Invalid winning points value: %d. Must be between 1 and 100.", winningPoints));
+                "Invalid winning points value: %d. Must be between 5 and 50.", winningPoints));
         }
         
         // Validate max tokens
