@@ -62,12 +62,32 @@ public class Player {
     }
 
     /**
+     * Updates the player's display name.
+     *
+     * @param name New player name
+     */
+    public void setName(final String name) {
+        this.name = Objects.requireNonNull(name, "name");
+    }
+
+    /**
      * Gets the player's token inventory.
      *
      * @return Unmodifiable map of gems and quantities
      */
     public Map<Gem, Integer> getTokens() {
         return Collections.unmodifiableMap(tokens);
+    }
+
+    /**
+     * Replaces the player's full token inventory.
+     * Missing gem keys are initialized to zero.
+     *
+     * @param tokens Replacement token map
+     */
+    public void setTokens(final Map<Gem, Integer> tokens) {
+        this.tokens = tokens == null ? new HashMap<Gem, Integer>() : new HashMap<Gem, Integer>(tokens);
+        ensureTokenEntries();
     }
 
     /**
@@ -103,6 +123,15 @@ public class Player {
     }
 
     /**
+     * Replaces purchased cards.
+     *
+     * @param cards Replacement purchased cards
+     */
+    public void setPurchasedCards(final List<Card> cards) {
+        this.purchasedCards = cards == null ? new ArrayList<Card>() : new ArrayList<Card>(cards);
+    }
+
+    /**
      * Gets the player's reserved cards.
      *
      * @return Unmodifiable list of reserved cards
@@ -112,12 +141,30 @@ public class Player {
     }
 
     /**
+     * Replaces reserved cards.
+     *
+     * @param cards Replacement reserved cards
+     */
+    public void setReservedCards(final List<Card> cards) {
+        this.reservedCards = cards == null ? new ArrayList<Card>() : new ArrayList<Card>(cards);
+    }
+
+    /**
      * Gets the nobles awarded to the player.
      *
      * @return Unmodifiable list of nobles
      */
     public List<Noble> getNobles() {
         return Collections.unmodifiableList(nobles);
+    }
+
+    /**
+     * Replaces the nobles owned by this player.
+     *
+     * @param nobles Replacement nobles
+     */
+    public void setNobles(final List<Noble> nobles) {
+        this.nobles = nobles == null ? new ArrayList<Noble>() : new ArrayList<Noble>(nobles);
     }
 
     /**
@@ -239,11 +286,11 @@ public class Player {
     void restoreState(final String restoredName, final Map<Gem, Integer> restoredTokens,
                       final List<Card> restoredPurchased, final List<Card> restoredReserved,
                       final List<Noble> restoredNobles) {
-        this.name = restoredName;
-        this.tokens = restoredTokens == null ? new HashMap<Gem, Integer>() : new HashMap<Gem, Integer>(restoredTokens);
-        this.purchasedCards = restoredPurchased == null ? new ArrayList<Card>() : new ArrayList<Card>(restoredPurchased);
-        this.reservedCards = restoredReserved == null ? new ArrayList<Card>() : new ArrayList<Card>(restoredReserved);
-        this.nobles = restoredNobles == null ? new ArrayList<Noble>() : new ArrayList<Noble>(restoredNobles);
+        setName(restoredName);
+        setTokens(restoredTokens);
+        setPurchasedCards(restoredPurchased);
+        setReservedCards(restoredReserved);
+        setNobles(restoredNobles);
     }
 
     /**

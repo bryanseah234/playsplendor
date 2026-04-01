@@ -1,4 +1,4 @@
-name: Documentation Update
+name: DocumentationUpdate
 
 on:
   push:
@@ -13,8 +13,20 @@ on:
       - 'src/**/*.java'
       - 'docs/diagrams/*.puml'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
-  update-documentation:
+  UpdateDocumentation:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -106,7 +118,8 @@ jobs:
         retention-days: 30
     
     - name: Comment on PR (if changes detected)
-      if: github.event_name == 'pull_request' && steps.doc-changes.outputs.changes == 'true'
+      if: github.event_name == 'pull_request' && steps.doc-changes.outputs.changes == 'true' && github.event.pull_request.head.repo.fork == false
+      continue-on-error: true
       uses: actions/github-script@v7
       with:
         script: |
@@ -204,8 +217,8 @@ jobs:
           });
 
   # Job to deploy documentation to GitHub Pages (optional)
-  deploy-documentation:
-    needs: update-documentation
+  DeployDocumentation:
+    needs: UpdateDocumentation
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     

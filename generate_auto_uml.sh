@@ -11,6 +11,22 @@ PACKAGE="com.splendor"
 
 echo "🎯 Starting Automatic UML Generation from Java Code..."
 
+resolve_graphviz_dot() {
+    if command -v dot >/dev/null 2>&1; then
+        command -v dot
+        return 0
+    fi
+
+    for candidate in /usr/bin/dot /usr/local/bin/dot /opt/homebrew/bin/dot /opt/local/bin/dot; do
+        if [ -x "$candidate" ]; then
+            echo "$candidate"
+            return 0
+        fi
+    done
+
+    return 1
+}
+
 # Create output directory
 mkdir -p "$OUTPUT_DIR"
 
@@ -187,12 +203,22 @@ EOF
 echo "🎨 Rendering generated diagrams..."
 # Render all generated diagrams
 if [ -f "$DIAGRAMS_DIR/plantuml.jar" ]; then
-    for puml_file in "$OUTPUT_DIR"/*.puml; do
-        if [ -f "$puml_file" ]; then
-            java -jar "$DIAGRAMS_DIR/plantuml.jar" -SbackgroundColor=#FFFFFF "$puml_file"
-            echo "Rendered: $(basename "$puml_file" .puml).png"
-        fi
-    done
+    if DOT_BIN="$(resolve_graphviz_dot)"; then
+        echo "Using Graphviz dot at: $DOT_BIN"
+        for puml_file in "$OUTPUT_DIR"/*.puml; do
+            if [ -f "$puml_file" ]; then
+                java -jar "$DIAGRAMS_DIR/plantuml.jar" \
+                    -graphvizdot "$DOT_BIN" \
+                    -SbackgroundColor=#FFFFFF \
+                    "$puml_file"
+                echo "Rendered: $(basename "$puml_file" .puml).png"
+            fi
+        done
+    else
+        echo "⚠️  Graphviz 'dot' not found; skipping PNG rendering."
+        echo "   Install Graphviz and rerun to generate PNG files."
+        echo "   (PlantUML sources were still generated in $OUTPUT_DIR)"
+    fi
 fi
 
 echo "✅ Auto-generation complete!"

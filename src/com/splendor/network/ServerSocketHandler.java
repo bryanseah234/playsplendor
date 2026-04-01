@@ -309,13 +309,6 @@ public class ServerSocketHandler implements NetworkMessageHandler {
 
     /**
      * Blocks until a response is available from the client or the timeout elapses.
-     *
-     * @param clientId  Client identifier
-     * @param timeoutMs Maximum wait time in milliseconds
-     * @return The next response string, or null on timeout
-     */
-    /**
-     * Blocks until a response is available from the client or the timeout elapses.
      * Implements NetworkMessageHandler interface.
      *
      * @param clientId  Client identifier
@@ -334,6 +327,18 @@ public class ServerSocketHandler implements NetworkMessageHandler {
             Thread.currentThread().interrupt();
             return null;
         }
+    }
+
+    /**
+     * Backward-compatible alias for polling a client response.
+     * Existing tests and legacy callers still use this method name.
+     *
+     * @param clientId  Client identifier
+     * @param timeoutMs Maximum wait time in milliseconds
+     * @return The next response string, or null on timeout
+     */
+    public String pollClientResponse(final String clientId, final int timeoutMs) {
+        return waitForClientResponse(clientId, timeoutMs);
     }
 
     /**

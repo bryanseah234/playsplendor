@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.splendor.config.IConfigProvider;
+import com.splendor.controller.BotStrategy;
 import com.splendor.model.validator.MoveValidator;
 import com.splendor.test.TestConfigProvider;
 import java.util.List;
