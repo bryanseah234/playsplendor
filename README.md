@@ -8,6 +8,10 @@ A modular, strictly MVC-based implementation of the board game Splendor in Java.
 ## Quick Start
 
 ```bash
+# One-time environment bootstrap (installs/downloads required tooling artifacts)
+./setup_requirements.sh    # Unix/macOS
+.\setup_requirements.bat   # Windows
+
 # Build the project
 ./compile.sh    # Unix/macOS
 .\compile.bat   # Windows
@@ -19,6 +23,8 @@ A modular, strictly MVC-based implementation of the board game Splendor in Java.
 # Run in server mode (network multiplayer)
 java -cp classes com.splendor.Main --server
 ```
+
+> Looking for multiplayer lobby setup steps? Jump to **Network Multiplayer → "4. Network Lobby Setup Walkthrough (Recommended)"**.
 
 ## Table of Contents
 - [Features](#features)
@@ -134,7 +140,29 @@ Include "bot" in a player's name (e.g., "Bot1", "AngryBot") to make them a compu
 ### Prerequisites
 
 - Java JDK 17 or higher
-- Maven (optional, for dependency management)
+- Node.js + npm (for Mermaid diagram rendering used by docs pipeline)
+- Graphviz (`dot`) for PlantUML PNG rendering
+- Python 3 + pip (validation/automation helper environment)
+
+### Environment Bootstrap (Recommended)
+
+Run the setup script once before running tests or CI-style docs checks:
+
+**Windows:**
+```batch
+.\setup_requirements.bat
+```
+
+**Unix/macOS:**
+```bash
+./setup_requirements.sh
+```
+
+What it verifies/installs:
+- Validates Java/Node/Python/Graphviz executables.
+- Installs npm dependencies (including Mermaid CLI) if needed.
+- Downloads `lib/junit-platform-console-standalone-1.10.2.jar` if missing.
+- Downloads `docs/diagrams/plantuml.jar` if missing.
 
 ### Building
 
@@ -205,6 +233,35 @@ Common remote inputs:
 
 Low-level protocol utilities still validate message prefixes such as `MOVE:`, `QUERY:`, and `DISCONNECT`, but gameplay input in this implementation is consumed as prompt responses by the remote view/client handler flow.
 
+### 4. Network Lobby Setup Walkthrough (Recommended)
+
+Use this flow to keep setup predictable and reduce terminal line collisions when multiple users connect close together:
+
+1. **Host starts server**
+   - Run `java -cp classes com.splendor.Main --server`.
+   - Wait for `Waiting for host to connect...`.
+2. **Host connects first**
+   - Connect using `nc <server-ip> <port>`.
+   - The host terminal will show:
+     - `Welcome to Splendor Network Game!`
+     - `You are the lobby leader.`
+     - `Please choose total players (2-4). Other players will wait for your choice.`
+   - Then enter the player count when prompted.
+3. **Other players connect**
+   - After host selects player count, remaining players connect with `nc`.
+   - Lobby status is shown (`Lobby: X/Y players joined...`) until full.
+4. **Name setup (30-second timeout)**
+   - Everyone gets a name prompt and can type a preferred name.
+   - If a player does not submit within 30 seconds, default `PlayerN` is assigned automatically.
+   - To avoid disrupting users mid-typing, status now updates as a full waiting-room snapshot rather than reprinting on each single name change.
+5. **Ready confirmation**
+   - All clients see `Press Enter to confirm readiness and continue.`
+   - Press Enter to proceed into the match.
+
+Tips:
+- Prefer one response per prompt; avoid pasting multiple lines at once.
+- If text looks offset in `nc`, press Enter once to re-sync your terminal input line.
+
 ## Configuration
 
 Game settings in `src/resources/config.properties`:
@@ -225,8 +282,9 @@ Game settings in `src/resources/config.properties`:
 ### Running Tests
 
 Prerequisites:
-- Java 17+ installed
-- JUnit console JAR present at `lib/junit-platform-console-standalone-1.10.2.jar`
+- Run `setup_requirements.(sh|bat)` to ensure test/pipeline dependencies are present.
+- By default, `test/run_tests.(sh|bat)` excludes `com.splendor.network` integration tests to avoid blocking automated/local pipelines.
+- To include network tests explicitly, pass `--include-network`.
 
 **Windows:**
 ```batch
@@ -270,6 +328,7 @@ The test suite uses JUnit 5 and covers:
 Windows `.bat` counterparts exist for the main shell scripts:
 - `compile.sh` ↔ `compile.bat`
 - `run.sh` ↔ `run.bat`
+- `setup_requirements.sh` ↔ `setup_requirements.bat`
 - `generate_docs_enhanced.sh` ↔ `generate_docs_enhanced.bat`
 - `test/run_tests.sh` ↔ `test/run_tests.bat`
 - `test/ci/generate_javadoc.sh` ↔ `test/ci/generate_javadoc.bat`
@@ -286,6 +345,7 @@ Windows `.bat` counterparts exist for the main shell scripts:
 splendor/
 ├── compile.bat / compile.sh      # Build scripts
 ├── run.bat / run.sh              # Run scripts
+├── setup_requirements.bat / setup_requirements.sh  # Environment dependency checker
 ├── generate_docs.bat / generate_docs.sh  # Documentation generator
 ├── README.md                      # This file
 ├── PRD.md                         # Product Requirements Document

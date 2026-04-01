@@ -1,5 +1,6 @@
 classDiagram
-    interface CardDataProvider {
+    class CardDataProvider {
+        <<interface>>
         +loadCards(tier) List~Card~
         +loadNobles() List~Noble~
     }

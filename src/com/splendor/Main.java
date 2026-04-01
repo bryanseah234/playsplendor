@@ -149,36 +149,82 @@ public class Main {
         System.out.println("╚══════════════════════════════════════════╝\n");
 
         System.out.println("Waiting for host to connect...");
-        if (!serverHandler.waitForClients(1, 0)) {
-            System.err.println("Interrupted while waiting for host.");
-            return;
-        }
-
-        // Step 2: ask host how many players
-        final String hostId = serverHandler.getConnectedClientIds().get(0);
-        final RemoteView hostView = new RemoteView(hostId, messageHandler, configProvider);
-        final int playerCount = hostView.promptForPlayerCount();
-        System.out.println("Host selected " + playerCount + " players. Waiting for remaining clients...");
-        serverHandler.broadcastToAllClients("Lobby: 1/" + playerCount + " players joined. Waiting for " + (playerCount - 1) + " more...");
-
-        // Step 3: wait for the remaining clients to connect one at a time, updating all clients after each join
-        for (int joined = 1; joined < playerCount; joined++) {
-            if (!serverHandler.waitForClients(1, 0)) {
-                System.err.println("Interrupted while waiting for players.");
+        int playerCount;
+        while (true) {
+            if (!serverHandler.waitForAtLeastClients(1, 0)) {
+                System.err.println("Interrupted while waiting for host.");
                 return;
             }
-            final int nowJoined = joined + 1;
-            final String status = nowJoined == playerCount
-                ? "Lobby: " + nowJoined + "/" + playerCount + " players joined. Starting game..."
-                : "Lobby: " + nowJoined + "/" + playerCount + " players joined. Waiting for " + (playerCount - nowJoined) + " more...";
-            serverHandler.broadcastToAllClients(status);
-            System.out.println(status);
+
+            final List<String> connectedIds = serverHandler.getConnectedClientIds();
+            if (connectedIds.isEmpty()) {
+                continue;
+            }
+
+            // Current first connection becomes lobby leader for this cycle.
+            final String hostId = connectedIds.get(0);
+            final RemoteView hostView = new RemoteView(hostId, messageHandler, configProvider);
+            hostView.displayWelcomeMessage();
+            hostView.displayMessage("You are the lobby leader.");
+            hostView.displayMessage("Please choose total players (2-4). Other players will wait for your choice.");
+            playerCount = hostView.promptForPlayerCount();
+
+            // Host may disconnect while choosing the player count; if so, restart lobby election.
+            if (!serverHandler.isClientConnected(hostId)) {
+                if (serverHandler.getConnectedClientCount() == 0) {
+                    System.out.println("Lobby reset: all clients disconnected. Waiting for a new leader...");
+                } else {
+                    System.out.println("Lobby leader disconnected before setup completed. Electing next leader...");
+                }
+                continue;
+            }
+
+            System.out.println("Host selected " + playerCount + " players. Waiting for remaining clients...");
+            serverHandler.broadcastToAllClients(
+                    "Lobby: 1/" + playerCount + " players joined. Waiting for " + (playerCount - 1) + " more...");
+
+            // Step 3: wait until total connected clients reaches the selected player count.
+            // If lobby empties before game start, fully reset and assign a new leader.
+            int lastAnnouncedCount = Math.max(1, serverHandler.getConnectedClientCount());
+            boolean restartLobby = false;
+            while (lastAnnouncedCount < playerCount) {
+                if (serverHandler.getConnectedClientCount() == 0) {
+                    System.out.println("Lobby reset: all clients disconnected. Waiting for a new leader...");
+                    restartLobby = true;
+                    break;
+                }
+                if (!serverHandler.waitForAtLeastClients(lastAnnouncedCount + 1, 0)) {
+                    System.err.println("Interrupted while waiting for players.");
+                    return;
+                }
+                if (serverHandler.getConnectedClientCount() == 0) {
+                    System.out.println("Lobby reset: all clients disconnected. Waiting for a new leader...");
+                    restartLobby = true;
+                    break;
+                }
+                final int nowJoined = Math.min(serverHandler.getConnectedClientCount(), playerCount);
+                final String status = nowJoined == playerCount
+                        ? "Lobby: " + nowJoined + "/" + playerCount + " players joined. Starting game..."
+                        : "Lobby: " + nowJoined + "/" + playerCount + " players joined. Waiting for "
+                                + (playerCount - nowJoined) + " more...";
+                serverHandler.broadcastToAllClients(status);
+                System.out.println(status);
+                lastAnnouncedCount = nowJoined;
+            }
+
+            if (restartLobby) {
+                continue;
+            }
+            break;
         }
 
         // Step 4: build one RemoteView per connected client (in connection order)
         final List<RemoteView> playerViews = new ArrayList<>();
         for (final String clientId : serverHandler.getConnectedClientIds()) {
             playerViews.add(new RemoteView(clientId, messageHandler, configProvider));
+        }
+        for (int i = 1; i < playerViews.size(); i++) {
+            playerViews.get(i).displayWelcomeMessage();
         }
 
         final List<String> confirmedNames = synchronizePlayerNames(serverHandler, playerViews);
@@ -212,8 +258,8 @@ public class Main {
                 "If you do not respond within 30 seconds, a default name will be assigned.");
 
         final long nameDeadline = System.currentTimeMillis() + 30000L;
+        broadcastWaitingStatus(serverHandler, clientIds, namesByClient, readyByClient, playerCount);
         while (System.currentTimeMillis() < nameDeadline) {
-            boolean updated = false;
             for (int i = 0; i < clientIds.size(); i++) {
                 final String clientId = clientIds.get(i);
                 if (Boolean.TRUE.equals(readyByClient.get(clientId))) {
@@ -228,10 +274,7 @@ public class Main {
                     namesByClient.put(clientId, trimmed);
                 }
                 readyByClient.put(clientId, true);
-                updated = true;
-            }
-            if (updated) {
-                broadcastWaitingStatus(serverHandler, clientIds, namesByClient, readyByClient, playerCount);
+                serverHandler.sendToClient(clientId, "Name received. Waiting for the other players...");
             }
             if (allReady(readyByClient, clientIds)) {
                 break;

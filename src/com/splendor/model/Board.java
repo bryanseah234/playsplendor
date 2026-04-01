@@ -57,6 +57,19 @@ public class Board {
     public Map<Gem, Integer> getGemBank() {
         return Collections.unmodifiableMap(gemBank);
     }
+
+    /**
+     * Replaces the full gem bank state.
+     * Primarily used by deterministic tests and state restoration helpers.
+     *
+     * @param newGemBank Replacement gem bank values
+     */
+    public void setGemBank(final Map<Gem, Integer> newGemBank) {
+        gemBank.clear();
+        if (newGemBank != null) {
+            gemBank.putAll(newGemBank);
+        }
+    }
     
     /**
      * Gets the count of a specific gem in the bank.
@@ -76,6 +89,22 @@ public class Board {
      */
     public Map<Integer, List<Card>> getAvailableCards() {
         return Collections.unmodifiableMap(availableCards);
+    }
+
+    /**
+     * Replaces the visible cards map for all tiers.
+     * Primarily used by deterministic tests and board-state restoration.
+     *
+     * @param newAvailableCards Replacement tier-to-visible-cards mapping
+     */
+    public void setAvailableCards(final Map<Integer, List<Card>> newAvailableCards) {
+        availableCards.clear();
+        if (newAvailableCards != null) {
+            for (final Map.Entry<Integer, List<Card>> entry : newAvailableCards.entrySet()) {
+                availableCards.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+            }
+        }
+        ensureTierSlotsPresent();
     }
     
     
@@ -107,6 +136,19 @@ public class Board {
      */
     public List<Noble> getAvailableNobles() {
         return Collections.unmodifiableList(availableNobles);
+    }
+
+    /**
+     * Replaces the available nobles list.
+     * Primarily used by deterministic tests and board-state restoration.
+     *
+     * @param nobles Replacement nobles list
+     */
+    public void setAvailableNobles(final List<Noble> nobles) {
+        availableNobles.clear();
+        if (nobles != null) {
+            availableNobles.addAll(nobles);
+        }
     }
     
     
@@ -224,30 +266,37 @@ public class Board {
     }
 
     /**
+     * Replaces deck queues from a tier-to-list structure.
+     * Primarily used by deterministic tests and undo state restoration.
+     *
+     * @param decks Replacement tier-to-deck-cards mapping
+     */
+    public void restoreDecks(final Map<Integer, List<Card>> decks) {
+        cardDecks.clear();
+        if (decks != null) {
+            for (final Map.Entry<Integer, List<Card>> entry : decks.entrySet()) {
+                cardDecks.put(entry.getKey(), new LinkedList<>(entry.getValue()));
+            }
+        }
+        ensureTierSlotsPresent();
+    }
+
+    /**
      * Restores the board state from a snapshot.
      * Package-private to restrict access strictly to the model layer's memento mechanism (Game.java).
      */
     void restoreState(final Map<Gem, Integer> gemBank, final Map<Integer, List<Card>> decks, 
                       final Map<Integer, List<Card>> availableCards, final List<Noble> availableNobles) {
-        this.gemBank.clear();
-        if (gemBank != null) {
-            this.gemBank.putAll(gemBank);
-        }
-        this.cardDecks.clear();
-        if (decks != null) {
-            for (final Map.Entry<Integer, List<Card>> entry : decks.entrySet()) {
-                this.cardDecks.put(entry.getKey(), new LinkedList<>(entry.getValue()));
-            }
-        }
-        this.availableCards.clear();
-        if (availableCards != null) {
-            for (final Map.Entry<Integer, List<Card>> entry : availableCards.entrySet()) {
-                this.availableCards.put(entry.getKey(), new ArrayList<>(entry.getValue()));
-            }
-        }
-        this.availableNobles.clear();
-        if (availableNobles != null) {
-            this.availableNobles.addAll(availableNobles);
+        setGemBank(gemBank);
+        restoreDecks(decks);
+        setAvailableCards(availableCards);
+        setAvailableNobles(availableNobles);
+    }
+
+    private void ensureTierSlotsPresent() {
+        for (int tier = 1; tier <= 3; tier++) {
+            cardDecks.putIfAbsent(tier, new LinkedList<>());
+            availableCards.putIfAbsent(tier, new ArrayList<>());
         }
     }
 

@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.splendor.config.IConfigProvider;
+import com.splendor.controller.BotStrategy;
 import com.splendor.model.validator.MoveValidator;
 import com.splendor.test.TestConfigProvider;
 import java.util.List;
@@ -37,6 +38,7 @@ class BotStrategyTest {
                 board.drawBlindCard(tier);
             }
         }
+        board.setAvailableCards(Map.of(1, List.of(), 2, List.of(), 3, List.of()));
         
         // Make sure taking gems is not an option
         Map<Gem, Integer> allGems = new HashMap<>(board.getGemBank());

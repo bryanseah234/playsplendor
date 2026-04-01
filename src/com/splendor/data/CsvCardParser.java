@@ -180,7 +180,7 @@ public class CsvCardParser {
      * @throws DataLoadException if the row is malformed or contains invalid data
      */
     private void parseCsvRow(final String line, final int lineNumber) throws DataLoadException {
-        final String[] parts = line.split(",");
+        final String[] parts = line.split("," , -1);
         
         if (parts.length < 4) {
             throw new DataLoadException(String.format(

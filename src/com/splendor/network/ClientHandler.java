@@ -48,9 +48,7 @@ public class ClientHandler {
             serverHandler.registerClientQueue(clientId);
             initializeStreams();
             GameLogger.info("Client handler initialized for: " + getClientAddress());
-            
-            // Send welcome message
-            sendWelcomeMessage();
+            sendMessage("Connected to Splendor server. Awaiting lobby instructions...");
             
             // Main message processing loop
             processClientMessages();
@@ -126,14 +124,6 @@ public class ClientHandler {
             GameLogger.debug("Sent to client " + clientId + ": " + message);
         }
     }
-    
-    /**
-     * Sends the welcome message to the client.
-     */
-    private void sendWelcomeMessage() {
-        sendMessage("Welcome to Splendor Network Game!");
-    }
-
     
     /**
      * Disconnects the client and cleans up resources.

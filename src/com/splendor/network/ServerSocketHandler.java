@@ -17,7 +17,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -36,7 +35,6 @@ public class ServerSocketHandler implements NetworkMessageHandler {
     private final List<ClientHandler> connectedClients;
     private volatile boolean isRunning;
     private final ConcurrentHashMap<String, LinkedBlockingQueue<String>> clientResponseQueues;
-    private volatile CountDownLatch clientReadyLatch;
     private volatile boolean gameStarted;
     private volatile boolean shutdownInitiated;
     
@@ -51,7 +49,6 @@ public class ServerSocketHandler implements NetworkMessageHandler {
         this.configProvider = configProvider;
         this.connectedClients = new CopyOnWriteArrayList<>();
         this.clientResponseQueues = new ConcurrentHashMap<>();
-        this.clientReadyLatch = null;
         this.isRunning = false;
         this.gameStarted = false;
         this.shutdownInitiated = false;
@@ -150,10 +147,6 @@ public class ServerSocketHandler implements NetworkMessageHandler {
             // Create client handler
             final ClientHandler clientHandler = new ClientHandler(clientSocket, this);
             connectedClients.add(clientHandler);
-            if (clientReadyLatch != null) {
-                clientReadyLatch.countDown();
-            }
-            
             // Handle client in separate thread
             clientExecutor.submit(() -> {
                 try {
@@ -182,17 +175,36 @@ public class ServerSocketHandler implements NetworkMessageHandler {
      * @return true if the required clients connected in time, false on timeout
      */
     public boolean waitForClients(final int count, final long timeoutMs) {
-        clientReadyLatch = new CountDownLatch(count);
-        try {
-            if (timeoutMs <= 0) {
-                clientReadyLatch.await();
+        final int targetClients = getConnectedClientCount() + Math.max(0, count);
+        return waitForAtLeastClients(targetClients, timeoutMs);
+    }
+
+    /**
+     * Blocks until at least {@code targetClients} are connected, or timeout elapses.
+     *
+     * @param targetClients Absolute connected-client target
+     * @param timeoutMs Maximum wait time in milliseconds (0 = wait forever)
+     * @return true if target was reached, false on timeout/interruption
+     */
+    public boolean waitForAtLeastClients(final int targetClients, final long timeoutMs) {
+        final int clampedTarget = Math.max(0, targetClients);
+        final long deadline = timeoutMs <= 0 ? Long.MAX_VALUE : System.currentTimeMillis() + timeoutMs;
+
+        while (isRunning && !shutdownInitiated) {
+            if (getConnectedClientCount() >= clampedTarget) {
                 return true;
             }
-            return clientReadyLatch.await(timeoutMs, TimeUnit.MILLISECONDS);
-        } catch (final InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return false;
+            if (System.currentTimeMillis() >= deadline) {
+                return false;
+            }
+            try {
+                TimeUnit.MILLISECONDS.sleep(50);
+            } catch (final InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return false;
+            }
         }
+        return getConnectedClientCount() >= clampedTarget;
     }
 
     /**
@@ -206,6 +218,24 @@ public class ServerSocketHandler implements NetworkMessageHandler {
             ids.add(client.getClientId());
         }
         return ids;
+    }
+
+    /**
+     * Checks whether a specific client ID is still connected.
+     *
+     * @param clientId Client identifier
+     * @return true if the client is currently connected
+     */
+    public boolean isClientConnected(final String clientId) {
+        if (clientId == null) {
+            return false;
+        }
+        for (final ClientHandler client : connectedClients) {
+            if (clientId.equals(client.getClientId()) && client.isConnected()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -309,13 +339,6 @@ public class ServerSocketHandler implements NetworkMessageHandler {
 
     /**
      * Blocks until a response is available from the client or the timeout elapses.
-     *
-     * @param clientId  Client identifier
-     * @param timeoutMs Maximum wait time in milliseconds
-     * @return The next response string, or null on timeout
-     */
-    /**
-     * Blocks until a response is available from the client or the timeout elapses.
      * Implements NetworkMessageHandler interface.
      *
      * @param clientId  Client identifier
@@ -334,6 +357,18 @@ public class ServerSocketHandler implements NetworkMessageHandler {
             Thread.currentThread().interrupt();
             return null;
         }
+    }
+
+    /**
+     * Backward-compatible alias for polling a client response.
+     * Existing tests and legacy callers still use this method name.
+     *
+     * @param clientId  Client identifier
+     * @param timeoutMs Maximum wait time in milliseconds
+     * @return The next response string, or null on timeout
+     */
+    public String pollClientResponse(final String clientId, final int timeoutMs) {
+        return waitForClientResponse(clientId, timeoutMs);
     }
 
     /**
