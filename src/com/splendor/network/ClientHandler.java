@@ -5,7 +5,6 @@
  */
 package com.splendor.network;
 
-import com.splendor.config.IConfigProvider;
 import com.splendor.exception.NetworkException;
 import com.splendor.util.GameLogger;
 import java.io.*;
@@ -21,7 +20,6 @@ public class ClientHandler {
     private final String clientId;
     private final Socket clientSocket;
     private final ServerSocketHandler serverHandler;
-    private final IConfigProvider configProvider;
     private BufferedReader inputReader;
     private PrintWriter outputWriter;
     private volatile boolean isConnected;
@@ -31,14 +29,11 @@ public class ClientHandler {
      * 
      * @param clientSocket Client socket
      * @param serverHandler Parent server handler
-     * @param configProvider Configuration provider
      */
-    public ClientHandler(final Socket clientSocket, final ServerSocketHandler serverHandler,
-                        final IConfigProvider configProvider) {
+    public ClientHandler(final Socket clientSocket, final ServerSocketHandler serverHandler) {
         this.clientId = UUID.randomUUID().toString();
         this.clientSocket = clientSocket;
         this.serverHandler = serverHandler;
-        this.configProvider = configProvider;
         this.isConnected = true;
     }
     

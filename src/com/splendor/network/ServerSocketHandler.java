@@ -146,7 +146,7 @@ public class ServerSocketHandler implements NetworkMessageHandler {
             }
             
             // Create client handler
-            final ClientHandler clientHandler = new ClientHandler(clientSocket, this, configProvider);
+            final ClientHandler clientHandler = new ClientHandler(clientSocket, this);
             connectedClients.add(clientHandler);
             if (clientReadyLatch != null) {
                 clientReadyLatch.countDown();
