@@ -270,6 +270,7 @@ The test suite uses JUnit 5 and covers:
 Windows `.bat` counterparts exist for the main shell scripts:
 - `compile.sh` ↔ `compile.bat`
 - `run.sh` ↔ `run.bat`
+- `setup_requirements.sh` ↔ `setup_requirements.bat`
 - `generate_docs_enhanced.sh` ↔ `generate_docs_enhanced.bat`
 - `test/run_tests.sh` ↔ `test/run_tests.bat`
 - `test/ci/generate_javadoc.sh` ↔ `test/ci/generate_javadoc.bat`
@@ -286,6 +287,7 @@ Windows `.bat` counterparts exist for the main shell scripts:
 splendor/
 ├── compile.bat / compile.sh      # Build scripts
 ├── run.bat / run.sh              # Run scripts
+├── setup_requirements.bat / setup_requirements.sh  # Environment dependency checker
 ├── generate_docs.bat / generate_docs.sh  # Documentation generator
 ├── README.md                      # This file
 ├── PRD.md                         # Product Requirements Document
