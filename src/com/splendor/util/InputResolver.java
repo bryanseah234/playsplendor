@@ -18,21 +18,19 @@ import java.util.Scanner;
  * <ul>
  *   <li>Range-bounded integer input with automatic re-prompting</li>
  *   <li>String length validation with min/max constraints</li>
- *   <li>Yes/no confirmation prompts with flexible input parsing</li>
  *   <li>Undo/back signal support via "Z" or "UNDO" keywords</li>
  *   <li>Invisible Unicode control character sanitization</li>
  *   <li>Optional callback on invalid input for UI refresh</li>
  * </ul>
- * 
+ *
  * <p>All prompting methods handle the full input loop internally, continuing to
  * prompt until valid input is received or an undo signal is given.
- * 
+ *
  * <p>Example usage:
  * <pre>
  *   InputResolver resolver = new InputResolver();
  *   int choice = resolver.promptForInt("Enter choice (1-4): ", 1, 4);
  *   String name = resolver.promptForString("Enter name: ", 1, 20);
- *   boolean confirmed = resolver.promptForConfirmation("Confirm?");
  * </pre>
  */
 public class InputResolver {
@@ -163,72 +161,6 @@ public class InputResolver {
                 System.out.println("Invalid input. Please try again.");
             }
         }
-    }
-
-    /**
-     * Prompts for a yes/no confirmation.
-     * 
-     * @param prompt Prompt message to display
-     * @return true for yes, false for no
-     */
-    public boolean promptForConfirmation(final String prompt) {
-        while (true) {
-            try {
-                System.out.print(prompt + " (y/n): ");
-                final String input = sanitizeInput(scanner.nextLine()).trim().toLowerCase();
-
-                if (input.isEmpty()) {
-                    System.out.println("Please enter 'y' for yes or 'n' for no.");
-                    continue;
-                }
-
-                if (input.equals("y") || input.equals("yes")) {
-                    return true;
-                }
-
-                if (input.equals("n") || input.equals("no")) {
-                    return false;
-                }
-
-                System.out.println("Please enter 'y' for yes or 'n' for no.");
-
-            } catch (final Exception e) {
-                System.out.println("Invalid input. Please enter 'y' or 'n'.");
-            }
-        }
-    }
-
-    /**
-     * Parses an integer from a string with error handling.
-     * 
-     * @param input        String to parse
-     * @param defaultValue Default value if parsing fails
-     * @return Parsed integer or default value
-     */
-    public int parseInt(final String input, final int defaultValue) {
-        if (input == null || sanitizeInput(input).trim().isEmpty()) {
-            return defaultValue;
-        }
-
-        try {
-            return Integer.parseInt(sanitizeInput(input).trim());
-        } catch (final NumberFormatException e) {
-            return defaultValue;
-        }
-    }
-
-    /**
-     * Validates that a string contains only letters and spaces.
-     * 
-     * @param input String to validate
-     * @return true if valid, false otherwise
-     */
-    public boolean isValidName(final String input) {
-        if (input == null || sanitizeInput(input).trim().isEmpty()) {
-            return false;
-        }
-
-        return sanitizeInput(input).matches("^[a-zA-Z\\s]+$");
     }
 
     /**

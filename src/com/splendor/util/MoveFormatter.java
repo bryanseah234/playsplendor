@@ -85,20 +85,4 @@ public final class MoveFormatter {
         return sb.length() == 0 ? "-" : sb.toString();
     }
 
-    /**
-     * Returns the single-character (or two-character for gold) abbreviation used
-     * to represent a gem in formatted output.
-     *
-     * @param gem The gem type to abbreviate.
-     * @return "W", "B", "G", "R", "K", "Au", or "" for an unknown gem.
-     */
-    public static String gemLabel(final Gem gem) {
-        if (gem == Gem.WHITE) return "W";
-        if (gem == Gem.BLUE) return "B";
-        if (gem == Gem.GREEN) return "G";
-        if (gem == Gem.RED) return "R";
-        if (gem == Gem.BLACK) return "K";
-        if (gem == Gem.GOLD) return "Au";
-        return "";
-    }
 }

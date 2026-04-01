@@ -10,6 +10,7 @@ import com.splendor.model.*;
 import com.splendor.model.validator.MoveValidator;
 
 import com.splendor.util.InputResolver;
+import com.splendor.util.MoveFormatter;
 import java.util.*;
 
 /**
@@ -241,7 +242,7 @@ public class ConsoleView implements IGameView {
         System.out.println("\n" + Colors.colorize(player.getName() + " can claim a noble:", Colors.PURPLE));
         for (int i = 0; i < nobles.size(); i++) {
             final Noble noble = nobles.get(i);
-            final String reqs = formatRequirements(noble.getRequirements());
+            final String reqs = MoveFormatter.formatGemCounts(noble.getRequirements());
             System.out.println(
                     String.format("%d) Noble %d - %d pts - %s", i + 1, noble.getId(), noble.getPoints(), reqs));
         }
@@ -270,14 +271,6 @@ public class ConsoleView implements IGameView {
         scanner.close();
     }
 
-    private String formatRequirements(final Map<Gem, Integer> requirements) {
-        final List<String> parts = new ArrayList<>();
-        for (final Map.Entry<Gem, Integer> entry : requirements.entrySet()) {
-            parts.add(Colors.colorize(entry.getKey().toString().substring(0, 1), Colors.getGemColor(entry.getKey()))
-                    + ":" + entry.getValue());
-        }
-        return parts.isEmpty() ? "None" : String.join(" ", parts);
-    }
 
     /**
      * Collects input for a take-three-different-gems move.

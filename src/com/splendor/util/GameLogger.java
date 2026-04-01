@@ -122,41 +122,4 @@ public class GameLogger {
         System.out.println(formattedMessage);
     }
     
-    /**
-     * Logs game state information.
-     * 
-     * @param context Context for the game state
-     * @param gameState Current game state
-     */
-    public static void logGameState(final String context, final Object gameState) {
-        info(context + ": " + gameState.toString());
-    }
-    
-    /**
-     * Logs player action.
-     * 
-     * @param playerName Player name
-     * @param action Action description
-     */
-    public static void logPlayerAction(final String playerName, final String action) {
-        info(String.format("Player '%s' performed action: %s", playerName, action));
-    }
-    
-    /**
-     * Logs configuration loading.
-     * 
-     * @param configSource Configuration source description
-     */
-    public static void logConfigurationLoaded(final String configSource) {
-        info("Configuration loaded from: " + configSource);
-    }
-    
-    /**
-     * Logs network events.
-     * 
-     * @param event Network event description
-     */
-    public static void logNetworkEvent(final String event) {
-        debug("Network: " + event);
-    }
 }

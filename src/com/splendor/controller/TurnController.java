@@ -90,7 +90,7 @@ public class TurnController {
             player.addTokens(entry.getKey(), entry.getValue());
         }
 
-        gameView.displayNotification("Took 3 different gems: " + selectedGems);
+        gameView.displayNotification("Took 3 different gems: " + formatGemMap(selectedGems));
     }
 
     /**
@@ -117,7 +117,7 @@ public class TurnController {
         // Add gems to player
         player.addTokens(gem, quantity);
 
-        gameView.displayNotification("Took 2 " + gem + " gems");
+        gameView.displayNotification("Took 2 " + gem.getLabel() + " gems");
     }
 
     /**
@@ -148,9 +148,9 @@ public class TurnController {
         if (goldAvailable > 0) {
             board.removeGems(Map.of(Gem.GOLD, 1));
             player.addTokens(Gem.GOLD, 1);
-            gameView.displayNotification("Reserved card and took 1 gold token");
+            gameView.displayNotification("Reserved card and took 1 " + Gem.GOLD.getLabel() + " token");
         } else {
-            gameView.displayNotification("Reserved card (no gold tokens available)");
+            gameView.displayNotification("Reserved card (no " + Gem.GOLD.getLabel() + " tokens available)");
         }
     }
 
@@ -343,5 +343,22 @@ public class TurnController {
 
         // Step 2: Return those same tokens to the central bank.
         board.addGems(tokensToRemove);
+    }
+
+    /**
+     * Formats a gem map with long form names for display.
+     *
+     * @param gems Map of gems to quantities
+     * @return Formatted string like "Green=1, White=1, Blue=1"
+     */
+    private String formatGemMap(final Map<Gem, Integer> gems) {
+        final StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        for (final Map.Entry<Gem, Integer> entry : gems.entrySet()) {
+            if (!first) sb.append(", ");
+            sb.append(entry.getKey().getLabel()).append("=").append(entry.getValue());
+            first = false;
+        }
+        return sb.toString();
     }
 }

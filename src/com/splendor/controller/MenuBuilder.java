@@ -325,19 +325,4 @@ public final class MenuBuilder {
         return ids;
     }
 
-    /**
-     * Returns the single- or two-character abbreviation for a gem used in menu labels.
-     *
-     * @param gem The gem type to abbreviate.
-     * @return "W", "B", "G", "R", "K", "Au", or "" for an unknown gem.
-     */
-    private static String gemLabel(final Gem gem) {
-        if (gem == Gem.WHITE) return "W";
-        if (gem == Gem.BLUE) return "B";
-        if (gem == Gem.GREEN) return "G";
-        if (gem == Gem.RED) return "R";
-        if (gem == Gem.BLACK) return "K";
-        if (gem == Gem.GOLD) return "Au";
-        return "";
-    }
 }

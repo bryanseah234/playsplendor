@@ -156,7 +156,7 @@ public class PlayerController {
         for (final Map.Entry<Gem, Integer> entry : discounts.entrySet()) {
             if (entry.getValue() > 0) {
                 if (sb.length() > 0) sb.append(", ");
-                sb.append(entry.getKey()).append("=").append(entry.getValue());
+                sb.append(entry.getKey().getLabel()).append("=").append(entry.getValue());
             }
         }
         return sb.length() == 0 ? "None" : sb.toString();

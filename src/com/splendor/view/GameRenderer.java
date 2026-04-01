@@ -81,7 +81,7 @@ public class GameRenderer {
      */
     public void displayGameState(final Game game) {
         clearDisplay();
-        System.out.println(getRenderedGameState(game));
+        System.out.println(renderToString(game));
     }
 
     /**
@@ -91,31 +91,9 @@ public class GameRenderer {
      * @param game The current game whose state should be rendered.
      * @return The fully rendered terminal frame as a string.
      */
-    public String getRenderedGameState(final Game game) {
-        return renderGameStateInternal(game.getBoard(), game.getPlayers(), game.getCurrentPlayer(),
-                game.getRecentMoves(), game.getMaxTokens());
-    }
-
-    /**
-     * Alias for getRenderedGameState; exists so network code can call a semantically
-     * distinct name to clarify that the result is being sent over the wire.
-     *
-     * @param game The current game.
-     * @return The rendered game screen string.
-     */
     public String renderToString(final Game game) {
         return renderGameStateInternal(game.getBoard(), game.getPlayers(), game.getCurrentPlayer(),
                 game.getRecentMoves(), game.getMaxTokens());
-    }
-
-    /**
-     * Renders the board state for a single player (used in tests/debug contexts).
-     *
-     * @param board         The board to render.
-     * @param currentPlayer The player whose affordability is used for card dimming.
-     */
-    public void displayBoard(final Board board, final Player currentPlayer) {
-        System.out.println(renderGameStateInternal(board, List.of(currentPlayer), currentPlayer, List.of(), 10));
     }
 
     /**

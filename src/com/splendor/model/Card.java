@@ -98,7 +98,15 @@ public class Card {
      */
     @Override
     public String toString() {
-        return String.format("Card %d [Tier %d, %d pts, Bonus: %s, Cost: %s]", 
-                           id, tier, points, bonusGem, cost);
+        final String bonusLabel = bonusGem == null ? "None" : bonusGem.getLabel();
+        final StringBuilder costStr = new StringBuilder();
+        boolean first = true;
+        for (final Map.Entry<Gem, Integer> entry : cost.entrySet()) {
+            if (!first) costStr.append(", ");
+            costStr.append(entry.getKey().getLabel()).append("=").append(entry.getValue());
+            first = false;
+        }
+        return String.format("Card %d [Tier %d, %d pts, Bonus: %s, Cost: {%s}]",
+                           id, tier, points, bonusLabel, costStr.toString());
     }
 }
