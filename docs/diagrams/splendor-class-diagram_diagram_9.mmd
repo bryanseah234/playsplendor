@@ -1,0 +1,71 @@
+classDiagram
+    class Constants {
+        <<utility>>
+        +SERVER_MODE_FLAG: String
+        +DEFAULT_SERVER_PORT: int
+        +MIN_PLAYERS: int
+        +MAX_PLAYERS: int
+        +DEFAULT_WINNING_POINTS: int
+        +DEFAULT_MAX_TOKENS: int
+        +MAX_RESERVED_CARDS: int
+        +CARDS_PER_TIER_DISPLAYED: int
+        +GOLD_TOKENS_PER_PLAYER_COUNT: int
+        +MIN_GEMS_FOR_TWO_SAME_ACTION: int
+        +MAX_GEMS_PER_TURN: int
+        +LOG_FORMAT: String
+        +LOG_LEVEL_INFO: String
+        +LOG_LEVEL_ERROR: String
+        +LOG_LEVEL_DEBUG: String
+    }
+    
+    class GameLogger {
+        <<utility>>
+        +setDebugEnabled(enabled) void
+        +info(message) void
+        +error(message) void
+        +error(message, exception) void
+        +debug(message) void
+        +warn(message) void
+        +logGameState(context, state) void
+        +logPlayerAction(player, action) void
+        +logConfigurationLoaded(source) void
+        +logNetworkEvent(event) void
+    }
+    
+    class AnsiUtils {
+        <<utility>>
+        +stripAnsi(str) String
+        +padRightAnsi(s, width) String
+        +truncateAnsi(s, maxVisible) String
+        +combineHorizontal(blocks, gap) List~String~
+    }
+    
+    class GemParser {
+        <<utility>>
+        +parseGem(token) Gem
+        +parseGemCode(code) Gem
+        +parseGemSelection(input) List~Gem~
+        +parseGemSequence(input) List~Gem~
+    }
+    
+    class InputResolver {
+        -scanner: Scanner
+        +promptForInt(prompt, min, max) int
+        +promptForInt(prompt, min, max, onInvalid) int
+        +promptForString(prompt, minLen, maxLen) String
+        +promptForConfirmation(prompt) boolean
+        +parseInt(input, default) int
+        +isValidName(input) boolean
+        +close() void
+    }
+    
+    class MoveFormatter {
+        <<utility>>
+        +formatMoveEntry(player, move) String
+        +formatGemCounts(counts) String
+        +gemLabel(gem) String
+    }
+    
+    GameLogger --> Constants
+    MoveFormatter --> Colors
+    MoveFormatter --> Gem

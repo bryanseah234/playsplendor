@@ -1,0 +1,36 @@
+sequenceDiagram
+    participant P as Player
+    participant GC as GameController
+    participant MB as MenuBuilder
+    participant GV as IGameView
+    participant MV as MoveValidator
+    participant TC as TurnController
+    participant PC as PlayerController
+    participant GFC as GameFlowController
+
+    GC->>MB: buildMenuOptions()
+    GC->>GV: promptForMove()
+    P->>GV: submit move
+    GV->>GC: move details
+    GC->>MV: validate(move)
+    
+    alt Invalid Move
+        MV-->>GV: rejection
+        GV-->>P: show error / re-prompt
+    else Valid Move
+        GC->>TC: executeMove()
+        TC->>GC: updated state
+        GC->>PC: checkNobleVisits()
+        opt Noble Visit
+            PC->>P: assign noble (+3pts)
+        end
+        GC->>PC: handleTokenDiscard()
+        opt Token Limit Exceeded
+            PC->>GV: trigger discard flow
+        end
+        GC->>GFC: updateState()
+        opt Final Round Triggered
+            GFC->>GC: transition to FINAL_ROUND
+        end
+        GFC->>GC: next turn
+    end

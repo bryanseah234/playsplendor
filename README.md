@@ -59,74 +59,7 @@ The project follows a strict MVC pattern to ensure separation of concerns. The C
 <details>
 <summary>📋 View Architecture Diagram Source</summary>
 
-```mermaid
-flowchart LR
-    subgraph Main["Main Entry Point"]
-        M[Main.java]
-    end
-    
-    subgraph Controller["Controller Layer"]
-        GC[GameController]
-        TC[TurnController]
-        GFC[GameFlowController]
-        PC[PlayerController]
-        MB[MenuBuilder]
-    end
-    
-    subgraph Model["Model Layer"]
-        GM[Game, Board, Player]
-        MV[MoveValidator]
-        GRV[GameRuleValidator]
-    end
-    
-    subgraph View["View Layer"]
-        IV[IGameView Interface]
-        CV[ConsoleView]
-        RV[RemoteView]
-        NV[NetworkGameView]
-    end
-    
-    subgraph Config["Configuration"]
-        ICP[IConfigProvider Interface]
-        FCP[FileConfigProvider]
-    end
-    
-    subgraph Network["Network Layer"]
-        SSH[ServerSocketHandler]
-    end
-    
-    subgraph Util["Utilities"]
-        UT[InputResolver, GameLogger]
-    end
-    
-    subgraph Exception["Exceptions"]
-        EX[SplendorException Hierarchy]
-    end
-
-    M -->|creates| GC
-    GC -->|orchestrates| TC
-    GC -->|orchestrates| GFC
-    GC -->|orchestrates| PC
-    GC -->|orchestrates| MB
-    GC -->|renders via| IV
-    GC -->|reads config via| ICP
-    GC -->|validates via| MV
-    GC -->|validates rules via| GRV
-    
-    CV -->|implements| IV
-    RV -->|implements| IV
-    NV -->|implements| IV
-    
-    FCP -->|implements| ICP
-    SSH -->|bridges| IV
-    
-    Model -->|throws| EX
-    
-    Controller -->|uses| Model
-    Controller -->|uses| View
-    Controller -->|uses| Config
-    Controller -->|uses| Util
-```
+``![README Diagram 1](docs/diagrams/README_diagram_1.png)``
 
 </details>
 
@@ -138,15 +71,7 @@ flowchart LR
 <details>
 <summary>📋 View State Diagram Source</summary>
 
-```mermaid
-stateDiagram-v2
-    [*] --> ONGOING: GameController.startGame()
-    ONGOING --> ONGOING: processTurn() [points < 15]
-    ONGOING --> FINAL_ROUND: processTurn() [player reaches 15+ pts]
-    FINAL_ROUND --> FINAL_ROUND: processTurn() [round not complete]
-    FINAL_ROUND --> FINISHED: All players took equal turns
-    FINISHED --> [*]: determineWinner() called
-```
+``![README Diagram 2](docs/diagrams/README_diagram_2.png)``
 
 </details>
 
@@ -161,44 +86,7 @@ The following sequence diagram illustrates the standard turn lifecycle, includin
 <details>
 <summary>📋 View Sequence Diagram Source</summary>
 
-```mermaid
-sequenceDiagram
-    participant P as Player
-    participant GC as GameController
-    participant MB as MenuBuilder
-    participant GV as IGameView
-    participant MV as MoveValidator
-    participant TC as TurnController
-    participant PC as PlayerController
-    participant GFC as GameFlowController
-
-    GC->>MB: buildMenuOptions()
-    GC->>GV: promptForMove()
-    P->>GV: submit move
-    GV->>GC: move details
-    GC->>MV: validate(move)
-    
-    alt Invalid Move
-        MV-->>GV: rejection
-        GV-->>P: show error / re-prompt
-    else Valid Move
-        GC->>TC: executeMove()
-        TC->>GC: updated state
-        GC->>PC: checkNobleVisits()
-        opt Noble Visit
-            PC->>P: assign noble (+3pts)
-        end
-        GC->>PC: handleTokenDiscard()
-        opt Token Limit Exceeded
-            PC->>GV: trigger discard flow
-        end
-        GC->>GFC: updateState()
-        opt Final Round Triggered
-            GFC->>GC: transition to FINAL_ROUND
-        end
-        GFC->>GC: next turn
-    end
-```
+``![README Diagram 3](docs/diagrams/README_diagram_3.png)``
 
 </details>
 

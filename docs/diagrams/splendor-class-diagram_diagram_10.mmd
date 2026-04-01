@@ -1,0 +1,55 @@
+classDiagram
+    class Exception {
+        +Exception(message)
+        +Exception(message, cause)
+    }
+    
+    class SplendorException {
+        <<abstract>>
+        +SplendorException(message)
+        +SplendorException(message, cause)
+    }
+    
+    class GameStateException {
+        +GameStateException(message)
+        +GameStateException(format, args)
+    }
+    
+    class InsufficientTokensException {
+        +InsufficientTokensException(message)
+        +InsufficientTokensException(format, args)
+    }
+    
+    class InvalidMoveException {
+        +InvalidMoveException(message)
+        +InvalidMoveException(format, args)
+    }
+    
+    class InvalidPlayerActionException {
+        +InvalidPlayerActionException(message)
+        +InvalidPlayerActionException(format, args)
+    }
+    
+    class ConfigException {
+        +ConfigException(message)
+        +ConfigException(message, cause)
+    }
+    
+    class DataLoadException {
+        +DataLoadException(message)
+        +DataLoadException(message, cause)
+    }
+    
+    class NetworkException {
+        +NetworkException(message)
+        +NetworkException(message, cause)
+    }
+    
+    Exception <|-- SplendorException
+    SplendorException <|-- GameStateException
+    SplendorException <|-- InsufficientTokensException
+    SplendorException <|-- InvalidMoveException
+    SplendorException <|-- InvalidPlayerActionException
+    SplendorException <|-- NetworkException
+    Exception <|-- ConfigException
+    Exception <|-- DataLoadException

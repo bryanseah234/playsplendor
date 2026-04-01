@@ -1,0 +1,182 @@
+classDiagram
+    class Gem {
+        <<enumeration>>
+        RED
+        GREEN
+        BLUE
+        WHITE
+        BLACK
+        GOLD
+        -displayName: String
+        +getDisplayName() String
+        +toString() String
+    }
+    
+    class MoveType {
+        <<enumeration>>
+        TAKE_THREE_DIFFERENT
+        TAKE_TWO_SAME
+        RESERVE_CARD
+        BUY_CARD
+        DISCARD_TOKENS
+        EXIT_GAME
+        -displayName: String
+        +getDisplayName() String
+        +toString() String
+    }
+    
+    class MenuAction {
+        <<enumeration>>
+        TAKE_THREE
+        TAKE_TWO
+        RESERVE_VISIBLE
+        RESERVE_DECK
+        BUY_VISIBLE
+        BUY_RESERVED
+        EXIT_GAME
+    }
+    
+    class MenuOption {
+        <<final>>
+        -number: int
+        -action: MenuAction
+        -available: boolean
+        -label: String
+        -detail: String
+        -reason: String
+        +MenuOption(...) 
+        +getNumber() int
+        +getAction() MenuAction
+        +isAvailable() boolean
+        +getLabel() String
+        +getDetail() String
+        +getReason() String
+    }
+    
+    class Card {
+        -id: int
+        -tier: int
+        -points: int
+        -bonusGem: Gem
+        -cost: Map~Gem, Integer~
+        +getId() int
+        +getTier() int
+        +getPoints() int
+        +getBonusGem() Gem
+        +getCost() Map~Gem, Integer~
+        +providesPoints() boolean
+        +providesDiscount() boolean
+        +getTotalCost() int
+    }
+    
+    class Noble {
+        -id: int
+        -points: int
+        -requirements: Map~Gem, Integer~
+        +getId() int
+        +getPoints() int
+        +getRequirements() Map~Gem, Integer~
+        +requirementsMet(playerGemCounts) boolean
+        +getTotalRequirementCount() int
+    }
+    
+    class Player {
+        -name: String
+        -tokens: Map~Gem, Integer~
+        -purchasedCards: List~Card~
+        -reservedCards: List~Card~
+        -nobles: List~Noble~
+        +getName() String
+        +getTokens() Map~Gem, Integer~
+        +getTokenCount(gem) int
+        +getTotalPoints() int
+        +getGemDiscounts() Map~Gem, Integer~
+        +addTokens(gem, quantity) void
+        +removeTokens(gem, quantity) void
+        +addPurchasedCard(card) void
+        +addReservedCard(card) void
+        +canReserveCard() boolean
+    }
+    
+    class ComputerPlayer {
+        +ComputerPlayer(name: String)
+    }
+    
+    class Move {
+        -moveType: MoveType
+        -selectedGems: Map~Gem, Integer~
+        -cardId: Integer
+        -isReservedCard: boolean
+        -deckTier: Integer
+        +getMoveType() MoveType
+        +getSelectedGems() Map~Gem, Integer~
+        +getCardId() Integer
+        +isReservedCard() boolean
+        +getDeckTier() Integer
+        +hasCardSelection() boolean
+        +hasDeckSelection() boolean
+        +hasGemSelection() boolean
+    }
+    
+    class GameState {
+        +ONGOING: GameState
+        +FINAL_ROUND: GameState
+        +FINISHED: GameState
+        -phase: Phase
+        +getPhase() Phase
+        +isOngoing() boolean
+        +isFinalRound() boolean
+        +isFinished() boolean
+        +getDisplayName() String
+    }
+    
+    GameState_Phase {
+        <<enumeration>>
+        ONGOING
+        FINAL_ROUND
+        FINISHED
+    }
+    
+    class Board {
+        -gemBank: Map~Gem, Integer~
+        -cardDecks: Map~Integer, Queue~Card~~
+        -availableCards: Map~Integer, List~Card~~
+        -availableNobles: List~Noble~
+        +getGemBank() Map~Gem, Integer~
+        +getAvailableCards(tier) List~Card~
+        +getAvailableNobles() List~Noble~
+        +drawCard(tier) Card
+        +removeGems(gems) void
+        +addGems(gems) void
+    }
+    
+    class Game {
+        -board: Board
+        -players: List~Player~
+        -currentState: GameState
+        -winningPoints: int
+        -currentPlayer: Player
+        +getBoard() Board
+        +getPlayers() List~Player~
+        +getCurrentPlayer() Player
+        +isGameFinished() boolean
+        +getState() GameState
+        +getWinningPoints() int
+    }
+    
+    ComputerPlayer --|> Player
+    Player --> Card : purchases
+    Player --> Noble : owns
+    Player --> Gem : tokens
+    Card --> Gem : cost
+    Card --> Gem : bonus
+    Noble --> Gem : requirements
+    Move --> MoveType
+    MenuOption --> MenuAction
+    Game --> Board
+    Game --> Player
+    Game --> GameState
+    Board --> Card
+    Board --> Noble
+    Board --> Gem
+    GameState --> GameState_Phase
