@@ -5,11 +5,11 @@
  */
 package com.splendor;
 
-import com.splendor.exception.ConfigException;
 import com.splendor.config.ConfigValidator;
 import com.splendor.config.FileConfigProvider;
 import com.splendor.config.IConfigProvider;
 import com.splendor.controller.GameController;
+import com.splendor.exception.ConfigException;
 import com.splendor.exception.SplendorException;
 import com.splendor.network.ServerSocketHandler;
 import com.splendor.util.Constants;
@@ -97,7 +97,7 @@ public class Main {
         gameController.startGame();
     }
     
-    /**
+    /**th
      * Starts the application in server mode.
      * Waits for the required number of clients, then launches the game.
      *
@@ -157,11 +157,20 @@ public class Main {
         final RemoteView hostView = new RemoteView(hostId, messageHandler);
         final int playerCount = hostView.promptForPlayerCount();
         System.out.println("Host selected " + playerCount + " players. Waiting for remaining clients...");
+        serverHandler.broadcastToAllClients("Lobby: 1/" + playerCount + " players joined. Waiting for " + (playerCount - 1) + " more...");
 
-        // Step 3: wait for the remaining clients to connect
-        if (playerCount > 1 && !serverHandler.waitForClients(playerCount - 1, 0)) {
-            System.err.println("Interrupted while waiting for players.");
-            return;
+        // Step 3: wait for the remaining clients to connect one at a time, updating all clients after each join
+        for (int joined = 1; joined < playerCount; joined++) {
+            if (!serverHandler.waitForClients(1, 0)) {
+                System.err.println("Interrupted while waiting for players.");
+                return;
+            }
+            final int nowJoined = joined + 1;
+            final String status = nowJoined == playerCount
+                ? "Lobby: " + nowJoined + "/" + playerCount + " players joined. Starting game..."
+                : "Lobby: " + nowJoined + "/" + playerCount + " players joined. Waiting for " + (playerCount - nowJoined) + " more...";
+            serverHandler.broadcastToAllClients(status);
+            System.out.println(status);
         }
 
         // Step 4: build one RemoteView per connected client (in connection order)

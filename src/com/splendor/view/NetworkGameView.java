@@ -6,6 +6,7 @@
  */
 package com.splendor.view;
 
+import com.splendor.model.ComputerPlayer;
 import com.splendor.model.Game;
 import com.splendor.model.MenuOption;
 import com.splendor.model.Move;
@@ -160,12 +161,17 @@ public class NetworkGameView implements IGameView {
     }
 
     /**
-     * No-op: the menu is rendered as part of the game state each time the board
-     * is sent to the client, so a separate displayAvailableMoves call is not needed.
+     * For CPU players, broadcasts the board and menu to every client so they can
+     * observe the bot's available options. For human players this is a no-op
+     * because their RemoteView already sends the board inside promptForMove,
+     * avoiding a double render.
      */
     @Override
     public void displayAvailableMoves(final List<MenuOption> options, final Game game) {
-        // Handled client-side
+        if (activePlayer instanceof ComputerPlayer) {
+            initPlayerOrder(game);
+            broadcast(v -> v.displayAvailableMoves(options, game));
+        }
     }
 
     /** Broadcasts the welcome banner to every client. */

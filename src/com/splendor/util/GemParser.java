@@ -18,7 +18,7 @@ import java.util.List;
  *   B / BLUE   -> BLUE
  *   G / GREEN  -> GREEN
  *   R / RED    -> RED
- *   K / BLACK  -> BLACK  (K avoids ambiguity with BLUE's B)
+ *   K / BLACK  -> BLACK
  *   AU / GOLD  -> GOLD
  */
 public final class GemParser {
