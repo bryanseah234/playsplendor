@@ -1,5 +1,6 @@
 classDiagram
-    interface IConfigProvider {
+    class IConfigProvider {
+        <<interface>>
         +loadConfiguration() void
         +getStringProperty(key, default) String
         +getIntProperty(key, default) int

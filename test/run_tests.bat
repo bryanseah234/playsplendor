@@ -11,6 +11,7 @@ set "VERBOSE="
 set "CATEGORY="
 set "SPECIFIC_CLASS="
 set "EXCLUDE_PACKAGE="
+set "INCLUDE_NETWORK="
 
 :parse_args
 if "%~1"=="" goto args_done
@@ -19,6 +20,7 @@ if /i "%~1"=="--verbose" set "VERBOSE=--details verbose" & shift & goto parse_ar
 if /i "%~1"=="--category" set "CATEGORY=%~2" & shift & shift & goto parse_args
 if /i "%~1"=="--class" set "SPECIFIC_CLASS=%~2" & shift & shift & goto parse_args
 if /i "%~1"=="--exclude-package" set "EXCLUDE_PACKAGE=%~2" & shift & shift & goto parse_args
+if /i "%~1"=="--include-network" set "INCLUDE_NETWORK=true" & shift & goto parse_args
 echo Unknown parameter passed: %~1
 exit /b 1
 :args_done
@@ -94,6 +96,11 @@ if defined SPECIFIC_CLASS (
 
 if defined EXCLUDE_PACKAGE (
     set "JUNIT_CMD=!JUNIT_CMD! --exclude-package !EXCLUDE_PACKAGE!"
+)
+
+REM Network integration tests are opt-in to keep local and CI-like runs deterministic.
+if not defined INCLUDE_NETWORK (
+    set "JUNIT_CMD=!JUNIT_CMD! --exclude-package com.splendor.network"
 )
 
 if defined COVERAGE (
