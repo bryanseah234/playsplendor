@@ -5,6 +5,7 @@
  */
 package com.splendor.config;
 
+import com.splendor.exception.ConfigException;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;

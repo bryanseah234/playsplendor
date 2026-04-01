@@ -5,32 +5,23 @@
  */
 package com.splendor.data;
 
-import com.splendor.config.ConfigException;
-import com.splendor.config.ConfigKeys;
+import com.splendor.exception.ConfigException;
 import com.splendor.config.FileConfigProvider;
 import com.splendor.config.IConfigProvider;
+import com.splendor.exception.DataLoadException;
 import com.splendor.model.Card;
 import com.splendor.model.Noble;
 import java.util.List;
 
 /**
  * Facade for loading card and noble data into the game.
- * 
- * This class provides a simple static API for loading game data while
- * encapsulating the underlying data provider implementation. It supports:
- * - CSV-based data loading (default)
- * - Custom deck injection via CardDataProvider interface
- * - Fail-fast validation on startup
- * 
- * The loader automatically selects the appropriate data provider based
- * on configuration and handles fallback scenarios gracefully.
- * 
- * @see CardDataProvider Interface for custom data providers
- * @see CsvCardParser Default CSV implementation
+ * Provides a simple static API for CSV-based card and noble loading with fail-fast validation.
+ *
+ * @see CsvCardParser
  */
 public final class CardLoader {
-    
-    private static volatile CardDataProvider instance;
+
+    private static volatile CsvCardParser instance;
     private static volatile IConfigProvider configProvider;
     private static final Object LOCK = new Object();
     
@@ -45,7 +36,7 @@ public final class CardLoader {
     /**
      * Loads all cards for a specific tier.
      * 
-     * This method uses the configured CardDataProvider to load cards.
+     * This method uses the configured CsvCardParser to load cards.
      * If no provider is configured, it creates a default CSV parser.
      * 
      * @param tier The card tier to load (1, 2, or 3)
@@ -54,7 +45,7 @@ public final class CardLoader {
      */
     public static List<Card> loadCards(final int tier) {
         try {
-            final CardDataProvider provider = getProvider();
+            final CsvCardParser provider = getProvider();
             return provider.loadCards(tier);
         } catch (final DataLoadException e) {
             throw new RuntimeException("Failed to load cards for tier " + tier, e);
@@ -64,7 +55,7 @@ public final class CardLoader {
     /**
      * Loads all available noble tiles.
      * 
-     * This method uses the configured CardDataProvider to load nobles.
+     * This method uses the configured CsvCardParser to load nobles.
      * If no provider is configured, it creates a default CSV parser.
      * 
      * @return List of noble tiles, shuffled
@@ -72,7 +63,7 @@ public final class CardLoader {
      */
     public static List<Noble> loadNobles() {
         try {
-            final CardDataProvider provider = getProvider();
+            final CsvCardParser provider = getProvider();
             return provider.loadNobles();
         } catch (final DataLoadException e) {
             throw new RuntimeException("Failed to load nobles", e);
@@ -90,7 +81,7 @@ public final class CardLoader {
      */
     public static void validateConfiguration() throws ConfigException {
         try {
-            final CardDataProvider provider = getProvider();
+            final CsvCardParser provider = getProvider();
             // Try loading one card from each tier to validate
             for (int tier = 1; tier <= 3; tier++) {
                 final List<Card> cards = provider.loadCards(tier);
@@ -143,7 +134,7 @@ public final class CardLoader {
      * @return The card data provider to use
      * @throws DataLoadException if provider initialization fails
      */
-    private static CardDataProvider getProvider() throws DataLoadException {
+    private static CsvCardParser getProvider() throws DataLoadException {
         if (instance == null) {
             synchronized (LOCK) {
                 if (instance == null) {

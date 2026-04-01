@@ -5,7 +5,7 @@
  */
 package com.splendor;
 
-import com.splendor.config.ConfigException;
+import com.splendor.exception.ConfigException;
 import com.splendor.config.ConfigValidator;
 import com.splendor.config.FileConfigProvider;
 import com.splendor.config.IConfigProvider;

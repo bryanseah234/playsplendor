@@ -6,6 +6,7 @@
 package com.splendor.network;
 
 import com.splendor.config.IConfigProvider;
+import com.splendor.exception.NetworkException;
 import com.splendor.exception.SplendorException;
 import com.splendor.util.Constants;
 import com.splendor.util.GameLogger;
@@ -156,7 +157,7 @@ public class ServerSocketHandler implements NetworkMessageHandler {
             clientExecutor.submit(() -> {
                 try {
                     clientHandler.handleClient();
-                } catch (final Exception e) {
+                } catch (final NetworkException e) {
                     GameLogger.error("Error handling client: " + clientAddress, e);
                 } finally {
                     removeClient(clientHandler);

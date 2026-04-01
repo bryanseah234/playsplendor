@@ -6,7 +6,8 @@
 package com.splendor.config;
 
 import com.splendor.data.CardLoader;
-import com.splendor.data.DataLoadException;
+import com.splendor.exception.ConfigException;
+import com.splendor.exception.DataLoadException;
 import com.splendor.model.Card;
 import com.splendor.model.Gem;
 import com.splendor.model.Noble;

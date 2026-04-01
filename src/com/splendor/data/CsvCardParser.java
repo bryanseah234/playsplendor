@@ -1,12 +1,8 @@
-/**
- * CSV-based card data parser for the Splendor game.
- * Replaces the legacy text file format with a structured CSV format.
- * 
- */
 package com.splendor.data;
 
 import com.splendor.config.ConfigKeys;
 import com.splendor.config.IConfigProvider;
+import com.splendor.exception.DataLoadException;
 import com.splendor.model.Card;
 import com.splendor.model.Gem;
 import com.splendor.model.Noble;
@@ -20,31 +16,25 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Parses card and noble data from CSV files.
- * 
- * This parser supports the following CSV schema:
+ * Parses card and noble data from a CSV file.
+ *
+ * <p>Expected CSV schema (columnar cost format):
  * <pre>
- * type,id,tier,points,bonus_gem,cost
- * CARD,1,1,0,BLACK,"BLUE:1,GREEN:1,RED:1,WHITE:1"
- * NOBLE,1,,3,,,"RED:4,GREEN:4"
+ * type,id,tier,points,bonus_gem,cost_black,cost_white,cost_red,cost_blue,cost_green
+ * CARD,1,1,0,BLACK,0,1,1,1,1
+ * NOBLE,1,3,0,0,4,0,4
  * </pre>
- * 
- * The parser is designed to be:
- * - Fail-fast: throws exceptions on malformed data
- * - Extensible: supports custom CSV formats via configuration
- * - Backward compatible: can fall back to legacy format if needed
- * 
- * @see CardDataProvider Interface this implements
+ *
+ * <p>The file path is read from {@link ConfigKeys#FILE_CARDS_DATA}.
+ * Parsing is fail-fast: any malformed row throws a {@link DataLoadException}.
  */
-public class CsvCardParser implements CardDataProvider {
+public class CsvCardParser {
     
     private static final String CSV_TYPE_CARD = "CARD";
     private static final String CSV_TYPE_NOBLE = "NOBLE";
     private static final String CSV_HEADER_TYPE = "type";
     private static final String CSV_HEADER_ID = "id";
-    private static final String CSV_HEADER_TIER = "tier";
     private static final String CSV_HEADER_POINTS = "points";
-    private static final String CSV_HEADER_BONUS_GEM = "bonus_gem";
     private static final Gem[] CARD_COST_COLUMNS  = { Gem.BLACK, Gem.WHITE, Gem.RED, Gem.BLUE, Gem.GREEN };
     private static final Gem[] NOBLE_REQ_COLUMNS  = { Gem.BLACK, Gem.WHITE, Gem.RED, Gem.BLUE, Gem.GREEN };
     
@@ -66,9 +56,13 @@ public class CsvCardParser implements CardDataProvider {
     }
     
     /**
-     * {@inheritDoc}
+     * Returns a shuffled list of cards for the given tier, duplicating base cards if
+     * needed to reach the configured target count.
+     *
+     * @param tier Card tier (1, 2, or 3)
+     * @return Shuffled list of cards for the tier
+     * @throws IllegalArgumentException if tier is not 1–3
      */
-    @Override
     public List<Card> loadCards(final int tier) {
         if (tier < 1 || tier > 3) {
             throw new IllegalArgumentException("Invalid tier: " + tier + ". Must be 1, 2, or 3.");
@@ -98,9 +92,10 @@ public class CsvCardParser implements CardDataProvider {
     }
     
     /**
-     * {@inheritDoc}
+     * Returns a shuffled list of all nobles loaded from the CSV file.
+     *
+     * @return Shuffled list of nobles
      */
-    @Override
     public List<Noble> loadNobles() {
         final List<Noble> nobles = new ArrayList<>(allNobles);
         Collections.shuffle(nobles);

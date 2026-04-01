@@ -4,6 +4,8 @@
  */
 package com.splendor.config;
 
+import com.splendor.exception.ConfigException;
+
 /**
  * Contract for configuration providers in the Splendor game.
  * 

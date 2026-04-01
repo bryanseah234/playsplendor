@@ -18,9 +18,9 @@ package com.splendor.exception;
  *   <li>{@link InsufficientTokensException} - Not enough tokens for an action</li>
  *   <li>{@link InvalidMoveException} - Illegal move attempted</li>
  *   <li>{@link InvalidPlayerActionException} - Invalid player action</li>
- *   <li>{@link com.splendor.network.NetworkException} - Network communication failure</li>
- *   <li>{@link com.splendor.config.ConfigException} - Configuration loading error</li>
- *   <li>{@link com.splendor.data.DataLoadException} - Data loading failure</li>
+ *   <li>{@link NetworkException} - Network communication failure</li>
+ *   <li>{@link ConfigException} - Configuration loading error</li>
+ *   <li>{@link DataLoadException} - Data loading failure</li>
  * </ul>
  * 
  * <p>The exception is caught at the application boundary (Main class) and converted
