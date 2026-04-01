@@ -119,7 +119,8 @@ public class GameLogger {
     /**
      * Logs game state information.
      * 
-     * @param game Current game state
+     * @param context Context for the game state
+     * @param gameState Current game state
      */
     public static void logGameState(final String context, final Object gameState) {
         info(context + ": " + gameState.toString());
