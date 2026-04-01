@@ -189,7 +189,7 @@ echo "🎨 Rendering generated diagrams..."
 if [ -f "$DIAGRAMS_DIR/plantuml.jar" ]; then
     for puml_file in "$OUTPUT_DIR"/*.puml; do
         if [ -f "$puml_file" ]; then
-            java -jar "$DIAGRAMS_DIR/plantuml.jar" "$puml_file"
+            java -jar "$DIAGRAMS_DIR/plantuml.jar" -SbackgroundColor=#FFFFFF "$puml_file"
             echo "Rendered: $(basename "$puml_file" .puml).png"
         fi
     done

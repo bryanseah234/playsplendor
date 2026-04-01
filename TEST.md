@@ -294,7 +294,119 @@ Tests are automatically run on:
 
 Test results are available in GitHub Actions logs.
 
+## Rulebook Regression Matrix (Requested Scenarios)
+
+This section maps rulebook-critical scenarios to current automated coverage and identifies explicit gaps.
+
+### Setup / Initialization
+
+- ✅ **2/3/4 player setup token counts + nobles (4/5/7 gems, 5 gold, 3/4/5 nobles)**  
+  Covered by `GameLogicTest` setup assertions and config-backed board initialization checks.
+- ✅ **Deck composition (40/30/20) and 4 face-up cards per tier**  
+  Covered by board/deck setup validations used in controller/model tests.
+
+### Core Mechanics
+
+- ✅ **Action 1: Take 3 different gems (valid + invalid same color + invalid gold + depleted color)**  
+  Covered by `MoveValidatorTest` rule checks and controller-level invalid-move handling.
+- ✅ **Action 2: Take 2 same gems (valid when bank >=4, invalid when <=3, invalid gold)**  
+  Covered by `MoveValidatorTest` and menu/controller availability checks.
+- ✅ **Action 3: Reserve card**
+  - Face-up reserve with board refill and gold gain: covered in `GameLogicTest`.
+  - Deck reserve with gold gain: covered in `MoveValidatorTest` + controller flow.
+  - Reject at 3 reserved cards: covered.
+  - Allow reserve with empty gold bank (gain 0 gold): covered in `GameLogicTest`.
+- ✅ **Action 4: Purchase card**
+  - Exact gem payment: covered.
+  - Bonus-only payment to zero: covered.
+  - Mixed payment with gold joker: covered (`MoveValidatorTest` affordability tests).
+  - Buy reserved card and free slot: covered.
+  - Reject insufficient funds: covered.
+
+### End-of-Turn / Edge Cases
+
+- ✅ **Token limit enforcement (discard to 10 before next turn)**  
+  Covered by player/controller token-limit tests and manual destructive case #2.
+- ✅ **Noble visit exact match**  
+  Covered (`GameLogicTest` noble award path).
+- ✅ **Multiple eligible nobles (must choose one)**  
+  Covered via noble-choice prompt path (`TestGameView.promptForNobleChoice` usage).
+- ✅ **Exhausted deck leaves slot empty without crash**  
+  Covered in board/controller tests that deplete decks before reserve/purchase.
+
+### Game Flow / Win Conditions
+
+- ✅ **Final round trigger at 15+ points and equal-turn completion**  
+  Covered in `GameFlowTest`.
+- ✅ **Standard win by highest prestige after final round**  
+  Covered in `GameFlowTest`.
+- ✅ **Tie-breaker by fewest purchased cards**  
+  Covered in `GameFlowTest`.
+- ✅ **Complete tie handling (shared victory)**  
+  Covered in `GameFlowTest`.
+
+### Forward-Looking / Hardening Gaps
+
+- ⚠️ **Property-based fuzz testing (thousands of random legal moves)**  
+  Not currently implemented as a dedicated property-based suite.
+- ⚠️ **State serialization round-trip (JSON/XML save+load integrity)**  
+  Not currently implemented as an automated persistence contract test.
+
+Recommended additions:
+1. Add a `RandomLegalMoveFuzzTest` with deterministic seeds and invariant checks (non-negative bank/player tokens, no duplicated card ownership, fixed card universe).
+2. Add `GameStateSerializationTest` for save/load snapshot parity (board, decks, turn index, players, reserved cards, nobles, RNG seed where applicable).
+
+### How to Keep Docs/Javadocs in Sync for Every Java Change
+
+When any Java class/interface/enum/public API is added, edited, or removed, run:
+
+```bash
+node render_diagrams.js
+bash test/ci/generate_javadoc.sh
+node test/ci/verify_javadoc_index.js
+bash test/ci/docs_guard.sh
+```
+
+Or run the consolidated wrapper:
+
+```bash
+bash test/ci/docs_pipeline.sh
+```
+
+Windows equivalents are also available:
+
+```batch
+test\ci\docs_pipeline.bat
+test\ci\generate_javadoc.bat
+test\ci\docs_guard.bat
+```
+
+If `mmdc` is unavailable in the environment, `docs_pipeline` skips diagram rendering and validates against existing generated PNG files.
+
+Notes:
+- Mermaid source must remain in external diagram source files (no inline mermaid fenced blocks in Markdown).
+- PNG diagram artifacts must be regenerated from those external sources.
+- Javadocs should include meaningful class and method descriptions so index verification passes.
+- You **can** run `generate_docs_enhanced.sh` manually; it is optional convenience tooling and not the required CI gate sequence.
+
+### "Is the physical test code already in `test/`?"
+
+Yes—core rule tests are already implemented in the repository test tree and can be executed with `bash test/run_tests.sh`:
+
+- `test/com/splendor/controller/GameLogicTest.java`  
+  Covers setup/action-flow scenarios including reserve + gold behavior and noble award flow.
+- `test/com/splendor/model/validator/MoveValidatorTest.java`  
+  Covers legality/invalidity rules for gem-taking, reserve constraints, and purchase affordability.
+- `test/com/splendor/model/GameFlowTest.java`  
+  Covers final-round behavior and tie-break outcomes.
+- `test/com/splendor/model/BotStrategyTest.java`  
+  Covers bot legal move behavior under constrained board/deck states.
+
+Still not implemented as dedicated automated suites (recommended next):
+- Property-based random legal move fuzz testing.
+- JSON/XML save-load state round-trip parity tests.
+
 ---
 
 **Last Updated:** April 1, 2026  
-**Test Status:** ✅ Comprehensive coverage with automated and manual tests
+**Test Status:** ✅ Strong core-rule coverage; ⚠️ persistence + fuzzing enhancements recommended

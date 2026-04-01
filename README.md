@@ -54,26 +54,21 @@ java -cp classes com.splendor.Main --server
 
 The project follows a strict MVC pattern to ensure separation of concerns. The Controller layer orchestrates the game logic by delegating specific tasks to specialized sub-controllers and validators.
 
-![Architecture Diagram](docs/diagrams/README_diagram_1.png)
+![Architecture Diagram](./docs/diagrams/README_diagram_1.png)
 
 <details>
-<summary>📋 View Architecture Diagram Source</summary>
+<summary>📋 View Architecture Diagram Source (.mmd)</summary>
 
-``![README Diagram 1](docs/diagrams/README_diagram_1.png)``
+[`docs/diagrams/README_diagram_1.mmd`](./docs/diagrams/README_diagram_1.mmd)
 
 </details>
 
-<details>
-<summary>🎲 Game State Lifecycle — ONGOING → FINAL_ROUND → FINISHED</summary>
-
-![Game State Diagram](docs/diagrams/README_diagram_2.png)
+![Game State Diagram](./docs/diagrams/README_diagram_2.png)
 
 <details>
-<summary>📋 View State Diagram Source</summary>
+<summary>📋 View State Diagram Source (.mmd)</summary>
 
-``![README Diagram 2](docs/diagrams/README_diagram_2.png)``
-
-</details>
+[`docs/diagrams/README_diagram_2.mmd`](./docs/diagrams/README_diagram_2.mmd)
 
 </details>
 
@@ -81,14 +76,12 @@ The project follows a strict MVC pattern to ensure separation of concerns. The C
 
 The following sequence diagram illustrates the standard turn lifecycle, including validation and special post-turn checks for noble visits or token limits.
 
-![Turn Sequence Diagram](docs/diagrams/README_diagram_3.png)
+![Turn Sequence Diagram](./docs/diagrams/README_diagram_3.png)
 
 <details>
-<summary>📋 View Sequence Diagram Source</summary>
+<summary>📋 View Sequence Diagram Source (.mmd)</summary>
 
-``![README Diagram 3](docs/diagrams/README_diagram_3.png)``
-
-</details>
+[`docs/diagrams/README_diagram_3.mmd`](./docs/diagrams/README_diagram_3.mmd)
 
 </details>
 
@@ -199,13 +192,18 @@ nc <server-ip> <port>
 powershell -Command "(New-Object System.Net.Sockets.TcpClient).Connect('<server-ip>', <port>)"
 ```
 
-### 3. Network Commands
+### 3. Network Input Style (Current)
 
-- `MOVE:TAKE_GEMS:R,G,B` - Take 3 different gems
-- `MOVE:BUY_CARD:5` - Buy card with ID 5
-- `MOVE:RESERVE_CARD:2` - Reserve card from tier 2
-- `UNDO` - Undo last turn
-- `QUIT` - Disconnect from server
+The current server/client flow is **prompt-driven**. Connected clients submit plain responses to prompts (menu choice numbers, gem codes, card IDs, tier IDs, discard inputs), rather than sending fixed `MOVE:...` command frames.
+
+Common remote inputs:
+- `1`, `2`, `3`, etc. for menu selections.
+- Gem selections like `R G B` (or `AU` for gold where allowed by prompt).
+- Numeric card IDs / tier IDs when prompted.
+- `Z` or `UNDO` to return to the previous prompt/menu.
+- `DISCARD:R B` (legacy accepted) or pair format like `R 1 B 1` during discard prompts.
+
+Low-level protocol utilities still validate message prefixes such as `MOVE:`, `QUERY:`, and `DISCONNECT`, but gameplay input in this implementation is consumed as prompt responses by the remote view/client handler flow.
 
 ## Configuration
 
@@ -226,14 +224,28 @@ Game settings in `src/resources/config.properties`:
 
 ### Running Tests
 
+Prerequisites:
+- Java 17+ installed
+- JUnit console JAR present at `lib/junit-platform-console-standalone-1.10.2.jar`
+
 **Windows:**
 ```batch
-.\run_tests.bat
+test\run_tests.bat
 ```
 
 **Unix/macOS:**
 ```bash
-./run_tests.sh
+bash test/run_tests.sh
+```
+
+Run a specific class:
+```bash
+bash test/run_tests.sh --class com.splendor.controller.GameLogicTest
+```
+
+Run by package/category:
+```bash
+bash test/run_tests.sh --category com.splendor.model
 ```
 
 ### Test Coverage
@@ -244,6 +256,29 @@ The test suite uses JUnit 5 and covers:
 - **Validators**: Move validation, rule enforcement
 - **Controllers**: Turn logic, game flow
 - **Edge Cases**: Invalid inputs, boundary conditions
+
+### Where the test code lives
+
+- `test/com/splendor/controller/` — controller/game flow behavior tests
+- `test/com/splendor/model/` — model/game state and strategy tests
+- `test/com/splendor/model/validator/` — move/rule validation tests
+- `test/com/splendor/network/` — network integration tests
+- `test/com/splendor/test/` — documentation/config helper tests
+
+### Script parity (.sh and .bat)
+
+Windows `.bat` counterparts exist for the main shell scripts:
+- `compile.sh` ↔ `compile.bat`
+- `run.sh` ↔ `run.bat`
+- `generate_docs_enhanced.sh` ↔ `generate_docs_enhanced.bat`
+- `test/run_tests.sh` ↔ `test/run_tests.bat`
+- `test/ci/generate_javadoc.sh` ↔ `test/ci/generate_javadoc.bat`
+- `test/ci/docs_guard.sh` ↔ `test/ci/docs_guard.bat`
+- `test/ci/docs_pipeline.sh` ↔ `test/ci/docs_pipeline.bat`
+- `test/ci/verify_javadoc_index.js` ↔ `test/ci/verify_javadoc_index.bat` (wrapper)
+- `test/ci/verify_diagram_assets.py` ↔ `test/ci/verify_diagram_assets.bat` (wrapper)
+- `test/network/network_three_terminal_test.sh` ↔ `test/network/network_three_terminal_test.bat`
+- `generate_auto_uml.sh` ↔ `generate_auto_uml.bat`
 
 ## Project Structure
 
@@ -315,10 +350,64 @@ splendor/
 
 ### CI/CD
 
-The repository uses GitHub Actions for:
-- Automated testing on push
-- Javadoc generation and validation
-- Code quality checks
+The repository currently uses GitHub Actions workflows for:
+- CI test execution (`.github/workflows/ci.yml`)
+- Javadoc publish (`.github/workflows/javadoc.yml`)
+- Documentation generation/deployment (`.github/workflows/documentation.yml`)
+- Security scanning (`.github/workflows/trufflehog.yml`)
+
+### Java Change Doc Pipeline (Required)
+
+When adding/editing/removing Java classes, interfaces, enums, or public methods, run:
+
+```bash
+node render_diagrams.js
+bash test/ci/generate_javadoc.sh
+node test/ci/verify_javadoc_index.js
+bash test/ci/docs_guard.sh
+```
+
+Consolidated one-command option:
+
+```bash
+bash test/ci/docs_pipeline.sh
+```
+
+Windows equivalents:
+
+```batch
+test\ci\docs_pipeline.bat
+test\ci\generate_javadoc.bat
+test\ci\docs_guard.bat
+```
+
+Note: if `mmdc` is not installed, `docs_pipeline` will skip diagram rendering and continue using existing PNG artifacts.
+
+This ensures externalized Mermaid sources, regenerated PNG diagrams, and Javadoc index/content stay synchronized.
+
+### Execution Order (Manual vs CI)
+
+**Manual local order (recommended):**
+1. `bash test/run_tests.sh`
+2. `bash test/ci/docs_pipeline.sh` (or run the 4 underlying commands individually)
+3. Commit generated docs/diagram updates if changed.
+
+**CI order (`.github/workflows/ci.yml`):**
+1. `bash test/run_tests.sh`
+2. `bash test/ci/docs_guard.sh`
+
+**Docs automation order (`.github/workflows/documentation.yml`):**
+1. `generate_docs_enhanced.(sh|bat)`
+2. Validate generated docs presence
+3. Upload artifacts / optional deploy
+
+### Where to change image background behavior
+
+To enforce **white backgrounds** for generated diagrams in both manual and CI flows:
+- Mermaid render config: `render_diagrams.js`, `extract_diagrams.js`
+- PlantUML render config: `generate_docs_enhanced.sh`, `generate_docs_enhanced.bat`, `generate_auto_uml.sh`
+
+These are the source-of-truth script locations used by the pipelines.
 
 ### Reporting Issues
 

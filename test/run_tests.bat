@@ -76,7 +76,7 @@ REM Run tests
 echo 3. Running tests...
 echo.
 
-set "JUNIT_CMD=java -jar lib/junit-platform-console-standalone-1.10.2.jar --class-path "test-classes;classes""
+set "JUNIT_CMD=java -jar lib/junit-platform-console-standalone-1.10.2.jar execute --class-path "test-classes;classes""
 
 if defined VERBOSE (
     set "JUNIT_CMD=!JUNIT_CMD! !VERBOSE!"
@@ -95,6 +95,11 @@ if defined COVERAGE (
 )
 
 !JUNIT_CMD!
+if %ERRORLEVEL% NEQ 0 (
+    echo.
+    echo ERROR: One or more tests failed.
+    exit /b %ERRORLEVEL%
+)
 
 echo.
 echo === Test run complete ===

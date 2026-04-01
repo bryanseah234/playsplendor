@@ -13,7 +13,7 @@ for (const file of files) {
     
     try {
         console.log(`Rendering ${srcFile}...`);
-        execSync(`mmdc -i "${srcFile}" -o "${pngFile}" -t default -b transparent -s 3`, { stdio: 'inherit' });
+        execSync(`mmdc -i "${srcFile}" -o "${pngFile}" -t default -b white -s 3`, { stdio: 'inherit' });
         console.log(`Rendered ${pngFile}`);
     } catch (e) {
         console.error(`Failed to render ${srcFile}`);
