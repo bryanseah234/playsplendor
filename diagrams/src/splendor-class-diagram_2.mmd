@@ -130,7 +130,7 @@ classDiagram
         +getDisplayName() String
     }
     
-    GameState.Phase {
+    class GameStatePhase {
         <<enumeration>>
         ONGOING
         FINAL_ROUND
@@ -179,4 +179,4 @@ classDiagram
     Board --> Card
     Board --> Noble
     Board --> Gem
-    GameState --> GameState.Phase
+    GameState --> GameStatePhase

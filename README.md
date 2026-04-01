@@ -205,6 +205,35 @@ Common remote inputs:
 
 Low-level protocol utilities still validate message prefixes such as `MOVE:`, `QUERY:`, and `DISCONNECT`, but gameplay input in this implementation is consumed as prompt responses by the remote view/client handler flow.
 
+### 4. Network Lobby Setup Walkthrough (Recommended)
+
+Use this flow to keep setup predictable and reduce terminal line collisions when multiple users connect close together:
+
+1. **Host starts server**
+   - Run `java -cp classes com.splendor.Main --server`.
+   - Wait for `Waiting for host to connect...`.
+2. **Host connects first**
+   - Connect using `nc <server-ip> <port>`.
+   - The host terminal will show:
+     - `Welcome to Splendor Network Game!`
+     - `You are the lobby leader.`
+     - `Please choose total players (2-4). Other players will wait for your choice.`
+   - Then enter the player count when prompted.
+3. **Other players connect**
+   - After host selects player count, remaining players connect with `nc`.
+   - Lobby status is shown (`Lobby: X/Y players joined...`) until full.
+4. **Name setup (30-second timeout)**
+   - Everyone gets a name prompt and can type a preferred name.
+   - If a player does not submit within 30 seconds, default `PlayerN` is assigned automatically.
+   - To avoid disrupting users mid-typing, status now updates as a full waiting-room snapshot rather than reprinting on each single name change.
+5. **Ready confirmation**
+   - All clients see `Press Enter to confirm readiness and continue.`
+   - Press Enter to proceed into the match.
+
+Tips:
+- Prefer one response per prompt; avoid pasting multiple lines at once.
+- If text looks offset in `nc`, press Enter once to re-sync your terminal input line.
+
 ## Configuration
 
 Game settings in `src/resources/config.properties`:

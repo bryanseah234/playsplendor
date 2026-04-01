@@ -84,162 +84,24 @@ if exist "%DIAGRAMS_DIR%\plantuml.jar" (
 
 REM Generate documentation index
 echo [INFO] Creating documentation index...
-(
-echo ^<!DOCTYPE html^>
-echo ^<html lang="en"^>
-echo ^<head^>
-echo     ^<meta charset="UTF-8"^>
-echo     ^<meta name="viewport" content="width=device-width, initial-scale=1.0"^>
-echo     ^<title^>Splendor Game Documentation^</title^>
-echo     ^<style^>
-echo         body {
-echo             font-family: Arial, sans-serif;
-echo             max-width: 1200px;
-echo             margin: 0 auto;
-echo             padding: 20px;
-echo             background-color: #f5f5f5;
-echo         }
-echo         .container {
-echo             background: white;
-echo             padding: 30px;
-echo             border-radius: 10px;
-echo             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-echo         }
-echo         h1 {
-echo             color: #2c3e50;
-echo             text-align: center;
-echo             margin-bottom: 30px;
-echo         }
-echo         .section {
-echo             margin: 30px 0;
-echo             padding: 20px;
-echo             border-left: 4px solid #3498db;
-echo             background-color: #f8f9fa;
-echo         }
-echo         .section h2 {
-echo             color: #2c3e50;
-echo             margin-top: 0;
-echo         }
-echo         .link-grid {
-echo             display: grid;
-echo             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-echo             gap: 20px;
-echo             margin-top: 20px;
-echo         }
-echo         .link-card {
-echo             background: white;
-echo             padding: 20px;
-echo             border-radius: 8px;
-echo             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-echo             text-decoration: none;
-echo             color: inherit;
-echo             transition: transform 0.2s;
-echo         }
-echo         .link-card:hover {
-echo             transform: translateY(-2px);
-echo             box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-echo         }
-echo         .link-card h3 {
-echo             color: #3498db;
-echo             margin-top: 0;
-echo         }
-echo         .diagram-grid {
-echo             display: grid;
-echo             grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-echo             gap: 20px;
-echo             margin-top: 20px;
-echo         }
-echo         .diagram-card {
-echo             background: white;
-echo             padding: 15px;
-echo             border-radius: 8px;
-echo             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-echo             text-align: center;
-echo         }
-echo         .diagram-card img {
-echo             max-width: 100%;
-echo             height: auto;
-echo             border: 1px solid #ddd;
-echo             border-radius: 4px;
-echo         }
-echo         .update-info {
-echo             text-align: center;
-echo             color: #7f8c8d;
-echo             font-style: italic;
-echo             margin-top: 30px;
-echo             padding-top: 20px;
-echo             border-top: 1px solid #ecf0f1;
-echo         }
-echo     ^</style^>
-echo ^</head^>
-echo ^<body^>
-echo     ^<div class="container"^>
-echo         ^<h1^>🎲 Splendor Game Documentation^</h1^>
-echo         
-echo         ^<div class="section"^>
-echo             ^<h2^>📚 API Documentation^</h2^>
-echo             ^<div class="link-grid"^>
-echo                 ^<a href="javadoc/index.html" class="link-card"^>
-echo                     ^<h3^>📖 Java API Documentation^</h3^>
-echo                     ^<p^>Complete Javadoc for all classes, methods, and packages in the Splendor game implementation.^</p^>
-echo                 ^</a^>
-echo                 ^<a href="diagrams/" class="link-card"^>
-echo                     ^<h3^>🏗️ Architecture Diagrams^</h3^>
-echo                     ^<p^>UML diagrams showing class relationships, dependencies, and system architecture.^</p^>
-echo                 ^</a^>
-echo             ^</div^>
-echo         ^</div^>
-echo.
-echo         ^<div class="section"^>
-echo             ^<h2^>🎯 UML Diagrams^</h2^>
-echo             ^<div class="diagram-grid"^>
-echo                 ^<div class="diagram-card"^>
-echo                     ^<h3^>Class Diagram^</h3^>
-echo                     ^<a href="diagrams/splendor.png" target="_blank"^>
-echo                         ^<img src="diagrams/splendor.png" alt="Main Class Diagram" onerror="this.style.display='none'"^>
-echo                     ^</a^>
-echo                     ^<p^>Complete class structure and relationships^</p^>
-echo                 ^</div^>
-echo                 ^<div class="diagram-card"^>
-echo                     ^<h3^>Lightweight Class Diagram^</h3^>
-echo                     ^<a href="diagrams/splendor_class_light.png" target="_blank"^>
-echo                         ^<img src="diagrams/splendor_class_light.png" alt="Lightweight Class Diagram" onerror="this.style.display='none'"^>
-echo                     ^</a^>
-echo                     ^<p^>Simplified view of main classes^</p^>
-echo                 ^</div^>
-echo                 ^<div class="diagram-card"^>
-echo                     ^<h3^>Dependency Diagram^</h3^>
-echo                     ^<a href="diagrams/splendor_dependency.png" target="_blank"^>
-echo                         ^<img src="diagrams/splendor_dependency.png" alt="Dependency Diagram" onerror="this.style.display='none'"^>
-echo                     ^</a^>
-echo                     ^<p^>Package and class dependencies^</p^>
-echo                 ^</div^>
-echo                 ^<div class="diagram-card"^>
-echo                     ^<h3^>Functional Flow^</h3^>
-echo                     ^<a href="diagrams/splendor_functional.png" target="_blank"^>
-echo                         ^<img src="diagrams/splendor_functional.png" alt="Functional Flow Diagram" onerror="this.style.display='none'"^>
-echo                     ^</a^>
-echo                     ^<p^>Game flow and sequence diagrams^</p^>
-echo                 ^</div^>
-echo                 ^<div class="diagram-card"^>
-echo                     ^<h3^>Inheritance Diagram^</h3^>
-echo                     ^<a href="diagrams/splendor_inheritance.png" target="_blank"^>
-echo                         ^<img src="diagrams/splendor_inheritance.png" alt="Inheritance Diagram" onerror="this.style.display='none'"^>
-echo                     ^</a^>
-echo                     ^<p^>Class inheritance and interface hierarchy^</p^>
-echo                 ^</div^>
-echo             ^</div^>
-echo         ^</div^>
-echo.
-echo         ^<div class="update-info"^>
-echo             ^<p^>Documentation last generated on: ^<strong^>%date% %time%^</strong^>^</p^>
-echo             ^<p^>🔄 Run ^<code^>generate_docs_enhanced.bat^</code^> to regenerate documentation^</p^>
-echo         ^</div^>
-echo     ^</div^>
-echo ^</body^>
-echo ^</html^>
-echo.
-) > "docs\index.html"
+powershell -NoProfile -Command ^
+  "$content = @'" ^
+  "<!DOCTYPE html>" ^
+  "<html lang=""en"">" ^
+  "<head>" ^
+  "  <meta charset=""UTF-8"">" ^
+  "  <meta http-equiv=""refresh"" content=""0; url=./javadoc/index.html"" />" ^
+  "  <title>Splendor Documentation</title>" ^
+  "</head>" ^
+  "<body>" ^
+  "  <p>Redirecting to <a href=""./javadoc/index.html"">Splendor Javadoc</a>...</p>" ^
+  "</body>" ^
+  "</html>" ^
+  "'@; New-Item -ItemType Directory -Force docs | Out-Null; Set-Content -Path 'docs/index.html' -Value $content -Encoding UTF8"
+if %errorlevel% neq 0 (
+    echo [ERROR] Failed to create docs\index.html
+    exit /b 1
+)
 
 echo [SUCCESS] Documentation index created at: docs\index.html
 
