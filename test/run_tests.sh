@@ -56,8 +56,11 @@ if [ -z "$TEST_FILES" ]; then
     exit 0
 fi
 
+# Unix classpath separator
+CP_SEP=":"
+
 javac -d test-classes \
-  -cp "classes;lib/junit-platform-console-standalone-1.10.2.jar" \
+  -cp "classes${CP_SEP}lib/junit-platform-console-standalone-1.10.2.jar" \
   -sourcepath test \
   $TEST_FILES
 
@@ -71,7 +74,7 @@ echo "   Test sources compiled OK."
 echo "3. Running tests..."
 echo ""
 
-JUNIT_CMD="java -jar lib/junit-platform-console-standalone-1.10.2.jar --class-path test-classes;classes"
+JUNIT_CMD="java -jar lib/junit-platform-console-standalone-1.10.2.jar execute --class-path test-classes${CP_SEP}classes"
 
 if [ -n "$VERBOSE" ]; then
     JUNIT_CMD="$JUNIT_CMD $VERBOSE"
@@ -92,6 +95,13 @@ if [ -n "$COVERAGE" ]; then
 fi
 
 eval $JUNIT_CMD
+JUNIT_EXIT=$?
+
+if [ $JUNIT_EXIT -ne 0 ]; then
+    echo ""
+    echo "ERROR: One or more tests failed."
+    exit $JUNIT_EXIT
+fi
 
 echo ""
 echo "=== Test run complete ==="

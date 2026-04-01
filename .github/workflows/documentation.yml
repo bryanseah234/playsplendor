@@ -33,6 +33,7 @@ jobs:
         distribution: 'temurin'
     
     - name: Cache PlantUML
+      id: cache-plantuml
       uses: actions/cache@v4
       with:
         path: docs/diagrams/plantuml.jar
@@ -88,9 +89,11 @@ jobs:
           echo "changes=true" >> $GITHUB_OUTPUT
           echo "📋 Documentation changes detected:"
           git status --porcelain docs/
+          git status --porcelain docs/ > git-status.txt
         else
           echo "changes=false" >> $GITHUB_OUTPUT
           echo "✅ No documentation changes needed"
+          echo "No documentation changes detected." > git-status.txt
         fi
       shell: bash
     
