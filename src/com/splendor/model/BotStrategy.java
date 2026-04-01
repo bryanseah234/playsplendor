@@ -21,11 +21,10 @@ import java.util.*;
 
 public final class BotStrategy {
 
-    private static final MoveValidator moveValidator = new MoveValidator();
-
     private BotStrategy() {}
 
-    public static Move chooseBotMove(final Player player, final Game game) {
+    public static Move chooseBotMove(final Player player, final Game game,
+            final MoveValidator moveValidator) {
         final Board board = game.getBoard();
 
         // Compute weighted bonus importance across ALL nobles (closer nobles = higher weight)
@@ -33,24 +32,24 @@ public final class BotStrategy {
 
         // 1. Buy the best affordable visible card whose bonus contributes to any target noble
         if (!bonusImportance.isEmpty()) {
-            final Integer nobleCardId = getBestAffordableCardForNoble(player, board, bonusImportance);
+            final Integer nobleCardId = getBestAffordableCardForNoble(player, board, bonusImportance, moveValidator);
             if (nobleCardId != null) {
                 return new Move(MoveType.BUY_CARD, nobleCardId, false);
             }
             // 2. Buy a reserved card that contributes to any target noble
-            final Integer nobleReservedId = getBestAffordableReservedForNoble(player, bonusImportance);
+            final Integer nobleReservedId = getBestAffordableReservedForNoble(player, bonusImportance, moveValidator);
             if (nobleReservedId != null) {
                 return new Move(MoveType.BUY_CARD, nobleReservedId, true);
             }
         }
 
         // 3. Buy any other affordable visible card (prefer higher points)
-        final Integer bestVisibleId = getBestAffordableVisibleId(player, board);
+        final Integer bestVisibleId = getBestAffordableVisibleId(player, board, moveValidator);
         if (bestVisibleId != null) {
             return new Move(MoveType.BUY_CARD, bestVisibleId, false);
         }
         // 4. Buy any other affordable reserved card
-        final List<Integer> affordableReserved = getAffordableReservedIds(player);
+        final List<Integer> affordableReserved = getAffordableReservedIds(player, moveValidator);
         if (!affordableReserved.isEmpty()) {
             return new Move(MoveType.BUY_CARD, affordableReserved.get(0), true);
         }
@@ -177,7 +176,8 @@ public final class BotStrategy {
      * Scored by: bonus importance * 10 + card points.
      */
     private static Integer getBestAffordableCardForNoble(final Player player, final Board board,
-                                                          final Map<Gem, Double> bonusImportance) {
+                                                          final Map<Gem, Double> bonusImportance,
+                                                          final MoveValidator moveValidator) {
         Card best = null;
         double bestScore = -1;
         for (int tier = 1; tier <= 3; tier++) {
@@ -202,7 +202,8 @@ public final class BotStrategy {
      * Finds the best affordable reserved card whose bonus color has noble importance.
      */
     private static Integer getBestAffordableReservedForNoble(final Player player,
-                                                              final Map<Gem, Double> bonusImportance) {
+                                                              final Map<Gem, Double> bonusImportance,
+                                                              final MoveValidator moveValidator) {
         Card best = null;
         double bestScore = -1;
         for (final Card card : player.getReservedCards()) {
@@ -224,7 +225,8 @@ public final class BotStrategy {
     /**
      * Finds the best affordable visible card by points (fallback when no noble card is affordable).
      */
-    private static Integer getBestAffordableVisibleId(final Player player, final Board board) {
+    private static Integer getBestAffordableVisibleId(final Player player, final Board board,
+                                                       final MoveValidator moveValidator) {
         Card best = null;
         for (int tier = 1; tier <= 3; tier++) {
             for (final Card card : board.getAvailableCards(tier)) {
@@ -315,7 +317,8 @@ public final class BotStrategy {
      * @param player The player whose reserved hand is checked.
      * @return List of affordable reserved card IDs (may be empty).
      */
-    private static List<Integer> getAffordableReservedIds(final Player player) {
+    private static List<Integer> getAffordableReservedIds(final Player player,
+            final MoveValidator moveValidator) {
         final List<Integer> ids = new ArrayList<>();
         for (final Card card : player.getReservedCards()) {
             if (moveValidator.canPlayerAffordCard(player, card)) ids.add(card.getId());

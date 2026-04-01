@@ -1,5 +1,6 @@
 package com.splendor.view;
 
+import com.splendor.config.IConfigProvider;
 import com.splendor.model.*;
 import com.splendor.model.validator.MoveValidator;
 import com.splendor.util.AnsiUtils;
@@ -48,10 +49,10 @@ public class GameRenderer {
     private final MoveValidator moveValidator;
 
     /**
-     * Creates a new GameRenderer with a fresh MoveValidator.
+     * Creates a new GameRenderer with a config-aware MoveValidator.
      */
-    public GameRenderer() {
-        this.moveValidator = new MoveValidator();
+    public GameRenderer(final IConfigProvider config) {
+        this.moveValidator = new MoveValidator(config);
     }
 
     /**

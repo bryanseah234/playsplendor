@@ -5,6 +5,7 @@
  */
 package com.splendor.view;
 
+import com.splendor.config.IConfigProvider;
 import com.splendor.model.*;
 import com.splendor.model.validator.MoveValidator;
 import com.splendor.network.NetworkMessageHandler;
@@ -23,18 +24,21 @@ public class RemoteView implements IGameView {
     private final String clientId;
     private final NetworkMessageHandler messageHandler;
     private final GameRenderer renderer;
-    private final MoveValidator moveValidator = new MoveValidator();
+    private final MoveValidator moveValidator;
 
     /**
      * Creates a new RemoteView for the specified client.
-     * 
+     *
      * @param clientId       Client identifier
      * @param messageHandler Network message handler
+     * @param config         Configuration provider
      */
-    public RemoteView(final String clientId, final NetworkMessageHandler messageHandler) {
+    public RemoteView(final String clientId, final NetworkMessageHandler messageHandler,
+            final IConfigProvider config) {
         this.clientId = clientId;
         this.messageHandler = messageHandler;
-        this.renderer = new GameRenderer();
+        this.renderer = new GameRenderer(config);
+        this.moveValidator = new MoveValidator(config);
     }
 
     /** Renders the full board state to a string and sends it to this client. */

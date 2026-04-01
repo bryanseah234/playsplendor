@@ -26,9 +26,6 @@ import java.util.*;
  */
 public final class MenuBuilder {
 
-    /** Shared validator instance used to check card affordability. */
-    private static final MoveValidator moveValidator = new MoveValidator();
-
     /** Prevent instantiation of this utility class. */
     private MenuBuilder() {}
 
@@ -38,11 +35,13 @@ public final class MenuBuilder {
      * Each option's availability is determined by querying the current board and
      * player state. Computer players are never offered the Exit Game option.
      *
-     * @param player The player whose turn it is.
-     * @param game   The current game state, used to inspect the board and rules.
+     * @param player        The player whose turn it is.
+     * @param game          The current game state, used to inspect the board and rules.
+     * @param moveValidator Validator used to check card affordability.
      * @return An ordered, non-null list of MenuOption objects ready for the view to render.
      */
-    public static List<MenuOption> buildMenuOptions(final Player player, final Game game) {
+    public static List<MenuOption> buildMenuOptions(final Player player, final Game game,
+            final MoveValidator moveValidator) {
         final Board board = game.getBoard();
         final List<MenuOption> options = new ArrayList<>();
         int index = 1; // 1-based numbering matches what the player types
@@ -61,13 +60,13 @@ public final class MenuBuilder {
                 "Take 2 same", formatColoredGemList(twoSame), canTakeTwo ? "" : "No color with 4+ tokens"));
 
         // --- Options 3 & 4: Reserve (visible or from deck) ---
-        final boolean canReserve = player.canReserveCard();           // player must have fewer than 3 reserved
+        final boolean canReserve = player.canReserveCard(moveValidator.getMaxReservedCards());
         final boolean canReserveVisible = canReserve && hasVisibleCards(board);
         final boolean canReserveDeck = canReserve && hasAnyDeckCards(board);
         final List<Integer> visibleIds = getVisibleCardIds(board);
         options.add(new MenuOption(index++, MenuAction.RESERVE_VISIBLE, canReserveVisible,
                 "Reserve visible card", canReserveVisible ? formatIdList(visibleIds, 8) : "None",
-                canReserveVisible ? "" : reserveVisibleReason(player, board)));
+                canReserveVisible ? "" : reserveVisibleReason(player, board, moveValidator)));
 
         // Build the tier list for deck reserves (e.g. "1/2/3").
         final List<Integer> availableTiers = new ArrayList<>();
@@ -90,7 +89,7 @@ public final class MenuBuilder {
         final boolean canReserveDeckAndHasCards = canReserveDeck && !availableTiers.isEmpty();
         final String reserveDeckUnavailableReason;
         if (!canReserveDeck) {
-            reserveDeckUnavailableReason = reserveDeckReason(player, board);
+            reserveDeckUnavailableReason = reserveDeckReason(player, board, moveValidator);
         } else if (availableTiers.isEmpty()) {
             reserveDeckUnavailableReason = "Decks are empty";
         } else {
@@ -100,14 +99,14 @@ public final class MenuBuilder {
                 "Reserve card from deck", deckInfo, reserveDeckUnavailableReason));
 
         // --- Options 5 & 6: Buy (visible or reserved) ---
-        final List<Integer> affordableVisible = getAffordableVisibleIds(player, board);
+        final List<Integer> affordableVisible = getAffordableVisibleIds(player, board, moveValidator);
         final boolean canBuyVisible = !affordableVisible.isEmpty();
         options.add(new MenuOption(index++, MenuAction.BUY_VISIBLE, canBuyVisible,
                 "Buy visible card", canBuyVisible ? formatIdList(affordableVisible, 8) : "None",
                 canBuyVisible ? "" : buyVisibleReason(player, board)));
 
         final List<Integer> reservedIds = getReservedCardIds(player);
-        final List<Integer> affordableReserved = getAffordableReservedIds(player);
+        final List<Integer> affordableReserved = getAffordableReservedIds(player, moveValidator);
         final boolean canBuyReserved = !affordableReserved.isEmpty();
         options.add(new MenuOption(index++, MenuAction.BUY_RESERVED, canBuyReserved,
                 "Buy reserved card(s)", reservedIds.isEmpty() ? "None" : formatIdList(reservedIds, 8),
@@ -216,8 +215,10 @@ public final class MenuBuilder {
      * @param board  The current board.
      * @return Reason string shown in the greyed-out menu entry.
      */
-    private static String reserveVisibleReason(final Player player, final Board board) {
-        if (!player.canReserveCard()) return "Reserve limit reached (3)";
+    private static String reserveVisibleReason(final Player player, final Board board,
+            final MoveValidator moveValidator) {
+        if (!player.canReserveCard(moveValidator.getMaxReservedCards()))
+            return "Reserve limit reached (" + moveValidator.getMaxReservedCards() + ")";
         if (!hasVisibleCards(board)) return "No visible cards";
         return "Not available";
     }
@@ -229,8 +230,10 @@ public final class MenuBuilder {
      * @param board  The current board.
      * @return Reason string shown in the greyed-out menu entry.
      */
-    private static String reserveDeckReason(final Player player, final Board board) {
-        if (!player.canReserveCard()) return "Reserve limit reached (3)";
+    private static String reserveDeckReason(final Player player, final Board board,
+            final MoveValidator moveValidator) {
+        if (!player.canReserveCard(moveValidator.getMaxReservedCards()))
+            return "Reserve limit reached (" + moveValidator.getMaxReservedCards() + ")";
         if (!hasAnyDeckCards(board)) return "Decks are empty";
         return "Not available";
     }
@@ -266,7 +269,8 @@ public final class MenuBuilder {
      * @param board  The current game board.
      * @return List of affordable visible card IDs.
      */
-    public static List<Integer> getAffordableVisibleIds(final Player player, final Board board) {
+    public static List<Integer> getAffordableVisibleIds(final Player player, final Board board,
+            final MoveValidator moveValidator) {
         final List<Integer> ids = new ArrayList<>();
         for (int tier = 1; tier <= 3; tier++) {
             for (final Card card : board.getAvailableCards(tier)) {
@@ -280,10 +284,12 @@ public final class MenuBuilder {
      * Returns the IDs of all reserved cards in the player's hand that they can
      * currently afford.
      *
-     * @param player The player whose reserved cards are checked.
+     * @param player        The player whose reserved cards are checked.
+     * @param moveValidator Validator used to check card affordability.
      * @return List of affordable reserved card IDs.
      */
-    public static List<Integer> getAffordableReservedIds(final Player player) {
+    public static List<Integer> getAffordableReservedIds(final Player player,
+            final MoveValidator moveValidator) {
         final List<Integer> ids = new ArrayList<>();
         for (final Card card : player.getReservedCards()) {
             if (moveValidator.canPlayerAffordCard(player, card)) ids.add(card.getId());

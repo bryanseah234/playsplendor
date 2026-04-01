@@ -338,13 +338,13 @@ public class GameController {
         while (true) {
             try {
                 // Build the context-sensitive list of actions available to this player.
-                final List<MenuOption> options = MenuBuilder.buildMenuOptions(player, game);
+                final List<MenuOption> options = MenuBuilder.buildMenuOptions(player, game, moveValidator);
 
                 if (player instanceof ComputerPlayer) {
                     gameView.displayAvailableMoves(options, game);
                     gameView.displayNotification(player.getName() + " is calculating a move...");
 
-                    Move botMove = BotStrategy.chooseBotMove(player, game); // AI selects an action
+                    Move botMove = BotStrategy.chooseBotMove(player, game, moveValidator); // AI selects an action
                     moveValidator.validateMove(botMove, player, game);       // confirm it is legal
                     return botMove;
                 }
@@ -418,7 +418,7 @@ public class GameController {
             moveValidator.validateMove(discardMove, player, game); // confirm the discard is legal
 
             // A dedicated PlayerController handles the token-return mechanics on the model.
-            final PlayerController playerController = new PlayerController(game, gameView);
+            final PlayerController playerController = new PlayerController(game, gameView, moveValidator);
             playerController.executeTokenDiscard(player, discardMove);
 
             // Record the discard in the move history so it appears in the game log.
@@ -484,7 +484,7 @@ public class GameController {
      * @throws SplendorException if noble resolution encounters an unexpected error.
      */
     private void checkNobleVisits(final Player player) throws SplendorException {
-        final PlayerController playerController = new PlayerController(game, gameView); // fresh per turn
+        final PlayerController playerController = new PlayerController(game, gameView, moveValidator); // fresh per turn
         playerController.checkNobleVisits(player);
     }
 

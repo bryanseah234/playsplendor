@@ -90,7 +90,7 @@ public class Main {
     private static void startConsoleMode(final IConfigProvider configProvider) throws SplendorException {
         System.out.println("Starting Splendor in console mode...");
         
-        final IGameView consoleView = new ConsoleView();
+        final IGameView consoleView = new ConsoleView(configProvider);
         final GameController gameController = new GameController(consoleView, configProvider);
         
         gameController.initializeGame();
@@ -154,7 +154,7 @@ public class Main {
 
         // Step 2: ask host how many players
         final String hostId = serverHandler.getConnectedClientIds().get(0);
-        final RemoteView hostView = new RemoteView(hostId, messageHandler);
+        final RemoteView hostView = new RemoteView(hostId, messageHandler, configProvider);
         final int playerCount = hostView.promptForPlayerCount();
         System.out.println("Host selected " + playerCount + " players. Waiting for remaining clients...");
         serverHandler.broadcastToAllClients("Lobby: 1/" + playerCount + " players joined. Waiting for " + (playerCount - 1) + " more...");
@@ -176,7 +176,7 @@ public class Main {
         // Step 4: build one RemoteView per connected client (in connection order)
         final List<RemoteView> playerViews = new ArrayList<>();
         for (final String clientId : serverHandler.getConnectedClientIds()) {
-            playerViews.add(new RemoteView(clientId, messageHandler));
+            playerViews.add(new RemoteView(clientId, messageHandler, configProvider));
         }
 
         System.out.println("All " + playerCount + " players connected. Starting game...");

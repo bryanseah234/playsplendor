@@ -295,11 +295,12 @@ public class Player {
     
     /**
      * Checks if the player can reserve more cards.
-     * 
-     * @return true if player has less than 3 reserved cards, false otherwise
+     *
+     * @param maxReserved maximum number of reserved cards allowed
+     * @return true if player has fewer than maxReserved reserved cards
      */
-    public boolean canReserveCard() {
-        return reservedCards.size() < 3;
+    public boolean canReserveCard(final int maxReserved) {
+        return reservedCards.size() < maxReserved;
     }
     
     /**

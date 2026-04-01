@@ -5,6 +5,7 @@
  */
 package com.splendor.view;
 
+import com.splendor.config.IConfigProvider;
 import com.splendor.model.*;
 import com.splendor.model.validator.MoveValidator;
 import com.splendor.util.GemParser;
@@ -24,13 +25,13 @@ public class ConsoleView implements IGameView {
     private Player currentPlayer;
 
     /**
-     * Creates a new ConsoleView with default input handling.
+     * Creates a new ConsoleView with config-aware components.
      */
-    public ConsoleView() {
+    public ConsoleView(final IConfigProvider config) {
         this.scanner = new Scanner(System.in);
         this.inputResolver = new InputResolver();
-        this.renderer = new GameRenderer();
-        this.moveValidator = new MoveValidator();
+        this.renderer = new GameRenderer(config);
+        this.moveValidator = new MoveValidator(config);
         this.currentPlayer = null;
     }
 
