@@ -219,7 +219,7 @@ public class Main {
                 if (Boolean.TRUE.equals(readyByClient.get(clientId))) {
                     continue;
                 }
-                final String input = serverHandler.pollClientResponse(clientId, 200);
+                final String input = serverHandler.waitForClientResponse(clientId, 200);
                 if (input == null) {
                     continue;
                 }
@@ -259,7 +259,7 @@ public class Main {
                 if (Boolean.TRUE.equals(continueReady.get(clientId))) {
                     continue;
                 }
-                final String response = serverHandler.pollClientResponse(clientId, 200);
+                final String response = serverHandler.waitForClientResponse(clientId, 200);
                 if (response != null) {
                     continueReady.put(clientId, true);
                 }

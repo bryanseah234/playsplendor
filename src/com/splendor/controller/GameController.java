@@ -7,7 +7,6 @@ import com.splendor.exception.GameStateException;
 import com.splendor.exception.InsufficientTokensException;
 import com.splendor.exception.InvalidMoveException;
 import com.splendor.exception.SplendorException;
-import com.splendor.model.BotStrategy;
 import com.splendor.model.ComputerPlayer;
 import com.splendor.model.Game;
 import com.splendor.model.MenuOption;

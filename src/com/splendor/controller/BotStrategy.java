@@ -1,5 +1,6 @@
-package com.splendor.model;
+package com.splendor.controller;
 
+import com.splendor.model.*;
 import com.splendor.model.validator.MoveValidator;
 import java.util.*;
 
@@ -19,12 +20,6 @@ import java.util.*;
  *
  * All public methods are static; the class cannot be instantiated.
  */
-package com.splendor.controller;
-
-import com.splendor.model.*;
-import com.splendor.model.validator.MoveValidator;
-import java.util.*;
-
 public final class BotStrategy {
 
     private BotStrategy() {}
