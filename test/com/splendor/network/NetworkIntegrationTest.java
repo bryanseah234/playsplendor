@@ -1,6 +1,6 @@
 package com.splendor.network;
 
-import com.splendor.config.ConfigException;
+import com.splendor.exception.ConfigException;
 import com.splendor.config.IConfigProvider;
 import com.splendor.exception.SplendorException;
 import org.junit.jupiter.api.AfterEach;

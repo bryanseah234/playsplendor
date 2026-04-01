@@ -1,6 +1,166 @@
 {
-  "java.project.sourcePaths": [
-    "src"
-  ],
-  "java.project.outputPath": "classes"
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.format.settings.url": "https://raw.githubusercontent.com/google/styleguide/gh-pages/eclipse-java-google-style.xml",
+    "java.format.settings.profile": "GoogleStyle",
+    
+    // Documentation generation settings
+    "java.sources.organizeImports.starThreshold": 99,
+    "java.sources.organizeImports.staticStarThreshold": 99,
+    "java.completion.importOrder": [
+        "java",
+        "javax",
+        "com",
+        "org"
+    ],
+    
+    // Javadoc settings
+    "java.completion.enabled": true,
+    "java.sources.inScopeOnly": false,
+    "java.trace.server": "off",
+    
+    // PlantUML settings
+    "plantuml.render": "PlantUML",
+    "plantuml.jar": "${workspaceFolder}/docs/diagrams/plantuml.jar",
+    "plantuml.exportOutDir": "docs/diagrams/out",
+    "plantuml.exportFormat": "png",
+    "plantuml.previewAutoUpdate": true,
+    
+    // Task configurations for documentation
+    "tasks.tasks": [
+        {
+            "label": "Generate Documentation",
+            "type": "shell",
+            "command": "${workspaceFolder}/generate_docs_enhanced.sh",
+            "windows": {
+                "command": "${workspaceFolder}/generate_docs_enhanced.bat"
+            },
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Generate Auto UML",
+            "type": "shell",
+            "command": "${workspaceFolder}/generate_auto_uml.sh",
+            "windows": {
+                "command": "echo 'Auto UML generation not available on Windows'"
+            },
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Validate Documentation",
+            "type": "shell",
+            "command": "cd ${workspaceFolder} && find . -name '*.java' -exec javadoc -Xdoclint:all -Xdoclint:-missing {} \;",
+            "windows": {
+                "command": "cd ${workspaceFolder} && for /r %%f in (*.java) do javadoc -Xdoclint:all -Xdoclint:-missing %%f"
+            },
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": ["$javadoc"]
+        }
+    ],
+    
+    // File associations for PlantUML
+    "files.associations": {
+        "*.puml": "plantuml",
+        "*.plantuml": "plantuml"
+    },
+    
+    // Editor settings for better documentation writing
+    "editor.wordWrap": "on",
+    "editor.rulers": [80, 120],
+    "editor.renderWhitespace": "boundary",
+    "editor.bracketPairColorization.enabled": true,
+    
+    // Java-specific settings
+    "java.contentProvider.preferred": "fernflower",
+    "java.import.gradle.enabled": false,
+    "java.import.maven.enabled": false,
+    "java.eclipse.downloadSources": false,
+    
+    // Code actions on save
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": true,
+        "source.generate.toString": true,
+        "source.generate.hashCodeEquals": true,
+        "source.generate.constructors": true,
+        "source.generate.delegateMethods": true
+    },
+    
+    // Documentation-specific snippets
+    "snippets": {
+        "JavaDoc Class": {
+            "prefix": "javadoc-class",
+            "body": [
+                "/**",
+                " * [Brief description of the class purpose].",
+                " * ",
+                " * <p>[Detailed description if needed].</p>",
+                " * ",
+                " * <p><strong>Thread Safety:</strong> [Thread safety notes]</p>",
+                " * ",
+                " * <p><strong>Example Usage:</strong></p>",
+                " * <pre>{@code",
+                " * // Example code showing typical usage",
+                " * }</pre>",
+                " * ",
+                " * @author [Author Name]",
+                " * @since [Version]",
+                " * @see [RelatedClass]",
+                " */",
+                "public class ${1:ClassName} {",
+                "    $0",
+                "}"
+            ],
+            "description": "JavaDoc template for a class"
+        },
+        "JavaDoc Method": {
+            "prefix": "javadoc-method",
+            "body": [
+                "/**",
+                " * [Brief description of what the method does].",
+                " * ",
+                " * <p>[Detailed description if needed].</p>",
+                " * ",
+                " * @param ${1:param} [Description]",
+                " * @return [Description of return value]",
+                " * @throws ${2:ExceptionType} When [condition]",
+                " * ",
+                " * @since [Version]",
+                " * @see #${3:relatedMethod}()",
+                " */",
+                "public ${4:ReturnType} ${5:methodName}(${6:Type} ${1:param}) {",
+                "    $0",
+                "}"
+            ],
+            "description": "JavaDoc template for a method"
+        }
+    },
+    
+    // Extensions recommendations
+    "recommendations": [
+        "redhat.java",
+        "vscjava.vscode-java-pack",
+        "plantuml",
+        "jebbs.plantuml",
+        "visualstudioexptteam.vscodeintellicode",
+        "sonarsource.sonarlint-vscode"
+    ]
 }
