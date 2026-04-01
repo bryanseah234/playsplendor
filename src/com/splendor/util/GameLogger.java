@@ -43,6 +43,12 @@ public class GameLogger {
     
     private static boolean debugEnabled = false;
     
+    public static final String LOG_FORMAT = "[%s] %s: %s";
+    public static final String LOG_LEVEL_INFO = "INFO";
+    public static final String LOG_LEVEL_ERROR = "ERROR";
+    public static final String LOG_LEVEL_DEBUG = "DEBUG";
+    public static final String LOG_LEVEL_WARN = "WARN";
+
     /**
      * Enables or disables debug logging.
      * 
@@ -58,7 +64,7 @@ public class GameLogger {
      * @param message Message to log
      */
     public static void info(final String message) {
-        log(Constants.LOG_LEVEL_INFO, message);
+        log(LOG_LEVEL_INFO, message);
     }
     
     /**
@@ -67,7 +73,7 @@ public class GameLogger {
      * @param message Error message to log
      */
     public static void error(final String message) {
-        log(Constants.LOG_LEVEL_ERROR, message);
+        log(LOG_LEVEL_ERROR, message);
     }
     
     /**
@@ -77,7 +83,7 @@ public class GameLogger {
      * @param exception Exception to log
      */
     public static void error(final String message, final Throwable exception) {
-        log(Constants.LOG_LEVEL_ERROR, message + " - " + exception.getMessage());
+        log(LOG_LEVEL_ERROR, message + " - " + exception.getMessage());
         if (debugEnabled && exception != null) {
             exception.printStackTrace();
         }
@@ -90,7 +96,7 @@ public class GameLogger {
      */
     public static void debug(final String message) {
         if (debugEnabled) {
-            log(Constants.LOG_LEVEL_DEBUG, message);
+            log(LOG_LEVEL_DEBUG, message);
         }
     }
     
@@ -111,7 +117,7 @@ public class GameLogger {
      */
     private static void log(final String level, final String message) {
         final String timestamp = LocalDateTime.now().format(TIMESTAMP_FORMAT);
-        final String formattedMessage = String.format(Constants.LOG_FORMAT, 
+        final String formattedMessage = String.format(LOG_FORMAT, 
                                                     timestamp, level, message);
         System.out.println(formattedMessage);
     }

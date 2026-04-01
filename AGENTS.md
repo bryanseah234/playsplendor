@@ -41,8 +41,6 @@ This file defines how AI coding agents (Cursor, Antigravity, Claude Code, GitHub
 - Use consistent naming patterns
 - Keep functions small and focused
 - Add type hints for Python, TypeScript interfaces for JS
-- For Java, keep Javadoc blocks directly above class/interface/method declarations (not above `package` lines)
-- When modifying Java APIs, update docs pipeline artifacts and verification scripts in the same change when possible
 
 ### 3. Git Conventions
 - Commit messages: `type: description`
@@ -55,15 +53,6 @@ This file defines how AI coding agents (Cursor, Antigravity, Claude Code, GitHub
 - Explain complex changes briefly
 - Admit uncertainty when present
 - Ask for clarification when requirements are ambiguous
-
-### 5. Documentation & Diagram Lifecycle (Required)
-- On Java changes (add/edit/remove class, interface, enum, public methods), run:
-  1. `node render_diagrams.js`
-  2. `bash test/ci/generate_javadoc.sh`
-  3. `node test/ci/verify_javadoc_index.js`
-  4. `bash test/ci/docs_guard.sh`
-- Mermaid/diagram source of truth is external files (e.g. `diagrams/src/*.mmd`), not inline markdown blocks.
-- If PR tooling cannot accept binaries, prioritize committing source updates (`.java`, `.md`, `.mmd`, scripts) and use CI artifacts for rendered binaries.
 
 ## Repository-Specific Overrides
 
