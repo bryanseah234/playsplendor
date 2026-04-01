@@ -34,10 +34,18 @@ print("No dead internal links found.")
 PY
 
 echo "[docs_guard] Checking for inline mermaid blocks (should be externalized)"
-if rg -n '```mermaid' --glob '*.md' . >/dev/null; then
-  echo "Inline mermaid blocks detected. Move source to diagrams/src and reference PNG paths."
-  rg -n '```mermaid' --glob '*.md' .
-  exit 3
+if command -v rg >/dev/null 2>&1; then
+  if rg -n '```mermaid' --glob '*.md' . >/dev/null; then
+    echo "Inline mermaid blocks detected. Move source to diagrams/src and reference PNG paths."
+    rg -n '```mermaid' --glob '*.md' .
+    exit 3
+  fi
+else
+  if find . -name '*.md' -type f -print0 | xargs -0 grep -n '```mermaid' >/dev/null 2>&1; then
+    echo "Inline mermaid blocks detected. Move source to diagrams/src and reference PNG paths."
+    find . -name '*.md' -type f -print0 | xargs -0 grep -n '```mermaid'
+    exit 3
+  fi
 fi
 
 echo "[docs_guard] Verifying diagram source/output pairs"
