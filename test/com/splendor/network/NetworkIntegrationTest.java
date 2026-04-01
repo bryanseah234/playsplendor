@@ -1,7 +1,7 @@
 package com.splendor.network;
 
-import com.splendor.config.ConfigException;
 import com.splendor.config.IConfigProvider;
+import com.splendor.exception.ConfigException;
 import com.splendor.exception.SplendorException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -210,7 +210,7 @@ class NetworkIntegrationTest {
     }
 
     private void startServerInBackground() throws InterruptedException {
-        server = new ServerSocketHandler(0, new TestConfigProvider());
+        server = new ServerSocketHandler(0, new com.splendor.test.TestConfigProvider());
         serverThread = new Thread(() -> {
             try {
                 server.startServer();
@@ -277,32 +277,6 @@ class NetworkIntegrationTest {
             this.writer = writer;
             this.welcomeLine1 = welcomeLine1;
             this.welcomeLine2 = welcomeLine2;
-        }
-    }
-
-    private static final class TestConfigProvider implements IConfigProvider {
-        @Override
-        public void loadConfiguration() throws ConfigException {
-        }
-
-        @Override
-        public String getStringProperty(String key, String defaultValue) {
-            return defaultValue;
-        }
-
-        @Override
-        public int getIntProperty(String key, int defaultValue) {
-            return defaultValue;
-        }
-
-        @Override
-        public boolean getBooleanProperty(String key, boolean defaultValue) {
-            return defaultValue;
-        }
-
-        @Override
-        public boolean hasProperty(String key) {
-            return false;
         }
     }
 }

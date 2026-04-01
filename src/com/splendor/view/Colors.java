@@ -33,7 +33,7 @@ import com.splendor.model.Gem;
  * </pre>
  * 
  * @see Gem For gem type to color mapping
- * @see AnsiUtils For ANSI-aware string manipulation
+ * @see com.splendor.util.AnsiUtils For ANSI-aware string manipulation
  */
 public class Colors {
     public static final String RESET = "\u001B[0m";

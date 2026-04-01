@@ -1,9 +1,28 @@
 # Splendor (Java Implementation)
 
+![Java Version](https://img.shields.io/badge/Java-17%2B-blue)
+![License](https://img.shields.io/badge/License-Educational-green)
+
 A modular, strictly MVC-based implementation of the board game Splendor in Java.
+
+## Quick Start
+
+```bash
+# Build the project
+./compile.sh    # Unix/macOS
+.\compile.bat   # Windows
+
+# Run the game (console mode)
+./run.sh        # Unix/macOS
+.\run.bat       # Windows
+
+# Run in server mode (network multiplayer)
+java -cp classes com.splendor.Main --server
+```
 
 ## Table of Contents
 - [Features](#features)
+- [Quick Start](#quick-start)
 - [Architecture Overview](#architecture-overview)
 - [Gameplay Flow](#gameplay-flow)
 - [How to Play](#how-to-play)
@@ -17,7 +36,8 @@ A modular, strictly MVC-based implementation of the board game Splendor in Java.
 - [License](#license)
 
 ## Features
-- **MVC Architecture**: Separation of concerns between Model, View, and Controller.
+
+- **MVC Architecture**: Strict separation of concerns between Model, View, and Controller.
 - **Custom Exception Handling**: Robust error management using the `SplendorException` hierarchy.
 - **Configurable**: Game rules and setup parameters loaded from `src/resources/config.properties`.
 - **Console Interface**:
@@ -28,83 +48,32 @@ A modular, strictly MVC-based implementation of the board game Splendor in Java.
   - **Undo Feature**: Allows players to undo their last turn by typing `Z` or `UNDO`.
 - **Network Support**: Multiplayer capabilities via TCP sockets.
 - **Bot/CPU Players**: Name a player with "bot" in the name to enable computer-controlled opponents.
+- **Automated Documentation**: Javadoc generation with pre-commit validation.
 
 ## Architecture Overview
 
 The project follows a strict MVC pattern to ensure separation of concerns. The Controller layer orchestrates the game logic by delegating specific tasks to specialized sub-controllers and validators.
 
-```mermaid
-flowchart TD
-    subgraph Main
-        M[Main]
-    end
-    subgraph controller
-        GC[GameController]
-        TC[TurnController]
-        GFC[GameFlowController]
-        PC[PlayerController]
-        MB[MenuBuilder]
-    end
-    subgraph model
-        MO[model]
-        MV[MoveValidator]
-        GRV[GameRuleValidator]
-    end
-    subgraph view
-        IV[IGameView]
-        CV[ConsoleView]
-        RV[RemoteView]
-        MRV[MultiRemoteView]
-        NV[NetworkGameView]
-    end
-    subgraph network
-        SSH[ServerSocketHandler]
-    end
-    subgraph config
-        ICP[IConfigProvider]
-        FCP[FileConfigProvider]
-    end
-    subgraph util
-        UT[util]
-    end
-    subgraph exception
-        EX[exception]
-    end
+![Architecture Diagram](docs/diagrams/architecture-overview.png)
 
-    M -->|creates| GC
-    GC -->|delegates| TC
-    GC -->|delegates| GFC
-    GC -->|delegates| PC
-    GC -->|delegates| MB
-    GC -->|renders via| IV
-    GC -->|reads via| ICP
-    GC -->|validates via| MV
-    GC -->|validates via| GRV
-    CV -->|implements| IV
-    RV -->|implements| IV
-    MRV -->|implements| IV
-    NV -->|implements| IV
-    FCP -->|implements| ICP
-    SSH -->|network bridge| IV
-    MO -->|throws| EX
-    controller -->|uses| MO
-    controller -->|uses| IV
-    controller -->|uses| ICP
-    controller -->|uses| UT
-```
+<details>
+<summary>📋 View Architecture Diagram Source</summary>
+
+``![README Diagram 1](docs/diagrams/README_diagram_1.png)``
+
+</details>
 
 <details>
 <summary>🎲 Game State Lifecycle — ONGOING → FINAL_ROUND → FINISHED</summary>
 
-```mermaid
-stateDiagram-v2
-    [*] --> ONGOING : GameController.startGame()
-    ONGOING --> ONGOING : processTurn() [points < 15]
-    ONGOING --> FINAL_ROUND : processTurn() [player reaches 15+ pts]
-    FINAL_ROUND --> FINAL_ROUND : processTurn() [round not complete]
-    FINAL_ROUND --> FINISHED : All players took equal turns
-    FINISHED --> [*] : determineWinner() called
-```
+![Game State Diagram](docs/diagrams/game-state-lifecycle.png)
+
+<details>
+<summary>📋 View State Diagram Source</summary>
+
+``![README Diagram 2](docs/diagrams/README_diagram_2.png)``
+
+</details>
 
 </details>
 
@@ -112,185 +81,146 @@ stateDiagram-v2
 
 The following sequence diagram illustrates the standard turn lifecycle, including validation and special post-turn checks for noble visits or token limits.
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Player
-    participant GameController
-    participant MenuBuilder
-    participant IGameView
-    participant MoveValidator
-    participant TurnController
-    participant PlayerController
-    participant GameFlowController
+![Turn Sequence Diagram](docs/diagrams/turn-sequence.png)
 
-    GameController->>MenuBuilder: buildMenuOptions()
-    GameController->>IGameView: promptForMove()
-    Player->>IGameView: submit move
-    IGameView->>GameController: move details
-    GameController->>MoveValidator: validate(move)
-    alt Invalid Move
-        MoveValidator-->>IGameView: rejection
-        IGameView-->>Player: show error / re-prompt
-    else Valid Move
-        GameController->>TurnController: executeMove()
-        TurnController->>GameController: updated state
-        GameController->>PlayerController: checkNobleVisits()
-        opt Noble Visit
-            PlayerController->>Player: assign noble (+3pts)
-        end
-        GameController->>PlayerController: handleTokenDiscard()
-        opt Token Limit Exceeded
-            PlayerController->>IGameView: trigger discard flow
-        end
-        GameController->>GameFlowController: updateState()
-        opt Final Round Triggered
-            GameFlowController->>GameController: transition to FINAL_ROUND
-        end
-        GameFlowController->>GameController: next turn
-    end
-```
+<details>
+<summary>📋 View Sequence Diagram Source</summary>
+
+``![README Diagram 3](docs/diagrams/README_diagram_3.png)``
+
+</details>
+
+</details>
 
 ## How to Play
 
 ### Objective
-The goal is to be the first player to reach **15 prestige points** (configurable). Points are earned by purchasing development cards and attracting nobles.
+
+The goal is to be the first player to reach 15 prestige points (configurable). Points are earned by purchasing development cards and attracting noble tiles.
 
 ### Setup
+
 The game scales based on the number of players (2-4):
-- 2 Players: 4 gems each color, 3 nobles
-- 3 Players: 5 gems each color, 4 nobles
-- 4 Players: 7 gems each color, 5 nobles
-- Gold Tokens: Always 5
+
+| Players | Gem Tokens per Color | Nobles Available |
+|---------|---------------------|------------------|
+| 2       | 4                   | 3                |
+| 3       | 5                   | 4                |
+| 4       | 7                   | 5                |
 
 ### Actions (one per turn)
+
 1. **Take 3 Different Gems**: Pick 1 gem each of 3 different colors (no Gold).
-2. **Take 2 Same Gems**: Take 2 gems of the same color (only if 4+ available in bank).
-3. **Reserve a Card**: Reserve a visible card or draw from a deck. Receive 1 Gold token. Max 3 reserved.
-4. **Buy a Development Card**: Pay the gem cost (discounted by your purchased card bonuses). Gold tokens are wildcards.
-5. **Buy a Reserved Card**: Purchase a previously reserved card from your hand.
+2. **Take 2 Same Gems**: Pick 2 gems of the same color (only if ≥4 available).
+3. **Reserve a Card**: Take a face-up card or draw from a deck (max 3 reserved).
+4. **Buy a Card**: Purchase a face-up card using your gems and discounts.
+5. **Buy Reserved Card**: Purchase a card you previously reserved.
 
 ### Nobles
-At end of turn, if your gem bonuses (from purchased cards) meet a Noble's requirements, that Noble visits automatically (3 prestige points). Only 1 noble per turn.
+
+At end of turn, if your gem bonuses (from purchased cards) meet a Noble's requirements, that Noble visits you automatically (+3 points).
 
 ### Winning
-Game ends when a player reaches 15+ points. The current round finishes so all players get equal turns. Highest score wins. Tie-breaker: fewest purchased cards.
+
+Game ends when a player reaches 15+ points. The current round finishes so all players get equal turns. Tiebreaker: fewest purchased cards.
 
 ### Token Limit
+
 Max 10 tokens (including Gold). Must discard down to 10 at end of turn.
 
 ### Undo
+
 After your move executes, type `Z` or `UNDO` to revert your turn and try again.
 
 ### Bot Players
-Include "bot" in a player's name (e.g., "Bot1", "AngryBot") to make them a computer-controlled player. Bots use a greedy strategy.
+
+Include "bot" in a player's name (e.g., "Bot1", "AngryBot") to make them a computer-controlled opponent.
 
 ## Getting Started
 
 ### Prerequisites
-- **Java JDK 17** or higher
-- A terminal with ANSI color support (most modern terminals)
-- No build tools required, uses `javac` directly
+
+- Java JDK 17 or higher
+- Maven (optional, for dependency management)
 
 ### Building
 
 **Windows:**
 ```batch
-compile.bat
+.\compile.bat
 ```
 
-**Linux / macOS:**
+**Unix/macOS:**
 ```bash
-chmod +x compile.sh
 ./compile.sh
 ```
 
 ### Running the Game
 
-**Windows:**
+**Console Mode (Single Player or Local Multiplayer):**
+
+Windows:
 ```batch
-run.bat
+.\run.bat
 ```
 
-**Linux / macOS:**
+Unix/macOS:
 ```bash
-chmod +x run.sh
 ./run.sh
+```
+
+**Server Mode (Network Multiplayer):**
+
+```bash
+java -cp classes com.splendor.Main --server
 ```
 
 ## Network Multiplayer
 
 Multiplayer is supported via a custom TCP protocol. The server manages the game state and broadcasts updates to all connected clients.
 
-<details>
-<summary>🌐 Network Flow — Client command to game response</summary>
-
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Client
-    participant ClientHandler
-    participant ServerSocketHandler
-    participant NetworkProtocol
-    participant GameController
-    participant IGameView
-
-    Client->>ClientHandler: "MOVE:BUY_CARD:42"
-    ClientHandler->>ServerSocketHandler: handleMove()
-    ServerSocketHandler->>NetworkProtocol: parseMessage()
-    alt Invalid Protocol Message
-        NetworkProtocol-->>ClientHandler: parse error
-        ClientHandler-->>Client: "ERROR:Invalid command"
-    else Valid Message
-        ServerSocketHandler->>GameController: processTurn()
-        GameController->>IGameView: displayGameState()
-        IGameView->>ServerSocketHandler: broadcast()
-        ServerSocketHandler->>ClientHandler: send update
-        ClientHandler->>Client: new game state
-    end
-    opt Client Disconnects
-        ClientHandler->>ServerSocketHandler: notifyDisconnect()
-        ServerSocketHandler->>IGameView: remove client
-        IGameView->>ServerSocketHandler: broadcast disconnect
-    end
-```
-
-</details>
-
 ### 1. Start the Server
+
+The server auto-discovers a free port and displays connection addresses.
+
 ```bash
 java -cp classes com.splendor.Main --server
 ```
-The server auto-discovers a free port and displays connection addresses.
 
 ### 2. Connect as Client
+
 **Netcat (WSL/Linux/macOS):**
 ```bash
-nc <host-ip> <port>
+nc <server-ip> <port>
 ```
-**Telnet:**
-```bash
-telnet <host-ip> <port>
+
+**PowerShell (Windows):**
+```powershell
+powershell -Command "(New-Object System.Net.Sockets.TcpClient).Connect('<server-ip>', <port>)"
 ```
 
 ### 3. Network Commands
-- `MOVE:TAKE_GEMS:R,G,B`: Take 3 different gems
-- `MOVE:TAKE_GEMS:R,R`: Take 2 same gems
-- `MOVE:BUY_CARD:<id>`: Buy a card
-- `MOVE:RESERVE_CARD:<id>`: Reserve a card
-- `MOVE:DISCARD_GEMS:R`: Discard token
-- `MOVE:UNDO` or `Z`: Undo turn
-- `QUERY:state`: Query game state
-- `DISCONNECT`: Leave game
+
+- `MOVE:TAKE_GEMS:R,G,B` - Take 3 different gems
+- `MOVE:BUY_CARD:5` - Buy card with ID 5
+- `MOVE:RESERVE_CARD:2` - Reserve card from tier 2
+- `UNDO` - Undo last turn
+- `QUIT` - Disconnect from server
 
 ## Configuration
 
 Game settings in `src/resources/config.properties`:
+
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `game.points.win` | 15 | Points needed to trigger final round |
-| `game.max_tokens` | 10 | Maximum tokens a player can hold |
-| Player scaling | varies | Token/noble counts per player count |
+| `game.points.win` | 15 | Points required to win |
+| `game.tokens.max` | 10 | Maximum tokens per player |
+| `game.tokens.2p` | 4 | Gem tokens per color (2 players) |
+| `game.tokens.3p` | 5 | Gem tokens per color (3 players) |
+| `game.tokens.4p` | 7 | Gem tokens per color (4 players) |
+| `game.nobles.base` | 3 | Base number of nobles |
+| `game.nobles.add` | 1 | Additional nobles per player |
+| `game.reserved.max` | 3 | Maximum reserved cards |
 
 ## Testing
 
@@ -298,273 +228,115 @@ Game settings in `src/resources/config.properties`:
 
 **Windows:**
 ```batch
-run_tests.bat
+.\run_tests.bat
 ```
 
-**Linux / macOS:**
+**Unix/macOS:**
 ```bash
-chmod +x run_tests.sh
 ./run_tests.sh
 ```
 
 ### Test Coverage
-The test suite uses **JUnit 5** and covers:
-- **Game Flow**: Turn advancement, final round triggers, winner determination.
-- **Move Validation**: Gem taking rules, card affordability, reserve limits.
-- **Controller Logic**: Game initialization, move execution, noble visits.
-- **Network Integration**: Server-client communication, message routing.
 
-Test files are in the `test/` directory mirroring the `src/` package structure.
+The test suite uses JUnit 5 and covers:
+
+- **Model Layer**: Game state, player actions, card mechanics
+- **Validators**: Move validation, rule enforcement
+- **Controllers**: Turn logic, game flow
+- **Edge Cases**: Invalid inputs, boundary conditions
 
 ## Project Structure
 
-The project directory structure is organized into logical packages following the MVC pattern.
-
 ```
-src/com/splendor/
-├── Main.java             # Entry point (console or --server mode)
-├── config/               # Configuration (IConfigProvider, FileConfigProvider)
-├── controller/           # Game orchestration (GameController, TurnController, PlayerController, MenuBuilder)
-├── exception/            # Custom exceptions (SplendorException hierarchy)
-├── model/                # Core entities (Game, Player, Board, Card, Gem, Noble, BotStrategy)
-│   └── validator/        # Move & rule validation
-├── network/              # Multiplayer (ServerSocketHandler, ClientHandler, NetworkProtocol)
-├── util/                 # Utilities (InputResolver, CardLoader, GameLogger, GemParser, MoveParser, MoveFormatter, AnsiUtils)
-└── view/                 # UI (ConsoleView, RemoteView, GameRenderer, CardRenderer, IGameView)
+splendor/
+├── compile.bat / compile.sh      # Build scripts
+├── run.bat / run.sh              # Run scripts
+├── generate_docs.bat / generate_docs.sh  # Documentation generator
+├── README.md                      # This file
+├── PRD.md                         # Product Requirements Document
+├── RULES.md                       # Game Rules
+├── DOCUMENTATION_STANDARDS.md    # Javadoc Standards
+├── src/
+│   └── com/splendor/
+│       ├── Main.java             # Entry point
+│       ├── config/               # Configuration management
+│       ├── model/                # Game logic and state
+│       │   ├── Game.java
+│       │   ├── Player.java
+│       │   ├── Board.java
+│       │   ├── Card.java
+│       │   ├── Gem.java
+│       │   └── validator/        # Move and rule validation
+│       ├── view/                 # User interface
+│       │   ├── IGameView.java
+│       │   ├── ConsoleView.java
+│       │   └── RemoteView.java
+│       ├── controller/           # Game orchestration
+│       │   ├── GameController.java
+│       │   ├── TurnController.java
+│       │   └── PlayerController.java
+│       ├── network/              # Network multiplayer
+│       │   ├── ServerSocketHandler.java
+│       │   └── ClientHandler.java
+│       ├── data/                 # Data loading (CSV)
+│       │   └── CardLoader.java
+│       ├── util/                 # Utilities
+│       │   ├── InputResolver.java
+│       │   ├── GameLogger.java
+│       │   └── GemParser.java
+│       └── exception/            # Custom exceptions
+│           └── SplendorException.java
+├── classes/                      # Compiled classes (generated)
+├── docs/
+│   ├── javadoc/                  # Generated API documentation
+│   └── diagrams/                 # Mermaid diagram exports
+├── resources/
+│   ├── config.properties         # Game configuration
+│   └── card_data.csv             # Card data
+└── test/                         # Unit tests
 ```
-
-<details>
-<summary>📦 Model Domain — Game, Player, Board, Card, Noble, Move + enums</summary>
-
-```mermaid
-classDiagram
-    class Game {
-        +getBoard()
-        +getPlayers()
-        +getState()
-        +snapshot()
-    }
-    class Player {
-        +getTokens()
-        +getReservedCards()
-        +getPurchasedCards()
-        +getPrestigePoints()
-    }
-    class ComputerPlayer
-    class Board {
-        +getGemBank()
-        +getAvailableCards(int tier)
-        +getNobles()
-    }
-    class Card {
-        +getTier()
-        +getCost()
-        +getBonusGem()
-        +getPrestigePoints()
-    }
-    class Noble {
-        +getCost()
-        +getPrestigePoints()
-    }
-    class Move {
-        +getType()
-        +getSelectedGems()
-        +getCardId()
-    }
-    class GameState {
-        <<enumeration>>
-        ONGOING
-        FINAL_ROUND
-        FINISHED
-    }
-    class Gem {
-        <<enumeration>>
-        RED
-        GREEN
-        BLUE
-        WHITE
-        BLACK
-        GOLD
-    }
-    class MoveType {
-        <<enumeration>>
-        TAKE_THREE_DIFFERENT
-        TAKE_TWO_SAME
-        RESERVE_CARD
-        BUY_CARD
-        DISCARD_TOKENS
-        EXIT_GAME
-    }
-
-    Player <|-- ComputerPlayer
-    Game "1" *-- "2..4" Player
-    Game "1" *-- "1" Board
-    Game "1" *-- "1" GameState
-    Player "1" o-- "0..*" Card
-    Player "1" o-- "0..*" Noble
-    Board "1" *-- "many" Card
-    Board "1" *-- "0..*" Noble
-    Card --> Gem
-    Move --> MoveType
-    Move --> Gem
-```
-
-</details>
-
-<details>
-<summary>🎮 Controller Layer — GameController orchestration chain</summary>
-
-```mermaid
-classDiagram
-    class GameController {
-        +startGame()
-        +processTurn()
-        +initializePlayers()
-    }
-    class TurnController {
-        +executeMove()
-        +handleTakeGems()
-        +handleBuyCard()
-        +handleReserveCard()
-    }
-    class GameFlowController {
-        +shouldStartFinalRound()
-        +determineWinner()
-        +isGameFinished()
-    }
-    class PlayerController {
-        +checkNobleVisits()
-        +handleTokenDiscard()
-    }
-    class MenuBuilder {
-        +buildMenuOptions()
-    }
-    class IGameView {
-        <<interface>>
-    }
-    class MoveValidator
-    class GameRuleValidator
-
-    GameController --> TurnController : delegates move
-    GameController --> GameFlowController : delegates state
-    GameController --> PlayerController : delegates noble
-    GameController --> MenuBuilder : builds options
-    GameController --> IGameView : renders UI
-    GameController --> MoveValidator : validates move
-    GameController --> GameRuleValidator : validates rule
-```
-
-</details>
-
-<details>
-<summary>👁️ View & Config Interfaces — IGameView implementations and IConfigProvider</summary>
-
-```mermaid
-classDiagram
-    class IGameView {
-        <<interface>>
-        +displayGameState()
-        +promptForMove()
-        +promptForPlayerName()
-        +displayWinner()
-        +close()
-    }
-    class ConsoleView
-    class RemoteView
-    class NetworkMessageHandler {
-        <<interface>>
-        +send()
-        +broadcast()
-    }
-    class MultiRemoteView
-    class NetworkGameView
-    class GameRenderer
-    class CardRenderer
-    class IConfigProvider {
-        <<interface>>
-        +getIntProperty()
-        +getStringProperty()
-        +loadConfiguration()
-    }
-    class FileConfigProvider
-    class ServerSocketHandler
-
-    IGameView <|.. ConsoleView
-    IGameView <|.. RemoteView
-    IGameView <|.. MultiRemoteView
-    IGameView <|.. NetworkGameView
-    ConsoleView --> GameRenderer
-    RemoteView --> GameRenderer
-    MultiRemoteView --> RemoteView
-    MultiRemoteView --> ServerSocketHandler
-    IConfigProvider <|.. FileConfigProvider
-    ServerSocketHandler ..|> NetworkMessageHandler : implements nested interface
-```
-
-</details>
-
-<details>
-<summary>⚠️ Exception Hierarchy — SplendorException and domain subclasses</summary>
-
-```mermaid
-classDiagram
-    class SplendorException
-    class GameStateException
-    class InvalidPlayerActionException
-    class InsufficientTokensException
-    class InvalidMoveException
-    class ViewException
-    class NetworkException
-    class ConfigException
-
-    Exception <|-- SplendorException
-    SplendorException <|-- GameStateException
-    SplendorException <|-- InvalidPlayerActionException
-    SplendorException <|-- InsufficientTokensException
-    SplendorException <|-- InvalidMoveException
-    SplendorException <|-- ViewException
-    SplendorException <|-- NetworkException
-    Exception <|-- ConfigException
-
-    note for ConfigException "Separate from SplendorException hierarchy"
-```
-
-</details>
 
 ## Contributing
 
 ### Getting Started
+
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/my-feature`)
-3. Make your changes
-4. Run the test suite (`run_tests.bat` or `run_tests.sh`), all tests must pass
-5. Submit a Pull Request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ### Code Conventions
+
 - **Architecture**: Strict MVC. Model has no I/O, View is interface-based, Controller orchestrates.
-- **Exception Handling**: Use the custom `SplendorException` hierarchy, never expose raw stack traces.
-- **Input Safety**: All user input wrapped in try-catch via `InputResolver`.
-- **AI Transparency**: Document any AI-assisted code in comments.
-- **Documentation**: When adding new core logic, update relevant Mermaid diagrams in `README.md`.
+- **Documentation**: All public APIs must have Javadoc comments.
+- **Testing**: Write unit tests for new functionality.
+- **Style**: Follow Java naming conventions and Google Java Style Guide.
 
 ### CI/CD
+
 The repository uses GitHub Actions for:
-- **Security Scanning**: TruffleHog scans for leaked secrets on push/PR.
-- **PR Labeling**: Automatic labels based on changed files.
-- **Contributor Greeting**: Welcome messages for first-time contributors.
+- Automated testing on push
+- Javadoc generation and validation
+- Code quality checks
 
 ### Reporting Issues
+
 Open a GitHub Issue with:
+- Clear description of the problem
 - Steps to reproduce
 - Expected vs actual behavior
 - Java version and OS
 
 ## AI Attribution
-This project was developed with the assistance of AI tools.
-- **Code Generation**: Core architectural components and boilerplate.
-- **Logic Refinement**: Game rules and edge cases via iterative prompting.
-- **Documentation**: README and RULES drafted by AI.
-- **Review**: All generated code reviewed and modified by humans.
+
+This project was developed with the assistance of AI tools for code generation, documentation, and testing.
 
 ## License
+
 This project is for educational purposes.
+
+---
+
+**Last Updated:** April 1, 2026  
+**Documentation Status:** ✅ Complete with automated generation

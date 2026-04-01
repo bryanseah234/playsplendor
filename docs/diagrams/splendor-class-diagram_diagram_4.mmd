@@ -1,0 +1,95 @@
+classDiagram
+    class IGameView {
+        <<interface>>
+        +displayGameState(game) void
+        +displayPlayerTurn(player) void
+        +displayMessage(message) String
+        +displayNotification(message) void
+        +displayError(errorMessage) String
+        +promptForCommand(player, game) String
+        +promptForMove(player, game, options) Move
+        +promptForTokenDiscard(player, excessCount) Move
+        +displayWinner(winner, scores) void
+        +clearDisplay() void
+        +displayAvailableMoves(options, game) void
+        +promptForNobleChoice(player, nobles) Noble
+        +promptForPlayerName(number, total) String
+        +promptForPlayerCount() int
+        +displayWelcomeMessage() void
+        +waitForEnter() String
+        +close() void
+    }
+    
+    class ConsoleView {
+        -inputResolver: InputResolver
+        -gameRenderer: GameRenderer
+        +displayGameState(game) void
+        +promptForMove(player, game, options) Move
+        +displayWinner(winner, scores) void
+    }
+    
+    class RemoteView {
+        -clientId: String
+        -messageHandler: NetworkMessageHandler
+        -gameLogger: GameLogger
+        -gemParser: GemParser
+        +promptForMove(player, game, options) Move
+        +displayGameState(game) void
+    }
+    
+    class NetworkGameView {
+        -playerViews: List~RemoteView~
+        -playerCount: int
+        +displayGameState(game) void
+        +promptForMove(player, game, options) Move
+    }
+    
+    class Colors {
+        <<utility>>
+        +RESET: String
+        +RED: String
+        +GREEN: String
+        +BLUE: String
+        +WHITE: String
+        +BLACK: String
+        +GOLD: String
+        +CYAN: String
+        +PURPLE: String
+        +GRAY: String
+        +DIM: String
+        +colorize(text, color) String
+        +getGemColor(gem) String
+    }
+    
+    class CardRenderer {
+        +renderCard(card, affordable) String
+        +renderCardBack() String
+        +renderNoble(noble) String
+    }
+    
+    class GameRenderer {
+        +renderFullBoard(game) List~String~
+        +renderPlayerInfo(player) List~String~
+        +renderGemBank(board) List~String~
+    }
+    
+    class NetworkMessageHandler {
+        <<interface>>
+        +sendToClient(clientId, message) void
+        +waitForClientResponse(clientId, timeoutMs) String
+    }
+    
+    IGameView <|.. ConsoleView
+    IGameView <|.. RemoteView
+    IGameView <|.. NetworkGameView
+    ConsoleView --> InputResolver
+    ConsoleView --> GameRenderer
+    RemoteView --> NetworkMessageHandler
+    RemoteView --> GameLogger
+    RemoteView --> GemParser
+    NetworkGameView --> RemoteView
+    CardRenderer --> Colors
+    CardRenderer --> Card
+    GameRenderer --> Board
+    GameRenderer --> Player
+    GameRenderer --> Colors

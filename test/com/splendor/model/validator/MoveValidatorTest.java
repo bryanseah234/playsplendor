@@ -308,7 +308,7 @@ class MoveValidatorTest {
         List<Player> players = new ArrayList<>();
         players.add(new Player("Alice"));
         players.add(new Player("Bob"));
-        return new Game(players, WINNING_POINTS, MAX_TOKENS);
+        return new Game(players, WINNING_POINTS, MAX_TOKENS, new com.splendor.test.TestConfigProvider());
     }
 
     private void giveTokens(Player player, Map<Gem, Integer> tokens) {

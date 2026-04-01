@@ -1,0 +1,33 @@
+classDiagram
+    direction LR
+    
+    class MoveValidator {
+        validateMove()
+        validateTakeThree()
+        validateTakeTwo()
+        validateReserve()
+        validateBuy()
+        validateDiscard()
+        canAffordCard()
+        getRuleExplanation()
+    }
+    
+    class GameRuleValidator {
+        validateGameStart()
+        validateStateTransition()
+        validatePlayerTurn()
+        validateNobleAssignment()
+    }
+    
+    class ValidationResult {
+        valid
+        message
+        isValid()
+        getMessage()
+        ok()
+        fail()
+    }
+    
+    MoveValidator --> ValidationResult : creates
+    MoveValidator ..> InvalidMoveException : throws
+    GameRuleValidator ..> GameStateException : throws

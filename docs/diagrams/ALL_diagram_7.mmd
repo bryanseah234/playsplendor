@@ -1,0 +1,42 @@
+classDiagram
+    direction LR
+    
+    class Exception {
+        Java Standard
+    }
+    
+    class SplendorException {
+        Base game exception
+    }
+    
+    class GameStateException {
+        State errors
+    }
+    
+    class InvalidMoveException {
+        Move errors
+    }
+    
+    class InsufficientTokensException {
+        Token errors
+    }
+    
+    class InvalidPlayerActionException {
+        Action errors
+    }
+    
+    class NetworkException {
+        Network errors
+    }
+    
+    class ConfigException {
+        Config errors
+    }
+    
+    Exception <|-- SplendorException
+    Exception <|-- ConfigException
+    SplendorException <|-- GameStateException
+    SplendorException <|-- InvalidMoveException
+    SplendorException <|-- InsufficientTokensException
+    SplendorException <|-- InvalidPlayerActionException
+    SplendorException <|-- NetworkException

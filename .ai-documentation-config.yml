@@ -1,0 +1,180 @@
+# AI Agent Documentation Update Configuration
+# This file configures AI coding agents to automatically update documentation
+
+# Documentation Update Rules
+documentation:
+  # When to trigger documentation updates
+  triggers:
+    - java_file_modified
+    - public_api_changed
+    - class_structure_changed
+    - new_class_added
+    - method_signature_changed
+    - package_structure_changed
+  
+  # Actions to perform when triggered
+  actions:
+    # Javadoc updates
+    javadoc:
+      enabled: true
+      priority: high
+      scope:
+        - public_methods
+        - public_classes
+        - public_interfaces
+        - public_enums
+      requirements:
+        - all_public_methods_documented
+        - all_parameters_documented
+        - all_exceptions_documented
+        - return_values_documented
+      templates:
+        class: |
+          /**
+           * [Brief description of class purpose].
+           * 
+           * <p>[Detailed description if needed].</p>
+           * 
+           * <p><strong>Thread Safety:</strong> [Thread safety notes]</p>
+           * 
+           * <p><strong>Example Usage:</strong></p>
+           * <pre>{@code
+           * // Example code showing typical usage
+           * }</pre>
+           * 
+           * @author [Author Name]
+           * @since [Version]
+           * @see [RelatedClass]
+           */
+        method: |
+          /**
+           * [Brief description of what the method does].
+           * 
+           * <p>[Detailed description if needed].</p>
+           * 
+           * @param [param] [Description]
+           * @return [Description of return value]
+           * @throws [ExceptionType] When [condition]
+           * 
+           * @since [Version]
+           * @see #[relatedMethod]()
+           */
+    
+    # UML diagram updates
+    uml:
+      enabled: true
+      priority: medium
+      diagrams:
+        - class_diagram
+        - dependency_diagram
+        - inheritance_diagram
+        - functional_diagram
+      update_strategy: incremental
+      backup_existing: true
+    
+    # Documentation index updates
+    index:
+      enabled: true
+      priority: low
+      auto_generate: true
+      include_new_classes: true
+
+# Validation Rules
+validation:
+  javadoc_coverage:
+    required: true
+    minimum_coverage: 95
+    exclude_patterns:
+      - "*Test*"
+      - "*Internal*"
+  
+  uml_accuracy:
+    required: true
+    validate_relationships: true
+    validate_method_signatures: true
+  
+  link_integrity:
+    required: true
+    check_internal_links: true
+    check_external_links: false
+
+# Update Workflow
+workflow:
+  pre_update:
+    - backup_existing_docs
+    - validate_current_state
+    - check_dependencies
+  
+  update_process:
+    - generate_javadoc
+    - update_uml_diagrams
+    - update_documentation_index
+    - validate_generated_docs
+  
+  post_update:
+    - run_documentation_tests
+    - check_for_warnings
+    - generate_summary_report
+
+# AI Agent Instructions
+ai_agent_instructions: |
+  When you modify Java code, follow these documentation update rules:
+  
+  1. **IMMEDIATELY** after changing public APIs:
+     - Update Javadoc for modified methods
+     - Add @since tags for new features
+     - Document new parameters and exceptions
+     - Update class-level documentation if behavior changed
+  
+  2. **AFTER** structural changes:
+     - Run documentation generation scripts
+     - Verify UML diagrams reflect changes
+     - Update package documentation if needed
+     - Test documentation links
+  
+  3. **BEFORE** committing:
+     - Run full documentation validation
+     - Check for Javadoc warnings
+     - Verify diagram accuracy
+     - Ensure no broken links
+  
+  4. **NEVER**:
+     - Commit code without updating related Javadoc
+     - Leave public methods undocumented
+     - Ignore documentation validation failures
+     - Break existing documentation links
+
+# IDE Integration
+ide_integration:
+  vscode:
+    extensions:
+      - redhat.java
+      - vscjava.vscode-java-pack
+      - plantuml
+    settings:
+      java.compile.nullAnalysis.mode: automatic
+      java.format.settings.url: "https://raw.githubusercontent.com/google/styleguide/gh-pages/eclipse-java-google-style.xml"
+  
+  intellij:
+    plugins:
+      - PlantUML integration
+      - Javadoc
+    settings:
+      auto_generate_javadoc: true
+      javadoc_stubs: true
+
+# Notification Settings
+notifications:
+  on_success: true
+  on_failure: true
+  on_warning: true
+  channels:
+    - console
+    - log_file
+  
+# Performance Settings
+performance:
+  max_execution_time: 300  # 5 minutes
+  parallel_processing: true
+  cache_enabled: true
+  incremental_updates: true

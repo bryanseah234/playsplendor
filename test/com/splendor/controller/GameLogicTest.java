@@ -2,6 +2,7 @@ package com.splendor.controller;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.splendor.config.IConfigProvider;
 import com.splendor.exception.SplendorException;
 import com.splendor.model.Board;
 import com.splendor.model.Card;
@@ -23,10 +24,11 @@ import org.junit.jupiter.api.Test;
 class GameLogicTest {
 
     private final MoveValidator moveValidator = new MoveValidator();
+    private final IConfigProvider configProvider = new com.splendor.test.TestConfigProvider();
 
     @Test
     void takeThreeDifferentAvailableWhenThreeOrMoreColorsHaveTokens() {
-        Board board = new Board(2);
+        Board board = new Board(2, configProvider);
         board.setGemBank(gems(1, 1, 1, 0, 0, 5));
 
         assertTrue(canTakeThreeDifferent(board));
@@ -34,7 +36,7 @@ class GameLogicTest {
 
     @Test
     void takeThreeDifferentUnavailableWhenOnlyTwoColorsHaveTokens() {
-        Board board = new Board(2);
+        Board board = new Board(2, configProvider);
         board.setGemBank(gems(2, 2, 0, 0, 0, 5));
 
         assertFalse(canTakeThreeDifferent(board));
@@ -42,7 +44,7 @@ class GameLogicTest {
 
     @Test
     void takeTwoSameAvailableWhenAtLeastOneGemHasFourOrMore() {
-        Board board = new Board(2);
+        Board board = new Board(2, configProvider);
         board.setGemBank(gems(4, 0, 0, 0, 0, 5));
 
         assertTrue(canTakeTwoSame(board));
@@ -50,7 +52,7 @@ class GameLogicTest {
 
     @Test
     void takeTwoSameUnavailableWhenAllGemsAreThreeOrFewer() {
-        Board board = new Board(2);
+        Board board = new Board(2, configProvider);
         board.setGemBank(gems(3, 3, 3, 3, 3, 5));
 
         assertFalse(canTakeTwoSame(board));
@@ -279,12 +281,12 @@ class GameLogicTest {
         return false;
     }
 
-    private static Game game(int playerCount) {
+    private Game game(int playerCount) {
         List<Player> players = new ArrayList<>();
         for (int i = 1; i <= playerCount; i++) {
             players.add(new Player("P" + i));
         }
-        return new Game(players, 15, 10);
+        return new Game(players, 15, 10, configProvider);
     }
 
     private static Card card(int id, int tier, int points, Gem bonusGem, Map<Gem, Integer> cost) {

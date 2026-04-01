@@ -1,0 +1,7 @@
+stateDiagram-v2
+    [*] --> ONGOING: GameController.startGame()
+    ONGOING --> ONGOING: processTurn() [points < 15]
+    ONGOING --> FINAL_ROUND: processTurn() [player reaches 15+ pts]
+    FINAL_ROUND --> FINAL_ROUND: processTurn() [round not complete]
+    FINAL_ROUND --> FINISHED: All players took equal turns
+    FINISHED --> [*]: determineWinner() called

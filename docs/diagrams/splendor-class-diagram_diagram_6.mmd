@@ -1,0 +1,27 @@
+classDiagram
+    class MoveValidator {
+        -validateTakeThreeDifferent(move, player, board) ValidationResult
+        -validateTakeTwoSame(move, player, board) ValidationResult
+        -validateReserveCard(move, player, board) ValidationResult
+        -validateBuyCard(move, player, board, game) ValidationResult
+        +validateMove(move, player, board, game) ValidationResult
+    }
+    
+    class GameRuleValidator {
+        +validateGameStart(playerCount, winningPoints, maxTokens) void
+        +validateStateTransition(current, target) void
+        +validatePlayerTurn(game, player) void
+        +validateNobleAssignment(game, player, noble) void
+    }
+    
+    class ValidationResult {
+        -valid: boolean
+        -errorMessage: String
+        +isValid() boolean
+        +getErrorMessage() String
+        +error(message) ValidationResult
+        +success() ValidationResult
+    }
+    
+    MoveValidator --> ValidationResult
+    GameRuleValidator --> GameState

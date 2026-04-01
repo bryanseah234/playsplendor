@@ -1,0 +1,63 @@
+classDiagram
+    direction LR
+    
+    class IGameView {
+        displayGameState()
+        displayPlayerTurn()
+        displayMessage()
+        displayError()
+        promptForMove()
+        promptForDiscard()
+        displayWinner()
+        promptForName()
+        close()
+    }
+    
+    class ConsoleView {
+        scanner
+        inputResolver
+        renderer
+    }
+    
+    class RemoteView {
+        clientId
+        messageHandler
+        renderer
+    }
+    
+    class NetworkGameView {
+        playerViews
+        playerCount
+    }
+    
+    class GameRenderer {
+        moveValidator
+        displayGameState()
+        displayBoard()
+        renderToString()
+    }
+    
+    class CardRenderer {
+        formatCardAscii()
+    }
+    
+    class Colors {
+        RED, GREEN, BLUE
+        colorize()
+        getGemColor()
+    }
+    
+    class NetworkMessageHandler {
+        sendToClient()
+        waitForResponse()
+    }
+    
+    IGameView <|.. ConsoleView
+    IGameView <|.. RemoteView
+    IGameView <|.. NetworkGameView
+    NetworkGameView "1" *-- "*" RemoteView
+    ConsoleView --> GameRenderer
+    RemoteView --> GameRenderer
+    RemoteView --> NetworkMessageHandler
+    GameRenderer --> CardRenderer
+    CardRenderer --> Colors

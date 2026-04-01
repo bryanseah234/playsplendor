@@ -1,0 +1,29 @@
+classDiagram
+    direction LR
+    
+    class ServerSocketHandler {
+        serverPort
+        serverSocket
+        isRunning
+        startServer()
+        acceptConnections()
+        broadcast()
+        sendToClient()
+        stopServer()
+    }
+    
+    class ClientHandler {
+        clientId
+        clientSocket
+        isConnected
+        handleClient()
+        processMessages()
+        sendMessage()
+        disconnect()
+    }
+    
+    class NetworkException
+    
+    ServerSocketHandler "1" *-- "*" ClientHandler : manages
+    ClientHandler --> ServerSocketHandler : references
+    NetworkException --|> SplendorException

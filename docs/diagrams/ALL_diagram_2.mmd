@@ -1,0 +1,88 @@
+classDiagram
+    direction LR
+    
+    class Gem {
+        RED
+        GREEN
+        BLUE
+        WHITE
+        BLACK
+        GOLD
+    }
+    
+    class MoveType {
+        TAKE_THREE
+        TAKE_TWO
+        RESERVE
+        BUY
+        DISCARD
+        EXIT
+    }
+    
+    class GameState {
+        ONGOING
+        FINAL_ROUND
+        FINISHED
+    }
+    
+    class Card {
+        id
+        tier
+        points
+        bonusGem
+        cost
+    }
+    
+    class Noble {
+        id
+        points
+        requirements
+    }
+    
+    class Player {
+        name
+        tokens
+        purchasedCards
+        reservedCards
+        nobles
+    }
+    
+    class ComputerPlayer
+    
+    class Board {
+        gemBank
+        cardDecks
+        availableCards
+        availableNobles
+    }
+    
+    class Game {
+        players
+        board
+        currentState
+        currentPlayerIndex
+        winningPoints
+        maxTokens
+    }
+    
+    class Move {
+        moveType
+        selectedGems
+        cardId
+        isReservedCard
+        deckTier
+    }
+    
+    ComputerPlayer --|> Player
+    Game "1" *-- "1" Board
+    Game "1" *-- "2..4" Player
+    Game "1" *-- "1" GameState
+    Board "1" *-- "*" Card
+    Board "1" *-- "*" Noble
+    Player "1" *-- "*" Card : purchased
+    Player "1" *-- "*" Card : reserved
+    Player "1" *-- "*" Noble
+    Card --> Gem
+    Noble --> Gem
+    Move --> MoveType
+    Move --> Gem

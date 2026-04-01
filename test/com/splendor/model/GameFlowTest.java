@@ -1,18 +1,22 @@
 package com.splendor.model;
 
 import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
+import com.splendor.config.IConfigProvider;
+import com.splendor.test.TestConfigProvider;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.junit.jupiter.api.Test;
 
 class GameFlowTest {
 
+    private final IConfigProvider configProvider = new TestConfigProvider();
+
     @Test
     void turnAdvancementCyclesForTwoPlayers() {
-        Game game = new Game(players(2), 15, 10);
+        Game game = new Game(players(2), 15, 10, configProvider);
 
         assertEquals("P1", game.getCurrentPlayer().getName());
         game.advanceToNextPlayer();
@@ -23,7 +27,7 @@ class GameFlowTest {
 
     @Test
     void turnAdvancementCyclesForFourPlayers() {
-        Game game = new Game(players(4), 15, 10);
+        Game game = new Game(players(4), 15, 10, configProvider);
 
         assertEquals("P1", game.getCurrentPlayer().getName());
         game.advanceToNextPlayer();
@@ -38,7 +42,7 @@ class GameFlowTest {
 
     @Test
     void finalRoundTriggersWhenPlayerReachesFifteenPoints() {
-        Game game = new Game(players(2), 15, 10);
+        Game game = new Game(players(2), 15, 10, configProvider);
         game.getPlayers().get(0).addPurchasedCard(card(9001, 1, 15, Gem.RED, Map.of()));
 
         assertFalse(game.isFinalRound());
@@ -50,7 +54,7 @@ class GameFlowTest {
 
     @Test
     void finalRoundCompletesAfterRemainingPlayersTakeOneTurnEach() {
-        Game game = new Game(players(4), 15, 10);
+        Game game = new Game(players(4), 15, 10, configProvider);
         game.getPlayers().get(0).addPurchasedCard(card(9002, 1, 15, Gem.BLUE, Map.of()));
 
         game.advanceToNextPlayer();
@@ -72,7 +76,7 @@ class GameFlowTest {
 
     @Test
     void winnerIsHighestScore() {
-        Game game = new Game(players(2), 15, 10);
+        Game game = new Game(players(2), 15, 10, configProvider);
         game.getPlayers().get(0).addPurchasedCard(card(9003, 1, 16, Gem.WHITE, Map.of()));
         game.getPlayers().get(1).addPurchasedCard(card(9004, 1, 14, Gem.BLACK, Map.of()));
 
@@ -85,7 +89,7 @@ class GameFlowTest {
 
     @Test
     void tieBreakerUsesFewestPurchasedCards() {
-        Game game = new Game(players(2), 15, 10);
+        Game game = new Game(players(2), 15, 10, configProvider);
 
         game.getPlayers().get(0).addPurchasedCard(card(9100, 1, 7, Gem.RED, Map.of()));
         game.getPlayers().get(0).addPurchasedCard(card(9101, 1, 8, Gem.BLUE, Map.of()));
@@ -102,14 +106,14 @@ class GameFlowTest {
 
     @Test
     void gameIsNotFinishedWhileOngoing() {
-        Game game = new Game(players(3), 15, 10);
+        Game game = new Game(players(3), 15, 10, configProvider);
         assertFalse(game.isGameFinished());
         assertFalse(game.isFinalRound());
     }
 
     @Test
     void advanceToNextPlayerDoesNothingWhenGameFinished() {
-        Game game = new Game(players(2), 15, 10);
+        Game game = new Game(players(2), 15, 10, configProvider);
         game.getPlayers().get(0).addPurchasedCard(card(9200, 1, 15, Gem.RED, Map.of()));
 
         game.advanceToNextPlayer();
@@ -127,7 +131,7 @@ class GameFlowTest {
 
     @Test
     void saveUndoStateAndUndoRestorePreviousState() {
-        Game game = new Game(players(2), 15, 10);
+        Game game = new Game(players(2), 15, 10, configProvider);
         Player p1 = game.getPlayers().get(0);
         int initialBlueBank = game.getBoard().getGemCount(Gem.BLUE);
 
@@ -151,13 +155,13 @@ class GameFlowTest {
 
     @Test
     void tokenLimitIsConfiguredMaxTokensDefaultTen() {
-        Game game = new Game(players(2), 15, 10);
+        Game game = new Game(players(2), 15, 10, configProvider);
         assertEquals(10, game.getMaxTokens());
     }
 
     @Test
     void recentMovesKeepsAtMostFiveInFifoOrder() {
-        Game game = new Game(players(2), 15, 10);
+        Game game = new Game(players(2), 15, 10, configProvider);
 
         game.addRecentMove("M1");
         game.addRecentMove("M2");
@@ -182,4 +186,38 @@ class GameFlowTest {
     private static Card card(int id, int tier, int points, Gem bonusGem, Map<Gem, Integer> cost) {
         return new Card(id, tier, points, bonusGem, new HashMap<>(cost));
     }
+
+    @Override
+    public String toString() {
+        return "GameFlowTest [configProvider=" + configProvider + ", getClass()=" + getClass() + ", hashCode()="
+                + hashCode() + ", toString()=" + super.toString() + "]";
+    }
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((configProvider == null) ? 0 : configProvider.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		GameFlowTest other = (GameFlowTest) obj;
+		if (configProvider == null) {
+			if (other.configProvider != null)
+				return false;
+		} else if (!configProvider.equals(other.configProvider))
+			return false;
+		return true;
+	}
+
+	public GameFlowTest() {
+	}
 }
