@@ -1,0 +1,100 @@
+@echo off
+setlocal enabledelayedexpansion
+REM Move to project root
+cd /d "%~dp0.."
+
+echo === Splendor Test Suite ===
+echo.
+
+set "COVERAGE="
+set "VERBOSE="
+set "CATEGORY="
+set "SPECIFIC_CLASS="
+
+:parse_args
+if "%~1"=="" goto args_done
+if /i "%~1"=="--coverage" set "COVERAGE=true" & shift & goto parse_args
+if /i "%~1"=="--verbose" set "VERBOSE=--details verbose" & shift & goto parse_args
+if /i "%~1"=="--category" set "CATEGORY=%~2" & shift & shift & goto parse_args
+if /i "%~1"=="--class" set "SPECIFIC_CLASS=%~2" & shift & shift & goto parse_args
+echo Unknown parameter passed: %~1
+exit /b 1
+:args_done
+
+REM Compile main sources first
+echo 1. Compiling main sources...
+if not exist classes mkdir classes
+javac -d classes -sourcepath src ^
+  src/com/splendor/*.java ^
+  src/com/splendor/config/*.java ^
+  src/com/splendor/controller/*.java ^
+  src/com/splendor/exception/*.java ^
+  src/com/splendor/model/*.java ^
+  src/com/splendor/model/validator/*.java ^
+  src/com/splendor/network/*.java ^
+  src/com/splendor/util/*.java ^
+  src/com/splendor/view/*.java
+
+if %ERRORLEVEL% NEQ 0 (
+    echo ERROR: Main source compilation failed!
+    exit /b 1
+)
+echo    Main sources compiled OK.
+
+REM Copy resources
+if exist src\resources (
+    xcopy /s /y /q src\resources\* classes\ >nul 2>&1
+)
+
+REM Compile test sources
+echo 2. Compiling test sources...
+if not exist test-classes mkdir test-classes
+
+REM Find all test Java files
+set "TEST_FILES="
+for /r test %%f in (*.java) do (
+    set "TEST_FILES=!TEST_FILES! %%f"
+)
+
+if "!TEST_FILES!"=="" (
+    echo    No test files found in test/
+    exit /b 0
+)
+
+javac -d test-classes ^
+  -cp "classes;lib/junit-platform-console-standalone-1.10.2.jar" ^
+  -sourcepath test ^
+  !TEST_FILES!
+
+if %ERRORLEVEL% NEQ 0 (
+    echo ERROR: Test compilation failed!
+    exit /b 1
+)
+echo    Test sources compiled OK.
+
+REM Run tests
+echo 3. Running tests...
+echo.
+
+set "JUNIT_CMD=java -jar lib/junit-platform-console-standalone-1.10.2.jar --class-path "test-classes;classes""
+
+if defined VERBOSE (
+    set "JUNIT_CMD=!JUNIT_CMD! !VERBOSE!"
+)
+
+if defined SPECIFIC_CLASS (
+    set "JUNIT_CMD=!JUNIT_CMD! --select-class !SPECIFIC_CLASS!"
+) else if defined CATEGORY (
+    set "JUNIT_CMD=!JUNIT_CMD! --select-package !CATEGORY!"
+) else (
+    set "JUNIT_CMD=!JUNIT_CMD! --scan-class-path test-classes"
+)
+
+if defined COVERAGE (
+    echo [Note: Coverage requires JaCoCo agent which might not be configured. Proceeding with standard run.]
+)
+
+!JUNIT_CMD!
+
+echo.
+echo === Test run complete ===

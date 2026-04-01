@@ -6,12 +6,11 @@ This document outlines comprehensive test cases to verify the robustness and cor
 
 ```bash
 # Run automated tests
-./run_tests.sh        # Unix/macOS
-.\run_tests.bat       # Windows
+test/run_tests.sh        # Unix/macOS
+test\run_tests.bat       # Windows
 
 # Run specific test category
-java -cp classes com.splendor.test.InputValidationTests
-java -cp classes com.splendor.test.GameRuleTests
+test/run_tests.sh --category com.splendor.test.model
 ```
 
 ## Automated Test Coverage
@@ -46,20 +45,20 @@ The test suite uses JUnit 5 and covers:
 
 ```bash
 # Run all tests with coverage report
-./run_tests.bat --coverage    # Windows
-./run_tests.sh --coverage     # Unix/macOS
+test\run_tests.bat --coverage    # Windows
+test/run_tests.sh --coverage     # Unix/macOS
 
 # Run specific test categories
-java -cp "classes;lib/*" org.junit.runner.JUnitCore com.splendor.test.ModelTests
-java -cp "classes;lib/*" org.junit.runner.JUnitCore com.splendor.test.ControllerTests
-java -cp "classes;lib/*" org.junit.runner.JUnitCore com.splendor.test.ValidatorTests
-java -cp "classes;lib/*" org.junit.runner.JUnitCore com.splendor.test.IntegrationTests
+test/run_tests.sh --category com.splendor.model
+test/run_tests.sh --category com.splendor.controller
+test/run_tests.sh --category com.splendor.validator
+test/run_tests.sh --category com.splendor.network
 
 # Run tests with verbose output
-java -cp "classes;lib/*" org.junit.runner.JUnitCore com.splendor.test.AllTests --verbose
+test/run_tests.sh --verbose
 
 # Generate HTML coverage report
-java -cp "classes;lib/jacoco/*" org.jacoco.core.tools.ExecFileLoader --report html coverage/
+# Coverage is integrated within run_tests.sh --coverage if JaCoCo is set up
 ```
 
 ### Coverage Report Generation
@@ -244,14 +243,11 @@ The test suite automatically generates coverage reports in multiple formats:
 ### Automated Test Suite
 
 ```bash
-# Compile tests
-javac -d classes -cp "lib/*" src/com/splendor/test/*.java
-
-# Run all tests
-java -cp "classes;lib/*" org.junit.runner.JUnitCore com.splendor.test.AllTests
+# Compile and run all tests
+test/run_tests.sh
 
 # Run specific test class
-java -cp "classes;lib/*" org.junit.runner.JUnitCore com.splendor.test.MoveValidatorTest
+test/run_tests.sh --class com.splendor.model.validator.MoveValidatorTest
 ```
 
 ### Manual Testing
