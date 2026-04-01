@@ -157,6 +157,9 @@ public class Main {
         // Step 2: ask host how many players
         final String hostId = serverHandler.getConnectedClientIds().get(0);
         final RemoteView hostView = new RemoteView(hostId, messageHandler, configProvider);
+        hostView.displayWelcomeMessage();
+        hostView.displayMessage("You are the lobby leader.");
+        hostView.displayMessage("Please choose total players (2-4). Other players will wait for your choice.");
         final int playerCount = hostView.promptForPlayerCount();
         System.out.println("Host selected " + playerCount + " players. Waiting for remaining clients...");
         serverHandler.broadcastToAllClients("Lobby: 1/" + playerCount + " players joined. Waiting for " + (playerCount - 1) + " more...");
@@ -179,6 +182,9 @@ public class Main {
         final List<RemoteView> playerViews = new ArrayList<>();
         for (final String clientId : serverHandler.getConnectedClientIds()) {
             playerViews.add(new RemoteView(clientId, messageHandler, configProvider));
+        }
+        for (int i = 1; i < playerViews.size(); i++) {
+            playerViews.get(i).displayWelcomeMessage();
         }
 
         final List<String> confirmedNames = synchronizePlayerNames(serverHandler, playerViews);
@@ -212,8 +218,8 @@ public class Main {
                 "If you do not respond within 30 seconds, a default name will be assigned.");
 
         final long nameDeadline = System.currentTimeMillis() + 30000L;
+        broadcastWaitingStatus(serverHandler, clientIds, namesByClient, readyByClient, playerCount);
         while (System.currentTimeMillis() < nameDeadline) {
-            boolean updated = false;
             for (int i = 0; i < clientIds.size(); i++) {
                 final String clientId = clientIds.get(i);
                 if (Boolean.TRUE.equals(readyByClient.get(clientId))) {
@@ -228,10 +234,7 @@ public class Main {
                     namesByClient.put(clientId, trimmed);
                 }
                 readyByClient.put(clientId, true);
-                updated = true;
-            }
-            if (updated) {
-                broadcastWaitingStatus(serverHandler, clientIds, namesByClient, readyByClient, playerCount);
+                serverHandler.sendToClient(clientId, "Name received. Waiting for the other players...");
             }
             if (allReady(readyByClient, clientIds)) {
                 break;

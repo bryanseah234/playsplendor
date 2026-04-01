@@ -496,7 +496,7 @@ public class RemoteView implements IGameView {
      */
     @Override
     public int promptForPlayerCount() {
-        send("Enter number of players (2-4): ");
+        send("Enter number of players (2-4), then press Enter.");
 
         final String response = messageHandler.waitForClientResponse(clientId, 30000);
         if (response == null) {

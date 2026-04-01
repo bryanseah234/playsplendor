@@ -17,7 +17,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -36,7 +35,6 @@ public class ServerSocketHandler implements NetworkMessageHandler {
     private final List<ClientHandler> connectedClients;
     private volatile boolean isRunning;
     private final ConcurrentHashMap<String, LinkedBlockingQueue<String>> clientResponseQueues;
-    private volatile CountDownLatch clientReadyLatch;
     private volatile boolean gameStarted;
     private volatile boolean shutdownInitiated;
     
@@ -51,7 +49,6 @@ public class ServerSocketHandler implements NetworkMessageHandler {
         this.configProvider = configProvider;
         this.connectedClients = new CopyOnWriteArrayList<>();
         this.clientResponseQueues = new ConcurrentHashMap<>();
-        this.clientReadyLatch = null;
         this.isRunning = false;
         this.gameStarted = false;
         this.shutdownInitiated = false;
@@ -150,10 +147,6 @@ public class ServerSocketHandler implements NetworkMessageHandler {
             // Create client handler
             final ClientHandler clientHandler = new ClientHandler(clientSocket, this);
             connectedClients.add(clientHandler);
-            if (clientReadyLatch != null) {
-                clientReadyLatch.countDown();
-            }
-            
             // Handle client in separate thread
             clientExecutor.submit(() -> {
                 try {
@@ -182,17 +175,24 @@ public class ServerSocketHandler implements NetworkMessageHandler {
      * @return true if the required clients connected in time, false on timeout
      */
     public boolean waitForClients(final int count, final long timeoutMs) {
-        clientReadyLatch = new CountDownLatch(count);
-        try {
-            if (timeoutMs <= 0) {
-                clientReadyLatch.await();
+        final int targetClients = getConnectedClientCount() + Math.max(0, count);
+        final long deadline = timeoutMs <= 0 ? Long.MAX_VALUE : System.currentTimeMillis() + timeoutMs;
+
+        while (isRunning && !shutdownInitiated) {
+            if (getConnectedClientCount() >= targetClients) {
                 return true;
             }
-            return clientReadyLatch.await(timeoutMs, TimeUnit.MILLISECONDS);
-        } catch (final InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return false;
+            if (System.currentTimeMillis() >= deadline) {
+                return false;
+            }
+            try {
+                TimeUnit.MILLISECONDS.sleep(50);
+            } catch (final InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return false;
+            }
         }
+        return getConnectedClientCount() >= targetClients;
     }
 
     /**

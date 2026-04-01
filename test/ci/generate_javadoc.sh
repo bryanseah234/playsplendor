@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eu
+if (set -o pipefail) 2>/dev/null; then
+  set -o pipefail
+fi
 
 cd "$(dirname "$0")/../.."
 rm -rf docs/javadoc

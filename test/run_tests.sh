@@ -10,6 +10,7 @@ COVERAGE=""
 VERBOSE=""
 CATEGORY=""
 SPECIFIC_CLASS=""
+EXCLUDE_PACKAGE=""
 
 while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -17,6 +18,7 @@ while [[ "$#" -gt 0 ]]; do
         --verbose) VERBOSE="--details verbose" ;;
         --category) CATEGORY="$2"; shift ;;
         --class) SPECIFIC_CLASS="$2"; shift ;;
+        --exclude-package) EXCLUDE_PACKAGE="$2"; shift ;;
         *) echo "Unknown parameter passed: $1"; exit 1 ;;
     esac
     shift
@@ -87,6 +89,10 @@ elif [ -n "$CATEGORY" ]; then
     JUNIT_CMD="$JUNIT_CMD --select-package $CATEGORY"
 else
     JUNIT_CMD="$JUNIT_CMD --scan-class-path test-classes"
+fi
+
+if [ -n "$EXCLUDE_PACKAGE" ]; then
+    JUNIT_CMD="$JUNIT_CMD --exclude-package $EXCLUDE_PACKAGE"
 fi
 
 # Add coverage if requested (requires jacoco agent in lib/ which may not exist, so mock it for the script)

@@ -87,13 +87,13 @@ flowchart TB
     GameController --> MoveValidator
     GameController --> GameRuleValidator
     
-    FileConfigProvider ..|> IConfigProvider
-    ConsoleView ..|> IGameView
-    RemoteView ..|> IGameView
-    NetworkGameView ..|> IGameView
+    IConfigProvider <|.. FileConfigProvider
+    IGameView <|.. ConsoleView
+    IGameView <|.. RemoteView
+    IGameView <|.. NetworkGameView
     
-    CsvCardParser ..|> CardDataProvider
-    CustomCardDeckProvider ..|> CardDataProvider
+    CardDataProvider <|.. CsvCardParser
+    CardDataProvider <|.. CustomCardDeckProvider
     CardLoader --> CardDataProvider
     
     Game --> Board
