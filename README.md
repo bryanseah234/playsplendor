@@ -255,7 +255,7 @@ splendor/
 ├── README.md                      # This file
 ├── PRD.md                         # Product Requirements Document
 ├── RULES.md                       # Game Rules
-├── DOCUMENTATION_STANDARDS.md    # Javadoc Standards
+├── docs/DOCUMENTATION.md    # Javadoc Standards
 ├── src/
 │   └── com/splendor/
 │       ├── Main.java             # Entry point
