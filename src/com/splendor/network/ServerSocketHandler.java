@@ -176,10 +176,22 @@ public class ServerSocketHandler implements NetworkMessageHandler {
      */
     public boolean waitForClients(final int count, final long timeoutMs) {
         final int targetClients = getConnectedClientCount() + Math.max(0, count);
+        return waitForAtLeastClients(targetClients, timeoutMs);
+    }
+
+    /**
+     * Blocks until at least {@code targetClients} are connected, or timeout elapses.
+     *
+     * @param targetClients Absolute connected-client target
+     * @param timeoutMs Maximum wait time in milliseconds (0 = wait forever)
+     * @return true if target was reached, false on timeout/interruption
+     */
+    public boolean waitForAtLeastClients(final int targetClients, final long timeoutMs) {
+        final int clampedTarget = Math.max(0, targetClients);
         final long deadline = timeoutMs <= 0 ? Long.MAX_VALUE : System.currentTimeMillis() + timeoutMs;
 
         while (isRunning && !shutdownInitiated) {
-            if (getConnectedClientCount() >= targetClients) {
+            if (getConnectedClientCount() >= clampedTarget) {
                 return true;
             }
             if (System.currentTimeMillis() >= deadline) {
@@ -192,7 +204,7 @@ public class ServerSocketHandler implements NetworkMessageHandler {
                 return false;
             }
         }
-        return getConnectedClientCount() >= targetClients;
+        return getConnectedClientCount() >= clampedTarget;
     }
 
     /**

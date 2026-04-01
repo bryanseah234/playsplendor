@@ -164,18 +164,21 @@ public class Main {
         System.out.println("Host selected " + playerCount + " players. Waiting for remaining clients...");
         serverHandler.broadcastToAllClients("Lobby: 1/" + playerCount + " players joined. Waiting for " + (playerCount - 1) + " more...");
 
-        // Step 3: wait for the remaining clients to connect one at a time, updating all clients after each join
-        for (int joined = 1; joined < playerCount; joined++) {
-            if (!serverHandler.waitForClients(1, 0)) {
+        // Step 3: wait until total connected clients reaches the selected player count.
+        // This handles early joiners that connect before the host finalizes lobby size.
+        int lastAnnouncedCount = Math.max(1, serverHandler.getConnectedClientCount());
+        while (lastAnnouncedCount < playerCount) {
+            if (!serverHandler.waitForAtLeastClients(lastAnnouncedCount + 1, 0)) {
                 System.err.println("Interrupted while waiting for players.");
                 return;
             }
-            final int nowJoined = joined + 1;
+            final int nowJoined = Math.min(serverHandler.getConnectedClientCount(), playerCount);
             final String status = nowJoined == playerCount
                 ? "Lobby: " + nowJoined + "/" + playerCount + " players joined. Starting game..."
                 : "Lobby: " + nowJoined + "/" + playerCount + " players joined. Waiting for " + (playerCount - nowJoined) + " more...";
             serverHandler.broadcastToAllClients(status);
             System.out.println(status);
+            lastAnnouncedCount = nowJoined;
         }
 
         // Step 4: build one RemoteView per connected client (in connection order)
