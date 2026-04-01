@@ -1,3 +1,8 @@
+package com.splendor.model;
+
+import com.splendor.model.validator.MoveValidator;
+import java.util.*;
+
 /**
  * Stateless AI strategy for CPU-controlled players.
  *

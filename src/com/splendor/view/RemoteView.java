@@ -499,11 +499,26 @@ public class RemoteView implements IGameView {
         send("Enter number of players (2-4): ");
 
         final String response = messageHandler.waitForClientResponse(clientId, 30000);
+        if (response == null) {
+            displayError("No player count received. Defaulting to 2 players.");
+            return 2;
+        }
+
+        final String trimmed = response.trim();
+        if (trimmed.isEmpty()) {
+            displayError("Empty player count received. Defaulting to 2 players.");
+            return 2;
+        }
 
         try {
-            return Integer.parseInt(response.trim());
+            final int parsed = Integer.parseInt(trimmed);
+            if (parsed < 2 || parsed > 4) {
+                displayError("Player count must be between 2 and 4. Defaulting to 2 players.");
+                return 2;
+            }
+            return parsed;
         } catch (final NumberFormatException e) {
-            displayError("Invalid player count received, defaulting to 2");
+            displayError("Invalid player count format received. Defaulting to 2 players.");
             return 2;
         }
     }

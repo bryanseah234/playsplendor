@@ -2,14 +2,29 @@ package com.splendor.controller;
 
 import com.splendor.config.ConfigKeys;
 import com.splendor.config.IConfigProvider;
-import com.splendor.exception.*;
-import com.splendor.model.*;
+import com.splendor.exception.ConfigException;
+import com.splendor.exception.GameStateException;
+import com.splendor.exception.InsufficientTokensException;
+import com.splendor.exception.InvalidMoveException;
+import com.splendor.exception.SplendorException;
+import com.splendor.model.BotStrategy;
+import com.splendor.model.ComputerPlayer;
+import com.splendor.model.Game;
+import com.splendor.model.MenuOption;
+import com.splendor.model.Move;
+import com.splendor.model.MoveType;
+import com.splendor.model.Player;
 import com.splendor.model.validator.GameRuleValidator;
 import com.splendor.model.validator.MoveValidator;
 import com.splendor.model.validator.ValidationResult;
 import com.splendor.util.MoveFormatter;
 import com.splendor.view.IGameView;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Central orchestrator for the Splendor board game. This controller sits at
@@ -371,10 +386,16 @@ public class GameController {
                 if (player instanceof ComputerPlayer) {
                     /*
                      * A bot should never produce an invalid move, but as a safety
-                     * net we fall back to reserving a card from the deck (tier 1).
-                     * This is always a legal action and prevents an infinite loop.
+                     * net we fall back to reserving a card from a non-empty deck.
+                     * We skip empty tiers to avoid "Selected card not found" errors.
                      */
-                    return Move.reserveFromDeck(1);
+                    for (int tier = 1; tier <= 3; tier++) {
+                        if (game.getBoard().getDeckSize(tier) > 0) {
+                            return Move.reserveFromDeck(tier);
+                        }
+                    }
+                    // Ultimate fallback if all decks are empty
+                    return new Move(MoveType.TAKE_THREE_DIFFERENT, new HashMap<>());
                 }
 
                 // Human: display the error and allow an undo escape hatch.
@@ -549,5 +570,99 @@ public class GameController {
             return false;
         }
         return input.equalsIgnoreCase("Z") || input.equalsIgnoreCase("UNDO");
+    }
+
+    @Override
+    public String toString() {
+        return "GameController [gameView=" + gameView + ", configProvider=" + configProvider + ", moveValidator="
+                + moveValidator + ", gameRuleValidator=" + gameRuleValidator + ", game=" + game + ", players=" + players
+                + ", getClass()=" + getClass() + ", hashCode()=" + hashCode() + ", performUndo()=" + performUndo()
+                + ", toString()=" + super.toString() + ", getGame()=" + getGame() + ", getPlayers()=" + getPlayers()
+                + "]";
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((gameView == null) ? 0 : gameView.hashCode());
+        result = prime * result + ((configProvider == null) ? 0 : configProvider.hashCode());
+        result = prime * result + ((moveValidator == null) ? 0 : moveValidator.hashCode());
+        result = prime * result + ((gameRuleValidator == null) ? 0 : gameRuleValidator.hashCode());
+        result = prime * result + ((game == null) ? 0 : game.hashCode());
+        result = prime * result + ((players == null) ? 0 : players.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        GameController other = (GameController) obj;
+        if (gameView == null) {
+            if (other.gameView != null)
+                return false;
+        } else if (!gameView.equals(other.gameView))
+            return false;
+        if (configProvider == null) {
+            if (other.configProvider != null)
+                return false;
+        } else if (!configProvider.equals(other.configProvider))
+            return false;
+        if (moveValidator == null) {
+            if (other.moveValidator != null)
+                return false;
+        } else if (!moveValidator.equals(other.moveValidator))
+            return false;
+        if (gameRuleValidator == null) {
+            if (other.gameRuleValidator != null)
+                return false;
+        } else if (!gameRuleValidator.equals(other.gameRuleValidator))
+            return false;
+        if (game == null) {
+            if (other.game != null)
+                return false;
+        } else if (!game.equals(other.game))
+            return false;
+        if (players == null) {
+            if (other.players != null)
+                return false;
+        } else if (!players.equals(other.players))
+            return false;
+        return true;
+    }
+
+    public GameController(IGameView gameView, IConfigProvider configProvider, MoveValidator moveValidator,
+            GameRuleValidator gameRuleValidator, Game game, List<Player> players) {
+        this.gameView = gameView;
+        this.configProvider = configProvider;
+        this.moveValidator = moveValidator;
+        this.gameRuleValidator = gameRuleValidator;
+        this.game = game;
+        this.players = players;
+    }
+
+    public void loadConfiguration() throws ConfigException {
+        configProvider.loadConfiguration();
+    }
+
+    public String getStringProperty(String key, String defaultValue) {
+        return configProvider.getStringProperty(key, defaultValue);
+    }
+
+    public int getIntProperty(String key, int defaultValue) {
+        return configProvider.getIntProperty(key, defaultValue);
+    }
+
+    public boolean getBooleanProperty(String key, boolean defaultValue) {
+        return configProvider.getBooleanProperty(key, defaultValue);
+    }
+
+    public boolean hasProperty(String key) {
+        return configProvider.hasProperty(key);
     }
 }

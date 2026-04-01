@@ -23,8 +23,8 @@ import org.junit.jupiter.api.Test;
 
 class GameLogicTest {
 
-    private final MoveValidator moveValidator = new MoveValidator();
-    private final IConfigProvider configProvider = new com.splendor.test.TestConfigProvider();
+    private final com.splendor.config.IConfigProvider configProvider = new com.splendor.test.TestConfigProvider();
+    private final MoveValidator moveValidator = new MoveValidator(configProvider);
 
     @Test
     void takeThreeDifferentAvailableWhenThreeOrMoreColorsHaveTokens() {
@@ -196,7 +196,7 @@ class GameLogicTest {
     void nobleIsAwardedWhenDiscountRequirementsAreMet() throws SplendorException {
         Game game = game(2);
         Player player = game.getCurrentPlayer();
-        PlayerController playerController = new PlayerController(game, new StubView());
+        PlayerController playerController = new PlayerController(game, new StubView(), moveValidator);
         Noble noble = new Noble(7501, 3, Map.of(Gem.RED, 1));
         game.getBoard().setAvailableNobles(new ArrayList<>(List.of(noble)));
         player.addPurchasedCard(card(7502, 1, 0, Gem.RED, Map.of()));
@@ -216,11 +216,11 @@ class GameLogicTest {
     }
 
     private boolean canReserveVisible(Player player, Board board) {
-        return player.canReserveCard() && hasVisibleCards(board);
+        return player.canReserveCard(moveValidator.getMaxReservedCards()) && hasVisibleCards(board);
     }
 
     private boolean canReserveDeck(Player player, Board board) {
-        return player.canReserveCard() && hasAnyDeckCards(board);
+        return player.canReserveCard(moveValidator.getMaxReservedCards()) && hasAnyDeckCards(board);
     }
 
     private boolean canBuyVisible(Player player, Board board) {

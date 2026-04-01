@@ -54,7 +54,7 @@ java -cp classes com.splendor.Main --server
 
 The project follows a strict MVC pattern to ensure separation of concerns. The Controller layer orchestrates the game logic by delegating specific tasks to specialized sub-controllers and validators.
 
-![Architecture Diagram](docs/diagrams/architecture-overview.png)
+![Architecture Diagram](docs/diagrams/README_diagram_1.png)
 
 <details>
 <summary>📋 View Architecture Diagram Source</summary>
@@ -66,7 +66,7 @@ The project follows a strict MVC pattern to ensure separation of concerns. The C
 <details>
 <summary>🎲 Game State Lifecycle — ONGOING → FINAL_ROUND → FINISHED</summary>
 
-![Game State Diagram](docs/diagrams/game-state-lifecycle.png)
+![Game State Diagram](docs/diagrams/README_diagram_2.png)
 
 <details>
 <summary>📋 View State Diagram Source</summary>
@@ -81,7 +81,7 @@ The project follows a strict MVC pattern to ensure separation of concerns. The C
 
 The following sequence diagram illustrates the standard turn lifecycle, including validation and special post-turn checks for noble visits or token limits.
 
-![Turn Sequence Diagram](docs/diagrams/turn-sequence.png)
+![Turn Sequence Diagram](docs/diagrams/README_diagram_3.png)
 
 <details>
 <summary>📋 View Sequence Diagram Source</summary>
@@ -255,7 +255,7 @@ splendor/
 ├── README.md                      # This file
 ├── PRD.md                         # Product Requirements Document
 ├── RULES.md                       # Game Rules
-├── DOCUMENTATION_STANDARDS.md    # Javadoc Standards
+├── docs/DOCUMENTATION.md      # Javadoc Standards
 ├── src/
 │   └── com/splendor/
 │       ├── Main.java             # Entry point

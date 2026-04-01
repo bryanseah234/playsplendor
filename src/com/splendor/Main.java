@@ -19,7 +19,9 @@ import com.splendor.view.NetworkGameView;
 import com.splendor.network.NetworkMessageHandler;
 import com.splendor.view.RemoteView;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Application entry point that handles mode selection and initialization.
@@ -56,8 +58,8 @@ public class Main {
             System.err.println("Failed to start application: " + e.getMessage());
             System.exit(1);
         } catch (Exception e) {
-            System.err.println("Unexpected error: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("Unexpected startup failure: " + safeMessage(e));
+            System.err.println("Please restart the server or check your network and configuration.");
             System.exit(1);
         }
     }
@@ -179,14 +181,136 @@ public class Main {
             playerViews.add(new RemoteView(clientId, messageHandler, configProvider));
         }
 
+        final List<String> confirmedNames = synchronizePlayerNames(serverHandler, playerViews);
         System.out.println("All " + playerCount + " players connected. Starting game...");
 
         // Step 5: start the game with a view that routes to each player's client
-        final IGameView gameView = new NetworkGameView(playerViews, playerCount);
+        final IGameView gameView = new NetworkGameView(playerViews, playerCount, confirmedNames);
         final GameController gameController = new GameController(gameView, configProvider);
 
         gameController.initializeGame();
         serverHandler.setGameStarted(true);
         gameController.startGame();
+    }
+
+    private static List<String> synchronizePlayerNames(final ServerSocketHandler serverHandler,
+            final List<RemoteView> playerViews) {
+        final int playerCount = playerViews.size();
+        final Map<String, String> namesByClient = new LinkedHashMap<>();
+        final Map<String, Boolean> readyByClient = new LinkedHashMap<>();
+        final List<String> clientIds = serverHandler.getConnectedClientIds();
+
+        for (int i = 0; i < clientIds.size(); i++) {
+            final String clientId = clientIds.get(i);
+            namesByClient.put(clientId, "Player" + (i + 1));
+            readyByClient.put(clientId, false);
+        }
+
+        serverHandler.broadcastToAllClients("All players connected.");
+        serverHandler.broadcastToAllClients("Name setup: type your preferred name and press Enter.");
+        serverHandler.broadcastToAllClients(
+                "If you do not respond within 30 seconds, a default name will be assigned.");
+
+        final long nameDeadline = System.currentTimeMillis() + 30000L;
+        while (System.currentTimeMillis() < nameDeadline) {
+            boolean updated = false;
+            for (int i = 0; i < clientIds.size(); i++) {
+                final String clientId = clientIds.get(i);
+                if (Boolean.TRUE.equals(readyByClient.get(clientId))) {
+                    continue;
+                }
+                final String input = serverHandler.pollClientResponse(clientId, 200);
+                if (input == null) {
+                    continue;
+                }
+                final String trimmed = input.trim();
+                if (!trimmed.isEmpty()) {
+                    namesByClient.put(clientId, trimmed);
+                }
+                readyByClient.put(clientId, true);
+                updated = true;
+            }
+            if (updated) {
+                broadcastWaitingStatus(serverHandler, clientIds, namesByClient, readyByClient, playerCount);
+            }
+            if (allReady(readyByClient, clientIds)) {
+                break;
+            }
+        }
+
+        for (int i = 0; i < clientIds.size(); i++) {
+            final String clientId = clientIds.get(i);
+            if (!Boolean.TRUE.equals(readyByClient.get(clientId))) {
+                readyByClient.put(clientId, true);
+                namesByClient.put(clientId, "Player" + (i + 1));
+            }
+        }
+        broadcastWaitingStatus(serverHandler, clientIds, namesByClient, readyByClient, playerCount);
+
+        serverHandler.broadcastToAllClients("Press Enter to confirm readiness and continue.");
+        final long readyDeadline = System.currentTimeMillis() + 30000L;
+        final Map<String, Boolean> continueReady = new LinkedHashMap<>();
+        for (final String clientId : clientIds) {
+            continueReady.put(clientId, false);
+        }
+
+        while (System.currentTimeMillis() < readyDeadline && !allReady(continueReady, clientIds)) {
+            for (final String clientId : clientIds) {
+                if (Boolean.TRUE.equals(continueReady.get(clientId))) {
+                    continue;
+                }
+                final String response = serverHandler.pollClientResponse(clientId, 200);
+                if (response != null) {
+                    continueReady.put(clientId, true);
+                }
+            }
+        }
+        for (final String clientId : clientIds) {
+            if (!Boolean.TRUE.equals(continueReady.get(clientId))) {
+                continueReady.put(clientId, true);
+            }
+        }
+        serverHandler.broadcastToAllClients("All players are ready. Initializing game...");
+
+        final List<String> orderedNames = new ArrayList<>();
+        for (final String clientId : clientIds) {
+            orderedNames.add(namesByClient.get(clientId));
+        }
+        return orderedNames;
+    }
+
+    private static void broadcastWaitingStatus(final ServerSocketHandler serverHandler,
+            final List<String> clientIds,
+            final Map<String, String> namesByClient,
+            final Map<String, Boolean> readyByClient,
+            final int totalPlayers) {
+        final StringBuilder status = new StringBuilder();
+        status.append("Waiting room (").append(totalPlayers).append(" players)\n");
+        for (int i = 0; i < clientIds.size(); i++) {
+            final String clientId = clientIds.get(i);
+            final String name = namesByClient.get(clientId);
+            final boolean ready = Boolean.TRUE.equals(readyByClient.get(clientId));
+            status.append(" - Slot ").append(i + 1).append(": ")
+                    .append(name)
+                    .append(ready ? " [READY]" : " [AWAITING NAME]")
+                    .append('\n');
+        }
+        serverHandler.broadcastToAllClients(status.toString());
+    }
+
+    private static boolean allReady(final Map<String, Boolean> readyMap, final List<String> ids) {
+        for (final String id : ids) {
+            if (!Boolean.TRUE.equals(readyMap.get(id))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static String safeMessage(final Throwable throwable) {
+        if (throwable == null || throwable.getMessage() == null || throwable.getMessage().trim().isEmpty()) {
+            return "No additional error details were provided.";
+        }
+        return throwable.getMessage().trim();
     }
 }

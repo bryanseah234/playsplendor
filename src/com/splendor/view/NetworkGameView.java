@@ -6,11 +6,11 @@
  */
 package com.splendor.view;
 
+import com.splendor.model.ComputerPlayer;
 import com.splendor.model.Game;
 import com.splendor.model.MenuOption;
 import com.splendor.model.Move;
 import com.splendor.model.Noble;
-import com.splendor.model.ComputerPlayer;
 import com.splendor.model.Player;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +25,7 @@ public class NetworkGameView implements IGameView {
 
     private final List<RemoteView> playerViews;
     private final int playerCount;
+    private final List<String> predefinedPlayerNames;
     private List<Player> playerOrder;
     private Player activePlayer;
 
@@ -35,8 +36,22 @@ public class NetworkGameView implements IGameView {
      * @param playerCount Total number of players (already determined before game init)
      */
     public NetworkGameView(final List<RemoteView> playerViews, final int playerCount) {
+        this(playerViews, playerCount, null);
+    }
+
+    /**
+     * Creates a NetworkGameView with one RemoteView per connected client and optional
+     * pre-collected names from lobby synchronization.
+     *
+     * @param playerViews List of RemoteViews in player-order (index 0 = player 1)
+     * @param playerCount Total number of players (already determined before game init)
+     * @param predefinedPlayerNames Optional ordered names captured during lobby setup.
+     */
+    public NetworkGameView(final List<RemoteView> playerViews, final int playerCount,
+            final List<String> predefinedPlayerNames) {
         this.playerViews = playerViews;
         this.playerCount = playerCount;
+        this.predefinedPlayerNames = predefinedPlayerNames;
         this.activePlayer = null;
     }
 
@@ -254,6 +269,9 @@ public class NetworkGameView implements IGameView {
      */
     @Override
     public String promptForPlayerName(final int playerNumber, final int totalPlayers) {
+        if (predefinedPlayerNames != null && playerNumber >= 1 && playerNumber <= predefinedPlayerNames.size()) {
+            return predefinedPlayerNames.get(playerNumber - 1);
+        }
         final int idx = Math.min(playerNumber - 1, playerViews.size() - 1);
         return playerViews.get(idx).promptForPlayerName(playerNumber, totalPlayers);
     }

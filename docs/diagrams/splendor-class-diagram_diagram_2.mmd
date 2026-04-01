@@ -58,12 +58,12 @@ classDiagram
         -tier: int
         -points: int
         -bonusGem: Gem
-        -cost: Map~Gem, Integer~
+        -cost: Map~Gem_Integer~
         +getId() int
         +getTier() int
         +getPoints() int
         +getBonusGem() Gem
-        +getCost() Map~Gem, Integer~
+        +getCost() Map~Gem_Integer~
         +providesPoints() boolean
         +providesDiscount() boolean
         +getTotalCost() int
@@ -72,25 +72,25 @@ classDiagram
     class Noble {
         -id: int
         -points: int
-        -requirements: Map~Gem, Integer~
+        -requirements: Map~Gem_Integer~
         +getId() int
         +getPoints() int
-        +getRequirements() Map~Gem, Integer~
+        +getRequirements() Map~Gem_Integer~
         +requirementsMet(playerGemCounts) boolean
         +getTotalRequirementCount() int
     }
     
     class Player {
         -name: String
-        -tokens: Map~Gem, Integer~
+        -tokens: Map~Gem_Integer~
         -purchasedCards: List~Card~
         -reservedCards: List~Card~
         -nobles: List~Noble~
         +getName() String
-        +getTokens() Map~Gem, Integer~
+        +getTokens() Map~Gem_Integer~
         +getTokenCount(gem) int
         +getTotalPoints() int
-        +getGemDiscounts() Map~Gem, Integer~
+        +getGemDiscounts() Map~Gem_Integer~
         +addTokens(gem, quantity) void
         +removeTokens(gem, quantity) void
         +addPurchasedCard(card) void
@@ -104,12 +104,12 @@ classDiagram
     
     class Move {
         -moveType: MoveType
-        -selectedGems: Map~Gem, Integer~
+        -selectedGems: Map~Gem_Integer~
         -cardId: Integer
         -isReservedCard: boolean
         -deckTier: Integer
         +getMoveType() MoveType
-        +getSelectedGems() Map~Gem, Integer~
+        +getSelectedGems() Map~Gem_Integer~
         +getCardId() Integer
         +isReservedCard() boolean
         +getDeckTier() Integer
@@ -130,7 +130,8 @@ classDiagram
         +getDisplayName() String
     }
     
-    GameState_Phase {
+    class GameState_Phase {
+        <<enumeration>>
         <<enumeration>>
         ONGOING
         FINAL_ROUND
@@ -138,11 +139,11 @@ classDiagram
     }
     
     class Board {
-        -gemBank: Map~Gem, Integer~
+        -gemBank: Map~Gem_Integer~
         -cardDecks: Map~Integer, Queue~Card~~
         -availableCards: Map~Integer, List~Card~~
         -availableNobles: List~Noble~
-        +getGemBank() Map~Gem, Integer~
+        +getGemBank() Map~Gem_Integer~
         +getAvailableCards(tier) List~Card~
         +getAvailableNobles() List~Noble~
         +drawCard(tier) Card

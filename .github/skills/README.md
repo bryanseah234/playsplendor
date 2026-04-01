@@ -210,4 +210,4 @@ When creating a new repository:
 - [GitHub Skills Documentation](https://docs.github.com/en/contributing/collaborating-with-github-docs/using-skills)
 - [Cursor AI Documentation](https://docs.cursor.com/)
 - [Claude Code Documentation](https://docs.anthropic.com/claude/code)
-- [AI Agent Configuration](../agents.md)
+- [AI Agent Configuration](../../AGENTS.md)
