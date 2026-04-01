@@ -25,10 +25,6 @@ package com.splendor.exception;
  */
 public class InvalidMoveException extends SplendorException {
     
-    @Override
-	public String toString() {
-		return "InvalidMoveException []";
-	}
 
 	/**
      * Creates a new InvalidMoveException with the specified message.

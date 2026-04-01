@@ -32,10 +32,6 @@ package com.splendor.exception;
  */
 public class SplendorException extends Exception {
     
-    @Override
-    public String toString() {
-        return "SplendorException []";
-    }
 
     /**
      * Creates a new SplendorException with the specified message.

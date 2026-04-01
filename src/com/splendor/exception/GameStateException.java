@@ -28,10 +28,6 @@ package com.splendor.exception;
  */
 public class GameStateException extends SplendorException {
     
-    @Override
-	public String toString() {
-		return "GameStateException []";
-	}
 
 	/**
      * Creates a new GameStateException with the specified message.

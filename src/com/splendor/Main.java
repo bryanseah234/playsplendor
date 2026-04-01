@@ -5,6 +5,10 @@
  */
 package com.splendor;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import com.splendor.config.ConfigValidator;
 import com.splendor.config.FileConfigProvider;
 import com.splendor.config.IConfigProvider;
@@ -17,10 +21,6 @@ import com.splendor.view.ConsoleView;
 import com.splendor.view.IGameView;
 import com.splendor.view.NetworkGameView;
 import com.splendor.view.RemoteView;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Application entry point that handles mode selection and initialization.
@@ -28,6 +28,7 @@ import java.util.Map;
  */
 public class Main {
     
+
 
 	public static final String SERVER_MODE_FLAG = "--server";
     /**
@@ -357,6 +358,8 @@ public class Main {
         }
         return throwable.getMessage().trim();
     }
+
+	public Main() {}
 
 	public Main() {}
 }
