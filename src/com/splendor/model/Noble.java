@@ -14,16 +14,9 @@ import java.util.Map;
  * Nobles are awarded automatically when a player's tableau meets their requirements.
  */
 public class Noble {
-    private int id;
-    private int points;
-    private Map<Gem, Integer> requirements;
-
-    /**
-     * Creates an empty noble with default values.
-     */
-    public Noble() {
-        this(0, 0, new HashMap<Gem, Integer>());
-    }
+    private final int id;
+    private final int points;
+    private final Map<Gem, Integer> requirements;
 
     /**
      * Creates a noble with the specified properties.
@@ -37,10 +30,10 @@ public class Noble {
         this.points = points;
         this.requirements = requirements == null ? new HashMap<Gem, Integer>() : new HashMap<Gem, Integer>(requirements);
     }
-    
+
     /**
      * Gets the unique noble identifier.
-     * 
+     *
      * @return Noble ID
      */
     public int getId() {
@@ -48,17 +41,8 @@ public class Noble {
     }
 
     /**
-     * Sets the noble identifier.
-     *
-     * @param id Noble ID
-     */
-    public void setId(final int id) {
-        this.id = id;
-    }
-    
-    /**
      * Gets the victory points provided by this noble.
-     * 
+     *
      * @return Victory points
      */
     public int getPoints() {
@@ -66,17 +50,8 @@ public class Noble {
     }
 
     /**
-     * Sets the victory points for this noble.
-     *
-     * @param points Victory points
-     */
-    public void setPoints(final int points) {
-        this.points = points;
-    }
-    
-    /**
      * Gets the gem requirements for this noble.
-     * 
+     *
      * @return Unmodifiable map of required gems and quantities
      */
     public Map<Gem, Integer> getRequirements() {
@@ -84,36 +59,30 @@ public class Noble {
     }
 
     /**
-     * Sets the requirements map for this noble.
-     *
-     * @param requirements Required gems map
-     */
-    public void setRequirements(final Map<Gem, Integer> requirements) {
-        this.requirements = requirements == null ? new HashMap<Gem, Integer>() : new HashMap<Gem, Integer>(requirements);
-    }
-    
-    /**
      * Checks if a player's tableau meets this noble's requirements.
-     * 
-     * @param playerGemCounts Map of gems the player has from their tableau
+     *
+     * @param playerGemCounts Map of gems the player has from their tableau     
      * @return true if requirements are met, false otherwise
      */
-    public boolean requirementsMet(final Map<Gem, Integer> playerGemCounts) {
+    public boolean requirementsMet(final Map<Gem, Integer> playerGemCounts) {   
+        if (playerGemCounts == null) {
+            return false;
+        }
         for (final Map.Entry<Gem, Integer> requirement : requirements.entrySet()) {
             final Gem gem = requirement.getKey();
             final int requiredCount = requirement.getValue();
-            final int playerCount = playerGemCounts.getOrDefault(gem, 0);
-            
+            final int playerCount = playerGemCounts.getOrDefault(gem, 0);       
+
             if (playerCount < requiredCount) {
                 return false;
             }
         }
         return true;
     }
-    
+
     /**
      * Gets the total number of gems required.
-     * 
+     *
      * @return Total gem requirement count
      */
     public int getTotalRequirementCount() {
@@ -123,10 +92,10 @@ public class Noble {
         }
         return total;
     }
-    
+
     /**
      * Returns a string representation of the noble.
-     * 
+     *
      * @return Formatted noble description
      */
     @Override

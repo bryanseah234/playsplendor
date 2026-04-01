@@ -5,12 +5,18 @@
  */
 package com.splendor.model.validator;
 
+import java.util.Map;
 import com.splendor.config.ConfigKeys;
 import com.splendor.config.IConfigProvider;
 import com.splendor.exception.InsufficientTokensException;
 import com.splendor.exception.InvalidMoveException;
-import com.splendor.model.*;
-import java.util.Map;
+import com.splendor.model.Board;
+import com.splendor.model.Card;
+import com.splendor.model.Game;
+import com.splendor.model.Gem;
+import com.splendor.model.Move;
+import com.splendor.model.MoveType;
+import com.splendor.model.Player;
 
 /**
  * Validates player moves to ensure they comply with game rules.
@@ -51,25 +57,13 @@ public class MoveValidator {
 
         // Validate based on move type
         switch (move.getMoveType()) {
-            case TAKE_THREE_DIFFERENT:
-                validateTakeThreeDifferent(move, player, game);
-                break;
-            case TAKE_TWO_SAME:
-                validateTakeTwoSame(move, player, game);
-                break;
-            case RESERVE_CARD:
-                validateReserveCard(move, player, game);
-                break;
-            case BUY_CARD:
-                validateBuyCard(move, player, game);
-                break;
-            case DISCARD_TOKENS:
-                validateDiscardTokens(move, player, game);
-                break;
-            case EXIT_GAME:
-                break;
-            default:
-                throw new InvalidMoveException("Unknown move type: " + move.getMoveType());
+            case TAKE_THREE_DIFFERENT -> validateTakeThreeDifferent(move, game);
+            case TAKE_TWO_SAME -> validateTakeTwoSame(move, game);
+            case RESERVE_CARD -> validateReserveCard(move, player, game);
+            case BUY_CARD -> validateBuyCard(move, player, game);
+            case DISCARD_TOKENS -> validateDiscardTokens(move, player, game);
+            case EXIT_GAME -> { } // valid move
+            default -> throw new InvalidMoveException("Unknown move type: " + move.getMoveType());
         }
     }
 
@@ -81,7 +75,7 @@ public class MoveValidator {
      * @param game   Current game state
      * @throws InvalidMoveException if move is invalid
      */
-    private void validateTakeThreeDifferent(final Move move, final Player player, final Game game)
+    private void validateTakeThreeDifferent(final Move move, final Game game)
             throws InvalidMoveException {
 
         final Map<Gem, Integer> selectedGems = move.getSelectedGems();
@@ -133,7 +127,7 @@ public class MoveValidator {
      * @param game   Current game state
      * @throws InvalidMoveException if move is invalid
      */
-    private void validateTakeTwoSame(final Move move, final Player player, final Game game)
+    private void validateTakeTwoSame(final Move move, final Game game)
             throws InvalidMoveException {
 
         final Map<Gem, Integer> selectedGems = move.getSelectedGems();
@@ -346,31 +340,6 @@ public class MoveValidator {
     }
 
     /**
-     * Validates the specific "take 2 of the same gem" rule and returns a human-readable
-     * ValidationResult rather than throwing an exception. Used to display a friendly
-     * explanation to the player before their move is submitted.
-     *
-     * @param gem   The gem colour the player wants to take two of.
-     * @param board The current game board.
-     * @return A passing ValidationResult if the take-two is legal; a failing one with
-     *         a rule-violation explanation otherwise.
-     */
-    public ValidationResult validateTakeTwo(Gem gem, Board board) {
-        int countInBank = board.getGemCount(gem);
-
-        if (gem == Gem.GOLD) {
-            return ValidationResult.fail("Cannot take Gold tokens directly. You must reserve a card to get Gold.");
-        }
-
-        if (countInBank < 4) {
-            return ValidationResult.fail("Rule Violation: You can only take 2 " + gem +
-                    " gems if there are 4+ in the bank. Currently only " + countInBank + " available.");
-        }
-
-        return ValidationResult.ok();
-    }
-
-    /**
      * Returns a ValidationResult with a plain-language explanation of why a move is or
      * is not permitted, without throwing an exception.
      *
@@ -389,15 +358,14 @@ public class MoveValidator {
         Board board = game.getBoard();
 
         // 1. Rule for taking 2 of the same gem
-        // Using move.getMoveType() which returns a MoveType enum
-        // Change TAKE_TWO to TAKE_TWO_SAME
         if (move.getMoveType() == MoveType.TAKE_TWO_SAME) {
             if (move.getSelectedGems() != null && !move.getSelectedGems().isEmpty()) {
                 Gem gem = move.getSelectedGems().keySet().iterator().next();
                 int countInBank = board.getGemCount(gem);
-                if (countInBank < 4) {
-                    return ValidationResult.fail("The bank only has " + countInBank +
-                            " " + gem + " tokens. You need at least 4 to take two.");
+                if (countInBank < MIN_GEMS_FOR_TWO_SAME) {
+                    return ValidationResult.fail(String.format(
+                            "The bank only has %d %s tokens. You need at least %d to take two.",
+                            countInBank, gem, MIN_GEMS_FOR_TWO_SAME));
                 }
             }
         }

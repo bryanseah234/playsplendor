@@ -25,7 +25,12 @@ package com.splendor.exception;
  */
 public class InvalidMoveException extends SplendorException {
     
-    /**
+    @Override
+	public String toString() {
+		return "InvalidMoveException []";
+	}
+
+	/**
      * Creates a new InvalidMoveException with the specified message.
      * 
      * @param message Exception message explaining why the move is invalid
@@ -41,6 +46,6 @@ public class InvalidMoveException extends SplendorException {
      * @param args Arguments for the format string
      */
     public InvalidMoveException(final String messageFormat, final Object... args) {
-        super(String.format(messageFormat, args));
+        super(messageFormat, args);
     }
 }

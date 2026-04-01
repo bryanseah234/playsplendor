@@ -133,14 +133,7 @@ public class ClientHandler {
     private void sendWelcomeMessage() {
         sendMessage("Welcome to Splendor Network Game!");
     }
-    
-    /**
-     * Handles client disconnection.
-     */
-    private void handleDisconnect() {
-        GameLogger.info("Client requested disconnect: " + clientId);
-        isConnected = false;
-    }
+
     
     /**
      * Disconnects the client and cleans up resources.

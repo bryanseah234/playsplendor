@@ -6,11 +6,11 @@
  */
 package com.splendor.view;
 
-import com.splendor.model.ComputerPlayer;
 import com.splendor.model.Game;
 import com.splendor.model.MenuOption;
 import com.splendor.model.Move;
 import com.splendor.model.Noble;
+import com.splendor.model.ComputerPlayer;
 import com.splendor.model.Player;
 import java.util.List;
 import java.util.Map;

@@ -50,7 +50,7 @@ public class Game {
             }
             this.boardSnapshot = new BoardSnapshot(game.getBoard());
             this.currentPlayerIndex = game.currentPlayerIndex;
-            this.currentState = new GameState(game.currentState.getPhase());
+            this.currentState = game.currentState;
             this.isFinalRound = game.isFinalRound;
             this.finalRoundPlayerIndex = game.finalRoundPlayerIndex;
             this.recentMoves = new ArrayList<>(game.recentMoves);
@@ -73,11 +73,7 @@ public class Game {
         }
 
         void restore(Player p) {
-            p.setName(name);
-            p.setTokens(tokens);
-            p.setPurchasedCards(purchasedCards);
-            p.setReservedCards(reservedCards);
-            p.setNobles(nobles);
+            p.restoreState(name, tokens, purchasedCards, reservedCards, nobles);
         }
     }
 
@@ -98,13 +94,10 @@ public class Game {
         }
 
         void restore(Board b) {
-            b.setGemBank(gemBank);
-            b.restoreDecks(cardDecks);
-            b.setAvailableCards(availableCards);
-            b.setAvailableNobles(availableNobles);
+            b.restoreState(gemBank, cardDecks, availableCards, availableNobles);
         }
     }
-    
+
     /**
      * Creates a new game with the specified players and configuration.
      * 
@@ -123,6 +116,7 @@ public class Game {
         this.winner = null;
         this.isFinalRound = false;
         this.finalRoundPlayerIndex = -1;
+        // Stack, LIFO
         this.recentMoves = new ArrayDeque<>();
         this.undoHistory = new ArrayDeque<>();
     }
@@ -272,7 +266,7 @@ public class Game {
      * @return true if game is finished, false otherwise
      */
     public boolean isGameFinished() {
-        return currentState.isFinished();
+        return currentState == GameState.FINISHED;
     }
     
     /**
@@ -280,7 +274,7 @@ public class Game {
      * Handles final round logic and game state transitions.
      */
     public void advanceToNextPlayer() {
-        if (currentState.isFinished()) {
+        if (currentState == GameState.FINISHED) {
             return;
         }
 

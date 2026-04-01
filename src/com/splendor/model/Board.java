@@ -5,9 +5,6 @@
  */
 package com.splendor.model;
 
-import com.splendor.config.ConfigKeys;
-import com.splendor.config.IConfigProvider;
-import com.splendor.data.CardLoader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,6 +12,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import com.splendor.config.ConfigKeys;
+import com.splendor.config.IConfigProvider;
+import com.splendor.data.CardLoader;
 
 /**
  * Represents the game board containing all shared resources and cards.
@@ -67,17 +67,6 @@ public class Board {
     public int getGemCount(final Gem gem) {
         return gemBank.getOrDefault(gem, 0);
     }
-
-    /**
-     * Replaces the entire gem bank with the provided map.
-     * Used exclusively by the undo/restore mechanism to reinstate a prior bank state.
-     *
-     * @param gemBank The gem bank snapshot to restore.
-     */
-    public void setGemBank(final Map<Gem, Integer> gemBank) {
-        this.gemBank.clear();
-        this.gemBank.putAll(gemBank);
-    }
     
     
     /**
@@ -87,19 +76,6 @@ public class Board {
      */
     public Map<Integer, List<Card>> getAvailableCards() {
         return Collections.unmodifiableMap(availableCards);
-    }
-
-    /**
-     * Replaces all face-up available cards with the provided tier-to-list map.
-     * Used by the undo/restore mechanism to reset the board face-up state.
-     *
-     * @param availableCards Snapshot map of tier (1–3) to list of face-up cards.
-     */
-    public void setAvailableCards(final Map<Integer, List<Card>> availableCards) {
-        this.availableCards.clear();
-        for (final Map.Entry<Integer, List<Card>> entry : availableCards.entrySet()) {
-            this.availableCards.put(entry.getKey(), new ArrayList<>(entry.getValue()));
-        }
     }
     
     
@@ -131,17 +107,6 @@ public class Board {
      */
     public List<Noble> getAvailableNobles() {
         return Collections.unmodifiableList(availableNobles);
-    }
-
-    /**
-     * Replaces the list of available noble tiles with the provided list.
-     * Used by the undo/restore mechanism to reset the noble state.
-     *
-     * @param availableNobles Snapshot list of noble tiles to restore.
-     */
-    public void setAvailableNobles(final List<Noble> availableNobles) {
-        this.availableNobles.clear();
-        this.availableNobles.addAll(availableNobles);
     }
     
     
@@ -259,19 +224,34 @@ public class Board {
     }
 
     /**
-     * Restores all tier decks from a previously captured snapshot map,
-     * rebuilding the internal LinkedList queues from the snapshot lists.
-     * Used by the undo/restore mechanism.
-     *
-     * @param decks Snapshot map of tier (1–3) to ordered card list.
+     * Restores the board state from a snapshot.
+     * Package-private to restrict access strictly to the model layer's memento mechanism (Game.java).
      */
-    public void restoreDecks(final Map<Integer, List<Card>> decks) {
-        for (final Map.Entry<Integer, List<Card>> entry : decks.entrySet()) {
-            cardDecks.put(entry.getKey(), new LinkedList<>(entry.getValue()));
+    void restoreState(final Map<Gem, Integer> gemBank, final Map<Integer, List<Card>> decks, 
+                      final Map<Integer, List<Card>> availableCards, final List<Noble> availableNobles) {
+        this.gemBank.clear();
+        if (gemBank != null) {
+            this.gemBank.putAll(gemBank);
+        }
+        this.cardDecks.clear();
+        if (decks != null) {
+            for (final Map.Entry<Integer, List<Card>> entry : decks.entrySet()) {
+                this.cardDecks.put(entry.getKey(), new LinkedList<>(entry.getValue()));
+            }
+        }
+        this.availableCards.clear();
+        if (availableCards != null) {
+            for (final Map.Entry<Integer, List<Card>> entry : availableCards.entrySet()) {
+                this.availableCards.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+            }
+        }
+        this.availableNobles.clear();
+        if (availableNobles != null) {
+            this.availableNobles.addAll(availableNobles);
         }
     }
-    
-    
+
+
     /**
      * Removes a noble from the available nobles.
      * 

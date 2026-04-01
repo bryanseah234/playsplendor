@@ -14,18 +14,11 @@ import java.util.Map;
  * Cards provide points, gem discounts, and contribute to noble requirements.
  */
 public class Card {
-    private int id;
-    private int tier;
-    private int points;
-    private Gem bonusGem;
-    private Map<Gem, Integer> cost;
-
-    /**
-     * Creates an empty card with default values.
-     */
-    public Card() {
-        this(0, 0, 0, null, new HashMap<Gem, Integer>());
-    }
+    private final int id;
+    private final int tier;
+    private final int points;
+    private final Gem bonusGem;
+    private final Map<Gem, Integer> cost;
 
     /**
      * Creates a card with the specified properties.
@@ -43,10 +36,10 @@ public class Card {
         this.bonusGem = bonusGem;
         this.cost = cost == null ? new HashMap<Gem, Integer>() : new HashMap<Gem, Integer>(cost);
     }
-    
+
     /**
      * Gets the unique card identifier.
-     * 
+     *
      * @return Card ID
      */
     public int getId() {
@@ -54,17 +47,8 @@ public class Card {
     }
 
     /**
-     * Sets the unique card identifier.
-     *
-     * @param id Card ID
-     */
-    public void setId(final int id) {
-        this.id = id;
-    }
-    
-    /**
      * Gets the card tier (1, 2, or 3).
-     * 
+     *
      * @return Card tier
      */
     public int getTier() {
@@ -72,17 +56,8 @@ public class Card {
     }
 
     /**
-     * Sets the card tier.
-     *
-     * @param tier Card tier
-     */
-    public void setTier(final int tier) {
-        this.tier = tier;
-    }
-    
-    /**
      * Gets the victory points provided by this card.
-     * 
+     *
      * @return Victory points
      */
     public int getPoints() {
@@ -90,17 +65,8 @@ public class Card {
     }
 
     /**
-     * Sets the victory points for this card.
-     *
-     * @param points Victory points
-     */
-    public void setPoints(final int points) {
-        this.points = points;
-    }
-    
-    /**
      * Gets the gem type that this card provides as a discount.
-     * 
+     *
      * @return Bonus gem type
      */
     public Gem getBonusGem() {
@@ -108,32 +74,14 @@ public class Card {
     }
 
     /**
-     * Sets the bonus gem type for this card.
-     *
-     * @param bonusGem Bonus gem type
-     */
-    public void setBonusGem(final Gem bonusGem) {
-        this.bonusGem = bonusGem;
-    }
-    
-    /**
      * Gets the cost to purchase this card.
-     * 
+     *
      * @return Unmodifiable map of required gems and quantities
      */
     public Map<Gem, Integer> getCost() {
         return Collections.unmodifiableMap(cost);
     }
 
-    /**
-     * Sets the cost map for this card.
-     *
-     * @param cost Cost map by gem
-     */
-    public void setCost(final Map<Gem, Integer> cost) {
-        this.cost = cost == null ? new HashMap<Gem, Integer>() : new HashMap<Gem, Integer>(cost);
-    }
-    
     /**
      * Checks if this card provides any victory points.
      * 

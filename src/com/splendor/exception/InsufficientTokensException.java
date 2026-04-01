@@ -40,6 +40,6 @@ public class InsufficientTokensException extends SplendorException {
      * @param args Arguments for the format string
      */
     public InsufficientTokensException(final String messageFormat, final Object... args) {
-        super(String.format(messageFormat, args));
+        super(messageFormat, args);
     }
 }

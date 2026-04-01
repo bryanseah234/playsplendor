@@ -203,10 +203,6 @@ public class ServerSocketHandler implements NetworkMessageHandler {
         return ids;
     }
 
-    public void markGameStarted() {
-        this.gameStarted = true;
-    }
-
     /**
      * Removes a disconnected client. If game is in progress, kills the game for all.
      *
@@ -268,7 +264,7 @@ public class ServerSocketHandler implements NetworkMessageHandler {
      *
      * @param clientId Client identifier
      */
-    public void registerClientQueue(final String clientId) {
+    void registerClientQueue(final String clientId) {
         clientResponseQueues.put(clientId, new LinkedBlockingQueue<>());
     }
 
@@ -277,7 +273,7 @@ public class ServerSocketHandler implements NetworkMessageHandler {
      *
      * @param clientId Client identifier
      */
-    public void unregisterClientQueue(final String clientId) {
+    void unregisterClientQueue(final String clientId) {
         clientResponseQueues.remove(clientId);
     }
 
@@ -287,7 +283,7 @@ public class ServerSocketHandler implements NetworkMessageHandler {
      * @param clientId Client identifier
      * @param message  Message to enqueue
      */
-    public void enqueueClientResponse(final String clientId, final String message) {
+    void enqueueClientResponse(final String clientId, final String message) {
         final LinkedBlockingQueue<String> queue = clientResponseQueues.get(clientId);
         if (queue != null) {
             queue.offer(message);
@@ -303,19 +299,6 @@ public class ServerSocketHandler implements NetworkMessageHandler {
      * @param timeoutMs Maximum wait time in milliseconds
      * @return The next response string, or null on timeout
      */
-    public String pollClientResponse(final String clientId, final long timeoutMs) {
-        final LinkedBlockingQueue<String> queue = clientResponseQueues.get(clientId);
-        if (queue == null) {
-            return null;
-        }
-        try {
-            return queue.poll(timeoutMs, TimeUnit.MILLISECONDS);
-        } catch (final InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return null;
-        }
-    }
-
     /**
      * Blocks until a response is available from the client or the timeout elapses.
      * Implements NetworkMessageHandler interface.
@@ -326,7 +309,16 @@ public class ServerSocketHandler implements NetworkMessageHandler {
      */
     @Override
     public String waitForClientResponse(final String clientId, final int timeoutMs) {
-        return pollClientResponse(clientId, timeoutMs);
+        final LinkedBlockingQueue<String> queue = clientResponseQueues.get(clientId);
+        if (queue == null) {
+            return null;
+        }
+        try {
+            return queue.poll(timeoutMs, TimeUnit.MILLISECONDS);
+        } catch (final InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return null;
+        }
     }
 
     /**
@@ -400,8 +392,18 @@ public class ServerSocketHandler implements NetworkMessageHandler {
     }
     
     /**
+     * Sets the flag indicating whether the game has officially started.
+     * Prevents mid-game disconnections from failing silently.
+     *
+     * @param started true if game has commenced
+     */
+    public void setGameStarted(final boolean started) {
+        this.gameStarted = started;
+    }
+
+    /**
      * Closes a socket safely.
-     * 
+     *
      * @param socket Socket to close
      */
     private void closeSocket(final Socket socket) {
