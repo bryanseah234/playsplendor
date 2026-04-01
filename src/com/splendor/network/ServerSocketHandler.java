@@ -10,7 +10,6 @@ import com.splendor.exception.NetworkException;
 import com.splendor.exception.SplendorException;
 import com.splendor.util.Constants;
 import com.splendor.util.GameLogger;
-import com.splendor.view.NetworkMessageHandler;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;

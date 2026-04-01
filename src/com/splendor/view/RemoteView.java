@@ -6,6 +6,8 @@
 package com.splendor.view;
 
 import com.splendor.model.*;
+import com.splendor.model.validator.MoveValidator;
+import com.splendor.network.NetworkMessageHandler;
 import com.splendor.util.GameLogger;
 import com.splendor.util.GemParser;
 import java.util.HashMap;
@@ -21,6 +23,7 @@ public class RemoteView implements IGameView {
     private final String clientId;
     private final NetworkMessageHandler messageHandler;
     private final GameRenderer renderer;
+    private final MoveValidator moveValidator = new MoveValidator();
 
     /**
      * Creates a new RemoteView for the specified client.
@@ -544,15 +547,20 @@ public class RemoteView implements IGameView {
         return new Move(MoveType.DISCARD_TOKENS, discard);
     }
 
-    /** Sends a concise reserved-card list for the active player. */
+    /** Sends a concise reserved-card list for the active player, including affordability status. */
     private void sendReservedCardDetails(final Player player) {
         send("Your reserved cards:");
         for (final Card card : player.getReservedCards()) {
-            send(String.format("  ID:%d | Pts:%d | Bonus:%s | Cost:%s",
+            final boolean affordable = moveValidator.canPlayerAffordCard(player, card);
+            final String status = affordable
+                    ? Colors.colorize("[CAN BUY]", Colors.GREEN)
+                    : Colors.colorize("[NOT AFFORDABLE]", Colors.RED);
+            send(String.format("  ID:%d | Pts:%d | Bonus:%s | Cost:%s | %s",
                     card.getId(),
                     card.getPoints(),
                     card.getBonusGem() == null ? "-" : card.getBonusGem(),
-                    card.getCost()));
+                    card.getCost(),
+                    status));
         }
     }
 

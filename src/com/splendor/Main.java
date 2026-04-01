@@ -16,7 +16,7 @@ import com.splendor.util.Constants;
 import com.splendor.view.ConsoleView;
 import com.splendor.view.IGameView;
 import com.splendor.view.NetworkGameView;
-import com.splendor.view.NetworkMessageHandler;
+import com.splendor.network.NetworkMessageHandler;
 import com.splendor.view.RemoteView;
 import java.util.ArrayList;
 import java.util.List;
