@@ -344,26 +344,6 @@ public class Game {
     }
     
     /**
-     * Gets a summary of the current game state.
-     * 
-     * @return Map of game state information
-     */
-    public Map<String, Object> getGameStateSummary() {
-        final Map<String, Object> summary = new HashMap<>();
-        
-        summary.put("currentState", currentState);
-        summary.put("currentPlayer", getCurrentPlayer().getName());
-        summary.put("winningPoints", winningPoints);
-        summary.put("isFinalRound", isFinalRound);
-        
-        if (winner != null) {
-            summary.put("winner", winner.getName());
-        }
-        
-        return summary;
-    }
-    
-    /**
      * Returns a string representation of the game state.
      * 
      * @return Game summary

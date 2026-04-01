@@ -83,49 +83,17 @@ public class Card {
     }
 
     /**
-     * Checks if this card provides any victory points.
-     * 
-     * @return true if card provides points, false otherwise
-     */
-    public boolean providesPoints() {
-        return points > 0;
-    }
-    
-    /**
      * Checks if this card provides a gem discount.
-     * 
+     *
      * @return true if card provides a bonus gem, false otherwise
      */
     public boolean providesDiscount() {
         return bonusGem != null;
     }
-    
-    /**
-     * Gets the total number of gems required to purchase this card.
-     * 
-     * @return Total gem cost
-     */
-    public int getTotalCost() {
-        int total = 0;
-        for (final int amount : cost.values()) {
-            total += amount;
-        }
-        return total;
-    }
-    
-    /**
-     * Checks if the card has a specific gem in its cost.
-     * 
-     * @param gem Gem type to check
-     * @return true if card requires the specified gem, false otherwise
-     */
-    public boolean requiresGem(final Gem gem) {
-        return cost.containsKey(gem) && cost.get(gem) > 0;
-    }
-    
+
     /**
      * Returns a string representation of the card.
-     * 
+     *
      * @return Formatted card description
      */
     @Override

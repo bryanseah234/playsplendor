@@ -2,7 +2,6 @@ package com.splendor.controller;
 
 import com.splendor.config.ConfigKeys;
 import com.splendor.config.IConfigProvider;
-import com.splendor.exception.ConfigException;
 import com.splendor.exception.GameStateException;
 import com.splendor.exception.InsufficientTokensException;
 import com.splendor.exception.InvalidMoveException;
@@ -569,69 +568,5 @@ public class GameController {
             return false;
         }
         return input.equalsIgnoreCase("Z") || input.equalsIgnoreCase("UNDO");
-    }
-
-    @Override
-    public String toString() {
-        return "GameController [gameView=" + gameView + ", configProvider=" + configProvider + ", moveValidator="
-                + moveValidator + ", gameRuleValidator=" + gameRuleValidator + ", game=" + game + ", players=" + players
-                + ", getClass()=" + getClass() + ", hashCode()=" + hashCode() + ", performUndo()=" + performUndo()
-                + ", toString()=" + super.toString() + ", getGame()=" + getGame() + ", getPlayers()=" + getPlayers()
-                + "]";
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((gameView == null) ? 0 : gameView.hashCode());
-        result = prime * result + ((configProvider == null) ? 0 : configProvider.hashCode());
-        result = prime * result + ((moveValidator == null) ? 0 : moveValidator.hashCode());
-        result = prime * result + ((gameRuleValidator == null) ? 0 : gameRuleValidator.hashCode());
-        result = prime * result + ((game == null) ? 0 : game.hashCode());
-        result = prime * result + ((players == null) ? 0 : players.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        GameController other = (GameController) obj;
-        if (gameView == null) {
-            if (other.gameView != null)
-                return false;
-        } else if (!gameView.equals(other.gameView))
-            return false;
-        if (configProvider == null) {
-            if (other.configProvider != null)
-                return false;
-        } else if (!configProvider.equals(other.configProvider))
-            return false;
-        if (moveValidator == null) {
-            if (other.moveValidator != null)
-                return false;
-        } else if (!moveValidator.equals(other.moveValidator))
-            return false;
-        if (gameRuleValidator == null) {
-            if (other.gameRuleValidator != null)
-                return false;
-        } else if (!gameRuleValidator.equals(other.gameRuleValidator))
-            return false;
-        if (game == null) {
-            if (other.game != null)
-                return false;
-        } else if (!game.equals(other.game))
-            return false;
-        if (players == null) {
-            if (other.players != null)
-                return false;
-        } else if (!players.equals(other.players))
-            return false;
-        return true;
     }
 }

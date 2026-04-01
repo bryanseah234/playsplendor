@@ -26,9 +26,7 @@ import com.splendor.util.GameLogger;
  * Uses thread-per-client model for concurrent player handling.
  */
 public class ServerSocketHandler implements NetworkMessageHandler {
-    
-    private final int serverPort;
-    private final IConfigProvider configProvider;
+
     private ServerSocket serverSocket;
     private ExecutorService clientExecutor;
     private final List<ClientHandler> connectedClients;
@@ -38,14 +36,9 @@ public class ServerSocketHandler implements NetworkMessageHandler {
     private volatile boolean shutdownInitiated;
     
     /**
-     * Creates a new ServerSocketHandler with the specified port and configuration.
-     * 
-     * @param serverPort Port to listen on
-     * @param configProvider Configuration provider
+     * Creates a new ServerSocketHandler.
      */
-    public ServerSocketHandler(final int serverPort, final IConfigProvider configProvider) {
-        this.serverPort = serverPort;
-        this.configProvider = configProvider;
+    public ServerSocketHandler() {
         this.connectedClients = new CopyOnWriteArrayList<>();
         this.clientResponseQueues = new ConcurrentHashMap<>();
         this.isRunning = false;

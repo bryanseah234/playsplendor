@@ -81,19 +81,6 @@ public class Noble {
     }
 
     /**
-     * Gets the total number of gems required.
-     *
-     * @return Total gem requirement count
-     */
-    public int getTotalRequirementCount() {
-        int total = 0;
-        for (final int amount : requirements.values()) {
-            total += amount;
-        }
-        return total;
-    }
-
-    /**
      * Returns a string representation of the noble.
      *
      * @return Formatted noble description

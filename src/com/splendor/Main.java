@@ -5,10 +5,6 @@
  */
 package com.splendor;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 import com.splendor.config.ConfigValidator;
 import com.splendor.config.FileConfigProvider;
 import com.splendor.config.IConfigProvider;
@@ -21,6 +17,10 @@ import com.splendor.view.ConsoleView;
 import com.splendor.view.IGameView;
 import com.splendor.view.NetworkGameView;
 import com.splendor.view.RemoteView;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Application entry point that handles mode selection and initialization.
@@ -28,10 +28,6 @@ import com.splendor.view.RemoteView;
  */
 public class Main {
     
-    @Override
-	public String toString() {
-		return "Main []";
-	}
 
 	public static final String SERVER_MODE_FLAG = "--server";
     /**
@@ -114,7 +110,7 @@ public class Main {
     private static void startServerMode(final IConfigProvider configProvider) throws SplendorException {
         System.out.println("Starting Splendor in server mode...");
 
-        final ServerSocketHandler serverHandler = new ServerSocketHandler(0, configProvider);
+        final ServerSocketHandler serverHandler = new ServerSocketHandler();
 
         // Accept connections in a background thread
         final Thread acceptThread = new Thread(() -> {

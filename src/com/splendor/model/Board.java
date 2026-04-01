@@ -59,19 +59,6 @@ public class Board {
     }
 
     /**
-     * Replaces the full gem bank state.
-     * Primarily used by deterministic tests and state restoration helpers.
-     *
-     * @param newGemBank Replacement gem bank values
-     */
-    public void setGemBank(final Map<Gem, Integer> newGemBank) {
-        gemBank.clear();
-        if (newGemBank != null) {
-            gemBank.putAll(newGemBank);
-        }
-    }
-    
-    /**
      * Gets the count of a specific gem in the bank.
      * 
      * @param gem Gem type to check
@@ -80,7 +67,6 @@ public class Board {
     public int getGemCount(final Gem gem) {
         return gemBank.getOrDefault(gem, 0);
     }
-    
     
     /**
      * Gets the available cards for each tier.
@@ -91,23 +77,6 @@ public class Board {
         return Collections.unmodifiableMap(availableCards);
     }
 
-    /**
-     * Replaces the visible cards map for all tiers.
-     * Primarily used by deterministic tests and board-state restoration.
-     *
-     * @param newAvailableCards Replacement tier-to-visible-cards mapping
-     */
-    public void setAvailableCards(final Map<Integer, List<Card>> newAvailableCards) {
-        availableCards.clear();
-        if (newAvailableCards != null) {
-            for (final Map.Entry<Integer, List<Card>> entry : newAvailableCards.entrySet()) {
-                availableCards.put(entry.getKey(), new ArrayList<>(entry.getValue()));
-            }
-        }
-        ensureTierSlotsPresent();
-    }
-    
-    
     /**
      * Gets the available cards for a specific tier.
      * 
@@ -138,20 +107,6 @@ public class Board {
         return Collections.unmodifiableList(availableNobles);
     }
 
-    /**
-     * Replaces the available nobles list.
-     * Primarily used by deterministic tests and board-state restoration.
-     *
-     * @param nobles Replacement nobles list
-     */
-    public void setAvailableNobles(final List<Noble> nobles) {
-        availableNobles.clear();
-        if (nobles != null) {
-            availableNobles.addAll(nobles);
-        }
-    }
-    
-    
     /**
      * Removes gems from the bank.
      * 
@@ -238,19 +193,6 @@ public class Board {
     }
     
     /**
-     * Adds a card to the available cards for a tier.
-     * 
-     * @param tier Tier to add card to
-     * @param card Card to add
-     */
-    public void addAvailableCard(final int tier, final Card card) {
-        final List<Card> tierCards = availableCards.get(tier);
-        if (tierCards != null) {
-            tierCards.add(card);
-        }
-    }
-
-    /**
      * Returns a shallow copy of the internal card decks as a tier-to-list map.
      * Each list contains the remaining face-down cards in queue order.
      * Used by the snapshot mechanism to capture deck state for undo.
@@ -285,12 +227,26 @@ public class Board {
      * Restores the board state from a snapshot.
      * Package-private to restrict access strictly to the model layer's memento mechanism (Game.java).
      */
-    void restoreState(final Map<Gem, Integer> gemBank, final Map<Integer, List<Card>> decks, 
+    void restoreState(final Map<Gem, Integer> gemBank, final Map<Integer, List<Card>> decks,
                       final Map<Integer, List<Card>> availableCards, final List<Noble> availableNobles) {
-        setGemBank(gemBank);
+        this.gemBank.clear();
+        if (gemBank != null) {
+            this.gemBank.putAll(gemBank);
+        }
         restoreDecks(decks);
-        setAvailableCards(availableCards);
-        setAvailableNobles(availableNobles);
+
+        this.availableCards.clear();
+        if (availableCards != null) {
+            for (final Map.Entry<Integer, List<Card>> entry : availableCards.entrySet()) {
+                this.availableCards.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+            }
+        }
+        ensureTierSlotsPresent();
+
+        this.availableNobles.clear();
+        if (availableNobles != null) {
+            this.availableNobles.addAll(availableNobles);
+        }
     }
 
     private void ensureTierSlotsPresent() {
