@@ -19,7 +19,6 @@ import java.util.concurrent.TimeUnit;
 import com.splendor.config.IConfigProvider;
 import com.splendor.exception.NetworkException;
 import com.splendor.exception.SplendorException;
-import com.splendor.util.Constants;
 import com.splendor.util.GameLogger;
 
 /**
@@ -71,7 +70,7 @@ public class ServerSocketHandler implements NetworkMessageHandler {
             serverSocket.setReuseAddress(true);
             
             // Initialize thread pool for client handling
-            clientExecutor = Executors.newFixedThreadPool(Constants.MAX_CLIENT_CONNECTIONS);
+            clientExecutor = Executors.newFixedThreadPool(4);
             
             isRunning = true;
 
@@ -137,7 +136,7 @@ public class ServerSocketHandler implements NetworkMessageHandler {
             GameLogger.info("New client connected from: " + clientAddress);
             
             // Check connection limit
-            if (connectedClients.size() >= Constants.MAX_CLIENT_CONNECTIONS) {
+            if (connectedClients.size() >= 4) {
                 GameLogger.warn("Connection limit reached. Rejecting connection from: " + clientAddress);
                 closeSocket(clientSocket);
                 return;
