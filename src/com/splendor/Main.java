@@ -130,7 +130,7 @@ public class Main {
 
             @Override
             public String waitForClientResponse(final String id, final int timeoutMs) {
-                return serverHandler.pollClientResponse(id, timeoutMs);
+                return serverHandler.waitForClientResponse(id, timeoutMs);
             }
         };
 
@@ -189,7 +189,7 @@ public class Main {
         final GameController gameController = new GameController(gameView, configProvider);
 
         gameController.initializeGame();
-        serverHandler.markGameStarted();
+        serverHandler.setGameStarted(true);
         gameController.startGame();
     }
 

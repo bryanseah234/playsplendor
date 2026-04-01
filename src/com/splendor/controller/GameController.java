@@ -78,7 +78,7 @@ public class GameController {
         this.configProvider = Objects.requireNonNull(configProvider, "Config provider cannot be null");
         this.moveValidator = new MoveValidator(configProvider);
         this.gameRuleValidator = new GameRuleValidator(); // validates game-start constraints only
-        this.players = new ArrayList<>();               // populated by createPlayers()
+        this.players = new ArrayList<>();                 // populated by createPlayers()
     }
 
     /**
@@ -469,7 +469,7 @@ public class GameController {
         for (int i = 1; i <= playerCount; i++) {
             final String playerName = gameView.promptForPlayerName(i, playerCount); // 1-indexed seat number
 
-            // Dispatch on the name: "bot" substring → ComputerPlayer, otherwise → human Player.
+            // Dispatch on the name: "bot" substring → AI-controlled Player, otherwise → human Player.
             if (playerName.toLowerCase().contains("bot")) {
                 players.add(new ComputerPlayer(playerName));
             } else {

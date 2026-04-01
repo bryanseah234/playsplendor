@@ -41,6 +41,6 @@ public class InvalidPlayerActionException extends SplendorException {
      * @param args Arguments for the format string
      */
     public InvalidPlayerActionException(final String messageFormat, final Object... args) {
-        super(String.format(messageFormat, args));
+        super(messageFormat, args);
     }
 }

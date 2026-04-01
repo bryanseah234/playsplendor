@@ -1,44 +1,45 @@
 /**
  * Central loader for card and noble data in the Splendor game.
  * Provides a unified interface for loading game data from various sources.
- * 
+ *
  */
 package com.splendor.data;
 
-import com.splendor.exception.ConfigException;
 import com.splendor.config.FileConfigProvider;
 import com.splendor.config.IConfigProvider;
+import com.splendor.exception.ConfigException;
 import com.splendor.exception.DataLoadException;
 import com.splendor.model.Card;
 import com.splendor.model.Noble;
 import java.util.List;
 
 /**
- * Facade for loading card and noble data into the game.
- * Provides a simple static API for CSV-based card and noble loading with fail-fast validation.
+ * Facade for loading card and noble data into the game. Provides a simple
+ * static API for CSV-based card and noble loading with fail-fast validation.
  *
  * @see CsvCardParser
  */
 public final class CardLoader {
 
+
     private static volatile CsvCardParser instance;
     private static volatile IConfigProvider configProvider;
     private static final Object LOCK = new Object();
-    
+
     /**
-     * Private constructor to prevent instantiation.
-     * This class is not meant to be instantiated.
+     * Private constructor to prevent instantiation. This class is not meant to
+     * be instantiated.
      */
     private CardLoader() {
         throw new AssertionError("Cannot instantiate utility class");
     }
-    
+
     /**
      * Loads all cards for a specific tier.
-     * 
-     * This method uses the configured CsvCardParser to load cards.
-     * If no provider is configured, it creates a default CSV parser.
-     * 
+     *
+     * This method uses the configured CsvCardParser to load cards. If no
+     * provider is configured, it creates a default CSV parser.
+     *
      * @param tier The card tier to load (1, 2, or 3)
      * @return List of cards for the specified tier, shuffled
      * @throws RuntimeException if data cannot be loaded
@@ -51,13 +52,13 @@ public final class CardLoader {
             throw new RuntimeException("Failed to load cards for tier " + tier, e);
         }
     }
-    
+
     /**
      * Loads all available noble tiles.
-     * 
-     * This method uses the configured CsvCardParser to load nobles.
-     * If no provider is configured, it creates a default CSV parser.
-     * 
+     *
+     * This method uses the configured CsvCardParser to load nobles. If no
+     * provider is configured, it creates a default CSV parser.
+     *
      * @return List of noble tiles, shuffled
      * @throws RuntimeException if data cannot be loaded
      */
@@ -69,75 +70,22 @@ public final class CardLoader {
             throw new RuntimeException("Failed to load nobles", e);
         }
     }
-    
-    /**
-     * Validates the card data configuration and loads a sample.
-     * 
-     * This method performs a fail-fast validation of the data source
-     * to ensure the game can start successfully. It should be called
-     * during application initialization.
-     * 
-     * @throws ConfigException if validation fails
-     */
-    public static void validateConfiguration() throws ConfigException {
-        try {
-            final CsvCardParser provider = getProvider();
-            // Try loading one card from each tier to validate
-            for (int tier = 1; tier <= 3; tier++) {
-                final List<Card> cards = provider.loadCards(tier);
-                if (cards.isEmpty()) {
-                    throw new ConfigException("No cards found for tier " + tier);
-                }
-            }
-            // Try loading nobles
-            final List<Noble> nobles = provider.loadNobles();
-            if (nobles.isEmpty()) {
-                throw new ConfigException("No nobles found in data source");
-            }
-        } catch (final DataLoadException e) {
-            throw new ConfigException("Failed to validate card data: " + e.getMessage(), e);
-        } catch (final RuntimeException e) {
-            if (e.getCause() instanceof ConfigException) {
-                throw (ConfigException) e.getCause();
-            }
-            throw new ConfigException("Card data validation failed: " + e.getMessage(), e);
-        }
-    }
-    
-    /**
-     * Gets the current configuration provider.
-     * 
-     * @return The configuration provider instance
-     */
-    public static IConfigProvider getConfigProvider() {
-        if (configProvider == null) {
-            synchronized (LOCK) {
-                if (configProvider == null) {
-                    configProvider = new FileConfigProvider();
-                    try {
-                        configProvider.loadConfiguration();
-                    } catch (final ConfigException e) {
-                        throw new RuntimeException("Failed to load configuration", e);
-                    }
-                }
-            }
-        }
-        return configProvider;
-    }
-    
+
     /**
      * Gets or creates the card data provider.
-     * 
-     * If a custom provider has been set, it is returned. Otherwise,
-     * a default CSV parser is created and returned.
-     * 
+     *
+     * If a custom provider has been set, it is returned. Otherwise, a default
+     * CSV parser is created and returned.
+     *
      * @return The card data provider to use
      * @throws DataLoadException if provider initialization fails
      */
     private static CsvCardParser getProvider() throws DataLoadException {
-        if (instance == null) {
+        CsvCardParser localInstance = instance;
+        if (localInstance == null) {
             synchronized (LOCK) {
-                if (instance == null) {
+                localInstance = instance;
+                if (localInstance == null) {
                     // Validate configuration first (fail-fast)
                     if (configProvider == null) {
                         configProvider = new FileConfigProvider();
@@ -145,15 +93,15 @@ public final class CardLoader {
                             configProvider.loadConfiguration();
                         } catch (final ConfigException e) {
                             throw new DataLoadException(
-                                "CRITICAL: Failed to initialize game configuration!", e);
+                                    "CRITICAL: Failed to initialize game configuration!", e);
                         }
                     }
-                    
+
                     // Create default CSV parser
-                    instance = new CsvCardParser(configProvider);
+                    instance = localInstance = new CsvCardParser(configProvider);
                 }
             }
         }
-        return instance;
+        return localInstance;
     }
 }

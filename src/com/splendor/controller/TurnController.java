@@ -5,12 +5,18 @@
  */
 package com.splendor.controller;
 
-import com.splendor.exception.*;
-import com.splendor.model.*;
-import com.splendor.view.IGameView;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import com.splendor.exception.InsufficientTokensException;
+import com.splendor.exception.InvalidMoveException;
+import com.splendor.exception.SplendorException;
+import com.splendor.model.Board;
+import com.splendor.model.Card;
+import com.splendor.model.Game;
+import com.splendor.model.Gem;
+import com.splendor.model.Move;
+import com.splendor.model.Player;
+import com.splendor.view.IGameView;
 
 /**
  * Manages turn execution and move processing.

@@ -33,7 +33,6 @@ public class FileConfigProvider implements IConfigProvider {
     public void loadConfiguration() throws ConfigException {
         try (InputStream inputStream = new FileInputStream(CONFIG_FILE_PATH)) {
             properties.load(inputStream);
-            validateRequiredProperties();
             
         } catch (FileNotFoundException e) {
             throw new ConfigException("Configuration file not found: " + CONFIG_FILE_PATH, e);
@@ -74,31 +73,5 @@ public class FileConfigProvider implements IConfigProvider {
     @Override
     public boolean hasProperty(final String key) {
         return properties.containsKey(key);
-    }
-    
-    /**
-     * Validates that all required configuration properties are present.
-     * 
-     * @throws ConfigException if required properties are missing
-     */
-    private void validateRequiredProperties() throws ConfigException {
-        final String[] requiredProperties = {
-            ConfigKeys.WINNING_POINTS,
-            ConfigKeys.MAX_TOKENS,
-            ConfigKeys.SETUP_2P_GEMS,
-            ConfigKeys.SETUP_3P_GEMS,
-            ConfigKeys.SETUP_4P_GEMS,
-            ConfigKeys.SETUP_NOBLES_ADD,
-            ConfigKeys.FILE_CARDS_DATA,
-            ConfigKeys.TIER1_CARD_COUNT,
-            ConfigKeys.TIER2_CARD_COUNT,
-            ConfigKeys.TIER3_CARD_COUNT
-        };
-        
-        for (final String property : requiredProperties) {
-            if (!hasProperty(property)) {
-                throw new ConfigException("Missing required configuration property: " + property);
-            }
-        }
     }
 }

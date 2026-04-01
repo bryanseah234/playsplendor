@@ -1,7 +1,6 @@
 /**
  * Represents a player in the Splendor game.
  * Tracks player state including tokens, cards, reserved cards, and score.
- * 
  */
 package com.splendor.model;
 
@@ -24,19 +23,12 @@ public class Player {
     private List<Noble> nobles;
 
     /**
-     * Creates a player with default values.
-     */
-    public Player() {
-        this("Player", new HashMap<Gem, Integer>(), new ArrayList<Card>(), new ArrayList<Card>(), new ArrayList<Noble>());
-    }
-
-    /**
      * Creates a player with the specified name.
      *
      * @param name Player name
      */
     public Player(final String name) {
-        this(name, new HashMap<Gem, Integer>(), new ArrayList<Card>(), new ArrayList<Card>(), new ArrayList<Noble>());
+        this(name, null, null, null, null);
     }
 
     /**
@@ -64,28 +56,14 @@ public class Player {
             tokens.putIfAbsent(gem, 0);
         }
     }
-    
-    /**
-     * Gets the player's name.
-     * 
-     * @return Player name
-     */
+
     public String getName() {
         return name;
     }
 
     /**
-     * Sets the player's name.
-     *
-     * @param name Player name
-     */
-    public void setName(final String name) {
-        this.name = name == null ? "" : name;
-    }
-    
-    /**
      * Gets the player's token inventory.
-     * 
+     *
      * @return Unmodifiable map of gems and quantities
      */
     public Map<Gem, Integer> getTokens() {
@@ -93,31 +71,18 @@ public class Player {
     }
 
     /**
-     * Sets the player's token inventory.
-     *
-     * @param tokens Token inventory
-     */
-    public void setTokens(final Map<Gem, Integer> tokens) {
-        this.tokens.clear();
-        if (tokens != null) {
-            this.tokens.putAll(tokens);
-        }
-        ensureTokenEntries();
-    }
-    
-    /**
      * Gets the count of a specific gem type.
-     * 
+     *
      * @param gem Gem type to check
      * @return Quantity of the specified gem
      */
     public int getTokenCount(final Gem gem) {
         return tokens.getOrDefault(gem, 0);
     }
-    
+
     /**
      * Gets the total number of tokens the player possesses.
-     * 
+     *
      * @return Total token count
      */
     public int getTotalTokenCount() {
@@ -127,10 +92,10 @@ public class Player {
         }
         return total;
     }
-    
+
     /**
      * Gets the player's purchased cards.
-     * 
+     *
      * @return Unmodifiable list of purchased cards
      */
     public List<Card> getPurchasedCards() {
@@ -138,20 +103,8 @@ public class Player {
     }
 
     /**
-     * Sets the player's purchased cards list.
-     *
-     * @param cards Purchased cards list
-     */
-    public void setPurchasedCards(final List<Card> cards) {
-        this.purchasedCards.clear();
-        if (cards != null) {
-            this.purchasedCards.addAll(cards);
-        }
-    }
-    
-    /**
      * Gets the player's reserved cards.
-     * 
+     *
      * @return Unmodifiable list of reserved cards
      */
     public List<Card> getReservedCards() {
@@ -159,20 +112,8 @@ public class Player {
     }
 
     /**
-     * Sets the player's reserved cards list.
-     *
-     * @param cards Reserved cards list
-     */
-    public void setReservedCards(final List<Card> cards) {
-        this.reservedCards.clear();
-        if (cards != null) {
-            this.reservedCards.addAll(cards);
-        }
-    }
-    
-    /**
      * Gets the nobles awarded to the player.
-     * 
+     *
      * @return Unmodifiable list of nobles
      */
     public List<Noble> getNobles() {
@@ -180,20 +121,8 @@ public class Player {
     }
 
     /**
-     * Sets the player's nobles list.
-     *
-     * @param nobles Nobles list
-     */
-    public void setNobles(final List<Noble> nobles) {
-        this.nobles.clear();
-        if (nobles != null) {
-            this.nobles.addAll(nobles);
-        }
-    }
-    
-    /**
      * Gets the player's total victory points.
-     * 
+     *
      * @return Total points from cards and nobles
      */
     public int getTotalPoints() {
@@ -207,32 +136,32 @@ public class Player {
         }
         return cardPoints + noblePoints;
     }
-    
+
     /**
      * Gets the gem discounts provided by purchased cards.
-     * 
+     *
      * @return Map of gem types and discount counts
      */
     public Map<Gem, Integer> getGemDiscounts() {
         final Map<Gem, Integer> discounts = new HashMap<>();
-        
+
         for (final Gem gem : Gem.values()) {
             discounts.put(gem, 0);
         }
-        
+
         for (final Card card : purchasedCards) {
             if (card.providesDiscount()) {
                 final Gem bonusGem = card.getBonusGem();
                 discounts.put(bonusGem, discounts.get(bonusGem) + 1);
             }
         }
-        
+
         return discounts;
     }
-    
+
     /**
      * Adds tokens to the player's inventory.
-     * 
+     *
      * @param gem Gem type to add
      * @param quantity Number of tokens to add
      */
@@ -240,13 +169,13 @@ public class Player {
         final int existing = tokens.getOrDefault(gem, 0);
         tokens.put(gem, existing + quantity);
     }
-    
+
     /**
      * Removes tokens from the player's inventory.
-     * 
+     *
      * @param gem Gem type to remove
      * @param quantity Number of tokens to remove
-     * @throws IllegalArgumentException if player doesn't have enough tokens
+     * @throws IllegalArgumentException if player doesn't have enough tokens    
      */
     public void removeTokens(final Gem gem, final int quantity) {
         final int currentCount = tokens.getOrDefault(gem, 0);
@@ -255,44 +184,44 @@ public class Player {
         }
         tokens.put(gem, currentCount - quantity);
     }
-    
+
     /**
      * Adds a purchased card to the player's tableau.
-     * 
+     *
      * @param card Card to add
      */
     public void addPurchasedCard(final Card card) {
         purchasedCards.add(card);
     }
-    
+
     /**
      * Adds a card to the player's reserved cards.
-     * 
+     *
      * @param card Card to reserve
      */
     public void addReservedCard(final Card card) {
         reservedCards.add(card);
     }
-    
+
     /**
      * Removes a card from reserved cards (when purchased).
-     * 
+     *
      * @param card Card to remove from reserved
      * @return true if card was found and removed, false otherwise
      */
     public boolean removeReservedCard(final Card card) {
         return reservedCards.remove(card);
     }
-    
+
     /**
      * Adds a noble to the player's collection.
-     * 
+     *
      * @param noble Noble to add
      */
     public void addNoble(final Noble noble) {
         nobles.add(noble);
     }
-    
+
     /**
      * Checks if the player can reserve more cards.
      *
@@ -302,10 +231,24 @@ public class Player {
     public boolean canReserveCard(final int maxReserved) {
         return reservedCards.size() < maxReserved;
     }
-    
+
+    /**
+     * Package-private method to restore full player state for undo operations.
+     * Keeps state encapsulated from outside the model package.
+     */
+    void restoreState(final String restoredName, final Map<Gem, Integer> restoredTokens,
+                      final List<Card> restoredPurchased, final List<Card> restoredReserved,
+                      final List<Noble> restoredNobles) {
+        this.name = restoredName;
+        this.tokens = restoredTokens == null ? new HashMap<Gem, Integer>() : new HashMap<Gem, Integer>(restoredTokens);
+        this.purchasedCards = restoredPurchased == null ? new ArrayList<Card>() : new ArrayList<Card>(restoredPurchased);
+        this.reservedCards = restoredReserved == null ? new ArrayList<Card>() : new ArrayList<Card>(restoredReserved);
+        this.nobles = restoredNobles == null ? new ArrayList<Noble>() : new ArrayList<Noble>(restoredNobles);
+    }
+
     /**
      * Returns a string representation of the player.
-     * 
+     *
      * @return Player summary
      */
     @Override

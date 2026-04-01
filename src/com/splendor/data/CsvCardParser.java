@@ -192,14 +192,9 @@ public class CsvCardParser {
         
         try {
             switch (type) {
-                case CSV_TYPE_CARD:
-                    allCards.add(parseCardRow(parts, lineNumber));
-                    break;
-                case CSV_TYPE_NOBLE:
-                    allNobles.add(parseNobleRow(parts, lineNumber));
-                    break;
-                default:
-                    throw new DataLoadException(String.format(
+                case CSV_TYPE_CARD -> allCards.add(parseCardRow(parts, lineNumber));
+                case CSV_TYPE_NOBLE -> allNobles.add(parseNobleRow(parts, lineNumber));
+                default -> throw new DataLoadException(String.format(
                         "Line %d: Unknown type '%s'. Expected CARD or NOBLE.", lineNumber, type));
             }
         } catch (final NumberFormatException e) {

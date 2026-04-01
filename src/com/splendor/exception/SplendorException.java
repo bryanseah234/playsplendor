@@ -32,6 +32,11 @@ package com.splendor.exception;
  */
 public class SplendorException extends Exception {
     
+    @Override
+    public String toString() {
+        return "SplendorException []";
+    }
+
     /**
      * Creates a new SplendorException with the specified message.
      * 
@@ -39,6 +44,16 @@ public class SplendorException extends Exception {
      */
     public SplendorException(final String message) {
         super(message);
+    }
+    
+    /**
+     * Creates a new SplendorException with a formatted message.
+     * 
+     * @param messageFormat String format pattern
+     * @param args Formatting arguments
+     */
+    public SplendorException(final String messageFormat, final Object... args) {
+        super(String.format(messageFormat, args));
     }
     
     /**

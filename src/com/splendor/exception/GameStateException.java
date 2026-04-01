@@ -28,7 +28,12 @@ package com.splendor.exception;
  */
 public class GameStateException extends SplendorException {
     
-    /**
+    @Override
+	public String toString() {
+		return "GameStateException []";
+	}
+
+	/**
      * Creates a new GameStateException with the specified message.
      * 
      * @param message Exception message explaining the state violation
@@ -44,6 +49,6 @@ public class GameStateException extends SplendorException {
      * @param args Arguments for the format string
      */
     public GameStateException(final String messageFormat, final Object... args) {
-        super(String.format(messageFormat, args));
+        super(messageFormat, args);
     }
 }

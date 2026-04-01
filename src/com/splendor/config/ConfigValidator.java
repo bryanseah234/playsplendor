@@ -32,7 +32,7 @@ import java.util.Map;
  */
 public final class ConfigValidator {
     
-    private static final String FILE_PROPERTY = "file.cards.data";
+private static final String FILE_PROPERTY = "file.cards.data";
     private static final String WINNING_POINTS_PROPERTY = "game.points.win";
     private static final String MAX_TOKENS_PROPERTY = "game.max_tokens";
     /**
@@ -81,6 +81,19 @@ public final class ConfigValidator {
             throw new ConfigException(String.format(
                 "Invalid max tokens value: %d. Must be between 3 and 20.", maxTokens));
         }
+
+        // Validate setup properties
+        final String[] setupKeys = {
+            ConfigKeys.SETUP_2P_GEMS,
+            ConfigKeys.SETUP_3P_GEMS,
+            ConfigKeys.SETUP_4P_GEMS,
+            ConfigKeys.SETUP_NOBLES_ADD
+        };
+        for (final String key : setupKeys) {
+            if (!configProvider.hasProperty(key)) {
+                throw new ConfigException("Missing required configuration property: " + key);
+            }
+        }
         
         // Validate tier card counts
         for (int tier = 1; tier <= 3; tier++) {
@@ -88,7 +101,7 @@ public final class ConfigValidator {
                 case 1 -> ConfigKeys.TIER1_CARD_COUNT;
                 case 2 -> ConfigKeys.TIER2_CARD_COUNT;
                 case 3 -> ConfigKeys.TIER3_CARD_COUNT;
-                default -> throw new IllegalStateException("Unexpected tier: " + tier);
+                default -> throw new IllegalStateException("Unexpected tier: " + tier); // Unreachable due to loop bounds
             };
             final int count = configProvider.getIntProperty(key, -1);
             if (count < 4 || count > 100) {
@@ -258,4 +271,5 @@ public final class ConfigValidator {
             throw new ConfigException(context + " cannot be GOLD");
         }
     }
+
 }
