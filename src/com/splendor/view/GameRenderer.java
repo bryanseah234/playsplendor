@@ -434,7 +434,7 @@ public class GameRenderer {
         lines.add(colorBorder("┌" + "─".repeat(bw + 2) + "┐", Colors.WHITE));
         for (final Gem gem : GEM_ORDER) {
             final int count = board.getGemCount(gem);
-            String label = gemLabel(gem) + ":" + count;
+            String label = gem.getShortCode() + ":" + count;
             String colText = Colors.colorize(label, Colors.getGemColor(gem));
             lines.add(frameLine(colText, Colors.WHITE, bw));
         }
@@ -533,7 +533,7 @@ public class GameRenderer {
         for (final Gem gem : GEM_ORDER) {
             final int count = counts.getOrDefault(gem, 0);
             if (includeZero || count > 0) {
-                parts.add(Colors.colorize(gemLabel(gem) + count, Colors.getGemColor(gem)));
+                parts.add(Colors.colorize(gem.getShortCode() + count, Colors.getGemColor(gem)));
             }
         }
         return parts.isEmpty() ? "None" : String.join(" ", parts);
@@ -552,7 +552,7 @@ public class GameRenderer {
         for (final Gem gem : GEM_ORDER) {
             final int count = requirements.getOrDefault(gem, 0);
             if (count > 0) {
-                tokens.add(Colors.colorize(gemLabel(gem) + count, Colors.getGemColor(gem)));
+                tokens.add(Colors.colorize(gem.getShortCode() + count, Colors.getGemColor(gem)));
             }
         }
         if (tokens.isEmpty()) {
@@ -576,15 +576,6 @@ public class GameRenderer {
         return lines;
     }
 
-    /**
-     * Delegates to CardRenderer.gemLabel for consistent gem abbreviations across renderers.
-     *
-     * @param gem The gem to abbreviate.
-     * @return Single- or two-character abbreviation.
-     */
-    private String gemLabel(final Gem gem) {
-        return CardRenderer.gemLabel(gem);
-    }
 
     /**
      * Builds a single bordered content line padded to exactly contentWidth visible chars.

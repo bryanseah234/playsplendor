@@ -76,7 +76,7 @@ public final class MoveFormatter {
             if (count > 0) {
                 if (sb.length() > 0) sb.append(" ");
                 // Coloured single-letter label followed by the quantity digit.
-                final String gemAbbreviation = gemLabel(gem);
+                final String gemAbbreviation = gem.getShortCode();
                 final String gemColor = Colors.getGemColor(gem);
                 final String colorizedLabel = Colors.colorize(gemAbbreviation, gemColor);
                 sb.append(colorizedLabel).append(count);

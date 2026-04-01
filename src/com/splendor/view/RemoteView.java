@@ -10,7 +10,6 @@ import com.splendor.model.*;
 import com.splendor.model.validator.MoveValidator;
 import com.splendor.network.NetworkMessageHandler;
 import com.splendor.util.GameLogger;
-import com.splendor.util.GemParser;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -200,7 +199,7 @@ public class RemoteView implements IGameView {
                 }
                 final List<Gem> gems = response == null || response.trim().isEmpty()
                         ? List.of()
-                        : GemParser.parseGemSelection(response);
+                        : Gem.parseGemSelection(response);
                 if (gems.size() != 3) throw new IllegalArgumentException("Enter exactly 3 colors.");
                 final Map<Gem, Integer> selected = new HashMap<>();
                 for (final Gem g : gems) {
@@ -218,7 +217,7 @@ public class RemoteView implements IGameView {
                 }
                 final List<Gem> gems = response == null || response.trim().isEmpty()
                         ? List.of()
-                        : GemParser.parseGemSelection(response);
+                        : Gem.parseGemSelection(response);
                 if (gems.size() != 1) throw new IllegalArgumentException("Enter exactly 1 color.");
                 final Map<Gem, Integer> selected = new HashMap<>();
                 selected.put(gems.get(0), 2);
@@ -368,7 +367,7 @@ public class RemoteView implements IGameView {
         if (parsedAsPairs) {
             for (int i = 0; i < tokens.length; i += 2) {
                 try {
-                    final Gem gem = GemParser.parseGem(tokens[i]);
+                    final Gem gem = Gem.parseGem(tokens[i]);
                     final int quantity = Integer.parseInt(tokens[i + 1]);
                     if (quantity <= 0) {
                         parsedAsPairs = false;
@@ -388,7 +387,7 @@ public class RemoteView implements IGameView {
         }
 
         // Backward compatibility for plain gem lists (e.g., "R B").
-        final List<Gem> gems = GemParser.parseGemSelection(payload);
+        final List<Gem> gems = Gem.parseGemSelection(payload);
         for (final Gem gem : gems) {
             gemMap.put(gem, gemMap.getOrDefault(gem, 0) + 1);
         }

@@ -130,7 +130,7 @@ public final class MenuBuilder {
         if (gems.isEmpty()) return "None";
         final StringJoiner joiner = new StringJoiner(" ");
         for (final Gem gem : gems) {
-            joiner.add(Colors.colorize(gemLabel(gem), Colors.getGemColor(gem)));
+            joiner.add(Colors.colorize(gem.getShortCode(), Colors.getGemColor(gem)));
         }
         return joiner.toString();
     }

@@ -8,7 +8,7 @@ package com.splendor.view;
 import com.splendor.config.IConfigProvider;
 import com.splendor.model.*;
 import com.splendor.model.validator.MoveValidator;
-import com.splendor.util.GemParser;
+
 import com.splendor.util.InputResolver;
 import java.util.*;
 
@@ -184,7 +184,7 @@ public class ConsoleView implements IGameView {
                 if (parts.length != 2)
                     throw new IllegalArgumentException("Invalid format.");
 
-                Gem gem = GemParser.parseGem(parts[0]);
+                Gem gem = Gem.parseGem(parts[0]);
                 int qty = Integer.parseInt(parts[1]);
 
                 if (qty <= 0)
@@ -295,7 +295,7 @@ public class ConsoleView implements IGameView {
         if (input.equalsIgnoreCase("Z") || input.equalsIgnoreCase("UNDO")) {
             throw new IllegalArgumentException("BACK_TO_MENU");
         }
-        final List<Gem> parsed = GemParser.parseGemSelection(input);
+        final List<Gem> parsed = Gem.parseGemSelection(input);
         if (parsed.size() != 3) {
             throw new IllegalArgumentException("Please enter exactly 3 colors");
         }
@@ -323,7 +323,7 @@ public class ConsoleView implements IGameView {
         if (input.equalsIgnoreCase("Z") || input.equalsIgnoreCase("UNDO")) {
             throw new IllegalArgumentException("BACK_TO_MENU");
         }
-        final List<Gem> parsed = GemParser.parseGemSelection(input);
+        final List<Gem> parsed = Gem.parseGemSelection(input);
         if (parsed.size() != 1) {
             throw new IllegalArgumentException("Please enter exactly 1 color");
         }
@@ -427,7 +427,7 @@ public class ConsoleView implements IGameView {
      *
      * @param player The player whose reserved cards are displayed.
      */
-    private void displayReservedCardDetails(final Player player) {
+   private void displayReservedCardDetails(final Player player) {
         final List<Card> reserved = player.getReservedCards();
         if (reserved.isEmpty()) {
             System.out.println("  (none)");
@@ -436,14 +436,18 @@ public class ConsoleView implements IGameView {
         for (final Card card : reserved) {
             final boolean affordable = moveValidator.canPlayerAffordCard(player, card);
             final String status = affordable
-                    ? Colors.colorize("[CAN BUY]", Colors.GREEN)
+                    ? Colors.colorize("[CAN BUY]", Colors.GREEN) // Keep this if you still have basic Colors.GREEN
                     : Colors.colorize("[NOT AFFORDABLE]", Colors.RED);
+            
+            // UPDATE 1: Use the new Gem methods for the bonus gem
             final String bonus = card.getBonusGem() == null ? "-"
-                    : Colors.colorize(gemShort(card.getBonusGem()), Colors.getGemColor(card.getBonusGem()));
+                    : Colors.colorize(card.getBonusGem().getShortCode(), Colors.getGemColor(card.getBonusGem()));
+            
             final List<String> costParts = new ArrayList<>();
             for (final Map.Entry<Gem, Integer> entry : card.getCost().entrySet()) {
                 if (entry.getValue() > 0) {
-                    costParts.add(Colors.colorize(gemShort(entry.getKey()), Colors.getGemColor(entry.getKey()))
+                    // UPDATE 2: Use the new Gem methods for the cost gems
+                    costParts.add(Colors.colorize(entry.getKey().getShortCode(), Colors.getGemColor(entry.getKey()))
                             + ":" + entry.getValue());
                 }
             }
@@ -451,34 +455,5 @@ public class ConsoleView implements IGameView {
             System.out.printf("  ID:%d | Pts:%d | Bonus:%s | Cost: %s %s%n",
                     card.getId(), card.getPoints(), bonus, costDisplay, status);
         }
-    }
-
-    /**
-     * Returns a short one- or two-character label for a gem color used in compact
-     * card display lines (W, B, G, R, K, Au). Mirrors GemParser's format table.
-     *
-     * @param gem The gem type to abbreviate.
-     * @return Short label string, or "" for unknown gem types.
-     */
-    private String gemShort(final Gem gem) {
-        if (gem == Gem.WHITE) {
-            return "W";
-        }
-        if (gem == Gem.BLUE) {
-            return "B";
-        }
-        if (gem == Gem.GREEN) {
-            return "G";
-        }
-        if (gem == Gem.RED) {
-            return "R";
-        }
-        if (gem == Gem.BLACK) {
-            return "K";
-        }
-        if (gem == Gem.GOLD) {
-            return "Au";
-        }
-        return "";
     }
 }
