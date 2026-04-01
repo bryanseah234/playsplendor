@@ -74,18 +74,7 @@ public class GameRenderer {
     }
 
     /**
-     * Prints the decorative SPLENDOR title header to stdout.
-     */
-    public void displayHeader() {
-        System.out.println(
-                Colors.colorize("╔══════════════════════════════════════════════════════════════╗", Colors.GOLD));
-        System.out.println(
-                Colors.colorize("║                           SPLENDOR                           ║", Colors.GOLD));
-        System.out.println(
-                Colors.colorize("╚══════════════════════════════════════════════════════════════╝", Colors.GOLD));
-    }
 
-    /**
      * Clears the terminal and prints the full rendered game state.
      *
      * @param game The current game whose state should be displayed.
