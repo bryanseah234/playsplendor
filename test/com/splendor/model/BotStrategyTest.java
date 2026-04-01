@@ -38,6 +38,7 @@ class BotStrategyTest {
                 board.drawBlindCard(tier);
             }
         }
+        board.setAvailableCards(Map.of(1, List.of(), 2, List.of(), 3, List.of()));
         
         // Make sure taking gems is not an option
         Map<Gem, Integer> allGems = new HashMap<>(board.getGemBank());

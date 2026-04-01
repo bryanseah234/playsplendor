@@ -221,6 +221,24 @@ public class ServerSocketHandler implements NetworkMessageHandler {
     }
 
     /**
+     * Checks whether a specific client ID is still connected.
+     *
+     * @param clientId Client identifier
+     * @return true if the client is currently connected
+     */
+    public boolean isClientConnected(final String clientId) {
+        if (clientId == null) {
+            return false;
+        }
+        for (final ClientHandler client : connectedClients) {
+            if (clientId.equals(client.getClientId()) && client.isConnected()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Removes a disconnected client. If game is in progress, kills the game for all.
      *
      * @param clientHandler Client handler to remove

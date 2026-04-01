@@ -10,12 +10,16 @@ function resolveMmdcCommand() {
     if (direct.status === 0) {
         return 'mmdc';
     }
+    const npxLocal = spawnSync('npx', ['--no-install', 'mmdc', '--version'], { stdio: 'ignore', shell: true });
+    if (npxLocal.status === 0) {
+        return 'npx --no-install mmdc';
+    }
     return null;
 }
 
 const mmdcCmd = resolveMmdcCommand();
 if (!mmdcCmd) {
-    console.warn('[render_diagrams] Mermaid CLI not found. Install it with: npm i -g @mermaid-js/mermaid-cli');
+    console.warn('[render_diagrams] Mermaid CLI not found. Install project dependencies with: npm install');
     console.warn('[render_diagrams] Skipping diagram rendering and keeping existing PNG outputs.');
     process.exit(0);
 }

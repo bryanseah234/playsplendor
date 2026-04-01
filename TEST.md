@@ -4,6 +4,15 @@ This document outlines comprehensive test cases to verify the robustness and cor
 
 ## Quick Start
 
+Before executing tests/pipeline checks, bootstrap dependencies once:
+
+```bash
+./setup_requirements.sh    # Unix/macOS
+.\setup_requirements.bat   # Windows
+```
+
+> Lobby instructions are in `README.md` under **Network Multiplayer → "4. Network Lobby Setup Walkthrough (Recommended)"**.
+
 ## Automation-Ready Commands (Single Source of Truth)
 
 The executable commands previously embedded in this document have been standardized into scripts under `test/`:
@@ -15,6 +24,7 @@ The executable commands previously embedded in this document have been standardi
 - `test/network/network_three_terminal_test.sh` — canonical 3-terminal network procedure (1 server + 2 clients minimum).
 
 For network validation, **do not** use a single terminal: the supported baseline is 3 concurrent terminals (server + two players).
+Network integration tests are now **opt-in** and are excluded from default test pipeline runs.
 
 ```bash
 # Run automated tests
@@ -23,6 +33,10 @@ test\run_tests.bat       # Windows
 
 # Run specific test category
 test/run_tests.sh --category com.splendor.test.model
+
+# Include network integration tests explicitly (opt-in)
+test/run_tests.sh --include-network
+test\run_tests.bat --include-network
 ```
 
 ## Automated Test Coverage

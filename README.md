@@ -8,6 +8,10 @@ A modular, strictly MVC-based implementation of the board game Splendor in Java.
 ## Quick Start
 
 ```bash
+# One-time environment bootstrap (installs/downloads required tooling artifacts)
+./setup_requirements.sh    # Unix/macOS
+.\setup_requirements.bat   # Windows
+
 # Build the project
 ./compile.sh    # Unix/macOS
 .\compile.bat   # Windows
@@ -19,6 +23,8 @@ A modular, strictly MVC-based implementation of the board game Splendor in Java.
 # Run in server mode (network multiplayer)
 java -cp classes com.splendor.Main --server
 ```
+
+> Looking for multiplayer lobby setup steps? Jump to **Network Multiplayer → "4. Network Lobby Setup Walkthrough (Recommended)"**.
 
 ## Table of Contents
 - [Features](#features)
@@ -134,7 +140,29 @@ Include "bot" in a player's name (e.g., "Bot1", "AngryBot") to make them a compu
 ### Prerequisites
 
 - Java JDK 17 or higher
-- Maven (optional, for dependency management)
+- Node.js + npm (for Mermaid diagram rendering used by docs pipeline)
+- Graphviz (`dot`) for PlantUML PNG rendering
+- Python 3 + pip (validation/automation helper environment)
+
+### Environment Bootstrap (Recommended)
+
+Run the setup script once before running tests or CI-style docs checks:
+
+**Windows:**
+```batch
+.\setup_requirements.bat
+```
+
+**Unix/macOS:**
+```bash
+./setup_requirements.sh
+```
+
+What it verifies/installs:
+- Validates Java/Node/Python/Graphviz executables.
+- Installs npm dependencies (including Mermaid CLI) if needed.
+- Downloads `lib/junit-platform-console-standalone-1.10.2.jar` if missing.
+- Downloads `docs/diagrams/plantuml.jar` if missing.
 
 ### Building
 
@@ -254,8 +282,9 @@ Game settings in `src/resources/config.properties`:
 ### Running Tests
 
 Prerequisites:
-- Java 17+ installed
-- JUnit console JAR present at `lib/junit-platform-console-standalone-1.10.2.jar`
+- Run `setup_requirements.(sh|bat)` to ensure test/pipeline dependencies are present.
+- By default, `test/run_tests.(sh|bat)` excludes `com.splendor.network` integration tests to avoid blocking automated/local pipelines.
+- To include network tests explicitly, pass `--include-network`.
 
 **Windows:**
 ```batch
