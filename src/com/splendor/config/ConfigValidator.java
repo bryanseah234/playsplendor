@@ -70,29 +70,37 @@ private static final String FILE_PROPERTY = "file.cards.data";
             throws ConfigException {
         // Validate winning points
         final int winningPoints = configProvider.getIntProperty(WINNING_POINTS_PROPERTY, -1);
-        if (winningPoints < 5 || winningPoints > 50) {
+        if (winningPoints < 5 || winningPoints > 20) {
             throw new ConfigException(String.format(
-                "Invalid winning points value: %d. Must be between 5 and 50.", winningPoints));
-        }
-        
-        // Validate max tokens
-        final int maxTokens = configProvider.getIntProperty(MAX_TOKENS_PROPERTY, -1);
-        if (maxTokens < 3 || maxTokens > 20) {
-            throw new ConfigException(String.format(
-                "Invalid max tokens value: %d. Must be between 3 and 20.", maxTokens));
+                "Invalid winning points value: %d. Must be between 5 and 20.", winningPoints));
         }
 
-        // Validate setup properties
+        // Validate max tokens
+        final int maxTokens = configProvider.getIntProperty(MAX_TOKENS_PROPERTY, -1);
+        if (maxTokens < 5 || maxTokens > 20) {
+            throw new ConfigException(String.format(
+                "Invalid max tokens value: %d. Must be between 5 and 20.", maxTokens));
+        }
+
+        // Validate gem setup per player count (4-7 gems per tier)
         final String[] setupKeys = {
             ConfigKeys.SETUP_2P_GEMS,
             ConfigKeys.SETUP_3P_GEMS,
-            ConfigKeys.SETUP_4P_GEMS,
-            ConfigKeys.SETUP_NOBLES_ADD
+            ConfigKeys.SETUP_4P_GEMS
         };
         for (final String key : setupKeys) {
-            if (!configProvider.hasProperty(key)) {
-                throw new ConfigException("Missing required configuration property: " + key);
+            final int gems = configProvider.getIntProperty(key, -1);
+            if (gems < 4 || gems > 7) {
+                throw new ConfigException(String.format(
+                    "Invalid gem count for %s: %d. Must be between 4 and 7.", key, gems));
             }
+        }
+
+        // Validate max reserved cards (1-5)
+        final int maxReserved = configProvider.getIntProperty(ConfigKeys.MAX_RESERVED_CARDS, -1);
+        if (maxReserved < 1 || maxReserved > 5) {
+            throw new ConfigException(String.format(
+                "Invalid max reserved cards: %d. Must be between 1 and 5.", maxReserved));
         }
         
         // Validate tier card counts

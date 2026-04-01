@@ -19,7 +19,6 @@ public final class ConfigKeys {
     public static final String SETUP_2P_GEMS = "game.setup.2p.gems";
     public static final String SETUP_3P_GEMS = "game.setup.3p.gems";
     public static final String SETUP_4P_GEMS = "game.setup.4p.gems";
-    public static final String SETUP_NOBLES_ADD = "game.setup.nobles.add";
     
     // Game rule configuration
     public static final String MAX_RESERVED_CARDS = "game.max_reserved_cards";

@@ -634,34 +634,4 @@ public class GameController {
             return false;
         return true;
     }
-
-    public GameController(IGameView gameView, IConfigProvider configProvider, MoveValidator moveValidator,
-            GameRuleValidator gameRuleValidator, Game game, List<Player> players) {
-        this.gameView = gameView;
-        this.configProvider = configProvider;
-        this.moveValidator = moveValidator;
-        this.gameRuleValidator = gameRuleValidator;
-        this.game = game;
-        this.players = players;
-    }
-
-    public void loadConfiguration() throws ConfigException {
-        configProvider.loadConfiguration();
-    }
-
-    public String getStringProperty(String key, String defaultValue) {
-        return configProvider.getStringProperty(key, defaultValue);
-    }
-
-    public int getIntProperty(String key, int defaultValue) {
-        return configProvider.getIntProperty(key, defaultValue);
-    }
-
-    public boolean getBooleanProperty(String key, boolean defaultValue) {
-        return configProvider.getBooleanProperty(key, defaultValue);
-    }
-
-    public boolean hasProperty(String key) {
-        return configProvider.hasProperty(key);
-    }
 }

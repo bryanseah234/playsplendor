@@ -5,11 +5,6 @@
  */
 package com.splendor.network;
 
-import com.splendor.config.IConfigProvider;
-import com.splendor.exception.NetworkException;
-import com.splendor.exception.SplendorException;
-import com.splendor.util.Constants;
-import com.splendor.util.GameLogger;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -21,6 +16,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import com.splendor.config.IConfigProvider;
+import com.splendor.exception.NetworkException;
+import com.splendor.exception.SplendorException;
+import com.splendor.util.Constants;
+import com.splendor.util.GameLogger;
 
 /**
  * Network server that handles remote client connections.
@@ -71,8 +71,7 @@ public class ServerSocketHandler implements NetworkMessageHandler {
             serverSocket.setReuseAddress(true);
             
             // Initialize thread pool for client handling
-            final int maxClients = configProvider.getIntProperty("network.max_clients", Constants.MAX_CLIENT_CONNECTIONS);
-            clientExecutor = Executors.newFixedThreadPool(maxClients);
+            clientExecutor = Executors.newFixedThreadPool(Constants.MAX_CLIENT_CONNECTIONS);
             
             isRunning = true;
 

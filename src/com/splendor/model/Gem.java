@@ -35,36 +35,49 @@ package com.splendor.model;
  * @see Noble#requirementsMet(Map) For gem requirements of noble tiles
  */
 public enum Gem {
-    RED("Red"),
-    GREEN("Green"), 
-    BLUE("Blue"),
-    WHITE("White"),
-    BLACK("Black"),
-    GOLD("Gold");
-    
+    RED("Red", "R"),
+    GREEN("Green", "G"),
+    BLUE("Blue", "B"),
+    WHITE("White", "W"),
+    BLACK("Black", "K"),
+    GOLD("Gold", "Au");
+
     private final String displayName;
-    
+    private final String label;
+
     /**
-     * Creates a new Gem with the specified display name.
-     * 
+     * Creates a new Gem with the specified display name and abbreviation label.
+     *
      * @param displayName Human-readable name for the gem
+     * @param label Single or two-character abbreviation used in UI display
      */
-    Gem(final String displayName) {
+    Gem(final String displayName, final String label) {
         this.displayName = displayName;
+        this.label = label;
     }
-    
+
     /**
      * Gets the display name of the gem.
-     * 
+     *
      * @return Human-readable gem name
      */
     public String getDisplayName() {
         return displayName;
     }
-    
+
+    /**
+     * Gets the single or two-character label for the gem.
+     * Used for compact gem token display in the UI.
+     *
+     * @return Abbreviation: "R", "G", "B", "W", "K", or "Au"
+     */
+    public String label() {
+        return label;
+    }
+
     /**
      * Returns a string representation of the gem.
-     * 
+     *
      * @return Display name of the gem
      */
     @Override

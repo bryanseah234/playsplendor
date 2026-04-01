@@ -358,7 +358,7 @@ public class Board {
      */
     private void initializeNobles() {
         List<Noble> allNobles = CardLoader.loadNobles();
-        int nobleCount = maxPlayers + config.getIntProperty(ConfigKeys.SETUP_NOBLES_ADD, 1);
+        int nobleCount = maxPlayers + 1;
         // Take the first N nobles
         if (allNobles.size() > nobleCount) {
             availableNobles.addAll(allNobles.subList(0, nobleCount));
