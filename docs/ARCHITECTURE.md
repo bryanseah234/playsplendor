@@ -27,7 +27,7 @@
 
 This project follows a strict **MVC (Model-View-Controller)** architecture:
 
-``![ALL Diagram 1](docs/diagrams/ALL_diagram_1.png)``
+``![ALL Diagram 1](diagrams/ALL_diagram_1.png)``
 
 **Six Main Portions:**
 1. **Domain** - Game entities and state
@@ -186,7 +186,7 @@ This project follows a strict **MVC (Model-View-Controller)** architecture:
 
 Core game entities and their relationships:
 
-``![ALL Diagram 2](docs/diagrams/ALL_diagram_2.png)``
+``![ALL Diagram 2](diagrams/ALL_diagram_2.png)``
 
 ---
 
@@ -194,7 +194,7 @@ Core game entities and their relationships:
 
 Game flow orchestration:
 
-``![ALL Diagram 3](docs/diagrams/ALL_diagram_3.png)``
+``![ALL Diagram 3](diagrams/ALL_diagram_3.png)``
 
 ---
 
@@ -202,7 +202,7 @@ Game flow orchestration:
 
 Rule enforcement:
 
-``![ALL Diagram 4](docs/diagrams/ALL_diagram_4.png)``
+``![ALL Diagram 4](diagrams/ALL_diagram_4.png)``
 
 ---
 
@@ -210,7 +210,7 @@ Rule enforcement:
 
 Online multiplayer infrastructure:
 
-``![ALL Diagram 5](docs/diagrams/ALL_diagram_5.png)``
+``![ALL Diagram 5](diagrams/ALL_diagram_5.png)``
 
 ---
 
@@ -218,7 +218,7 @@ Online multiplayer infrastructure:
 
 Display and interaction:
 
-``![ALL Diagram 6](docs/diagrams/ALL_diagram_6.png)``
+``![ALL Diagram 6](diagrams/ALL_diagram_6.png)``
 
 ---
 
@@ -226,7 +226,7 @@ Display and interaction:
 
 Exception hierarchy:
 
-``![ALL Diagram 7](docs/diagrams/ALL_diagram_7.png)``
+``![ALL Diagram 7](diagrams/ALL_diagram_7.png)``
 
 ---
 

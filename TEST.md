@@ -4,6 +4,18 @@ This document outlines comprehensive test cases to verify the robustness and cor
 
 ## Quick Start
 
+## Automation-Ready Commands (Single Source of Truth)
+
+The executable commands previously embedded in this document have been standardized into scripts under `test/`:
+
+- `test/run_tests.sh` / `test/run_tests.bat` — compile + run JUnit suites.
+- `test/ci/generate_javadoc.sh` — regenerate `docs/javadoc` using native `javadoc`.
+- `test/ci/verify_javadoc_index.js` — verify every top-level class/interface/enum/record appears in `allclasses-index.html` and has a non-empty description.
+- `test/ci/docs_guard.sh` — docs guardrail: dead-link check + inline-mermaid ban + Javadoc index verification.
+- `test/network/network_three_terminal_test.sh` — canonical 3-terminal network procedure (1 server + 2 clients minimum).
+
+For network validation, **do not** use a single terminal: the supported baseline is 3 concurrent terminals (server + two players).
+
 ```bash
 # Run automated tests
 test/run_tests.sh        # Unix/macOS
