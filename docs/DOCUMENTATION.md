@@ -114,6 +114,29 @@ public boolean purchaseCard(Player player, Card card) throws InsufficientFundsEx
 
 ## 🔄 Automated Documentation Workflow
 
+### Change Lifecycle (What happens when classes are added/edited/removed)
+Run this sequence whenever Java code changes:
+
+1. Regenerate diagrams from external sources:
+   - `node render_diagrams.js`
+2. Regenerate Javadoc:
+   - `bash test/ci/generate_javadoc.sh`
+3. Verify class index completeness/descriptions:
+   - `node test/ci/verify_javadoc_index.js`
+4. Run repository docs guard (links + lifecycle checks):
+   - `bash test/ci/docs_guard.sh`
+5. (Optional explicit diagram check):
+   - `python test/ci/verify_diagram_assets.py`
+
+If any step fails, fix sources first (JavaDoc comments, diagram source, or links), then rerun the sequence.
+
+### Binary PR limitation (important)
+If your PR tool does not support binary files (PNG/JAR), do **not** include regenerated binaries in that PR.
+Instead:
+- Commit text/source changes first (`.java`, `.md`, `.mmd`, scripts/workflows).
+- Run diagram/Javadoc generation in CI or a follow-up artifact-producing pipeline.
+- Keep diagram source in `diagrams/src/` as source of truth.
+
 ### Verification Steps
 After documentation generation:
 1. **Check Javadoc Quality:** No broken links, all public methods/parameters documented.

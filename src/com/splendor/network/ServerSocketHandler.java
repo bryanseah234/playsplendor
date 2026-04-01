@@ -38,6 +38,7 @@ public class ServerSocketHandler implements NetworkMessageHandler {
     private final ConcurrentHashMap<String, LinkedBlockingQueue<String>> clientResponseQueues;
     private volatile CountDownLatch clientReadyLatch;
     private volatile boolean gameStarted;
+    private volatile boolean shutdownInitiated;
     
     /**
      * Creates a new ServerSocketHandler with the specified port and configuration.
@@ -53,6 +54,7 @@ public class ServerSocketHandler implements NetworkMessageHandler {
         this.clientReadyLatch = null;
         this.isRunning = false;
         this.gameStarted = false;
+        this.shutdownInitiated = false;
     }
     
     /**
@@ -155,12 +157,15 @@ public class ServerSocketHandler implements NetworkMessageHandler {
             // Handle client in separate thread
             clientExecutor.submit(() -> {
                 try {
-                    clientHandler.handleClient();
-                } catch (final NetworkException e) {
-                    GameLogger.error("Error handling client: " + clientAddress, e);
-                } finally {
-                    removeClient(clientHandler);
+                clientHandler.handleClient();
+            } catch (final NetworkException e) {
+                if (!shutdownInitiated) {
+                    GameLogger.error("Connection error for client " + clientAddress
+                            + ". This player will be disconnected.", e);
                 }
+            } finally {
+                removeClient(clientHandler);
+            }
             });
             
         } catch (final Exception e) {
@@ -214,14 +219,16 @@ public class ServerSocketHandler implements NetworkMessageHandler {
      */
     private void removeClient(final ClientHandler clientHandler) {
         connectedClients.remove(clientHandler);
+        unregisterClientQueue(clientHandler.getClientId());
         GameLogger.info("Client disconnected. Active connections: " + connectedClients.size());
-        if (gameStarted) {
-            GameLogger.info("Player disconnected mid-game. Terminating game for all players.");
-            broadcastToAllClients("A player has disconnected. Game is over.");
-            // Graceful shutdown - notify all clients and stop accepting new connections
+        if (gameStarted && !shutdownInitiated) {
+            shutdownInitiated = true;
+            final String disconnectedMessage =
+                    "Game disconnected - a player has left, terminating game for all participants.";
+            GameLogger.warn(disconnectedMessage);
+            System.out.println(disconnectedMessage);
+            broadcastToAllClients(disconnectedMessage);
             stopServer();
-            // Throw a runtime exception to propagate to Main which can handle cleanup
-            throw new RuntimeException("Player disconnected mid-game. Server terminated.");
         }
     }
     
@@ -250,6 +257,12 @@ public class ServerSocketHandler implements NetworkMessageHandler {
      */
     @Override
     public void sendToClient(final String clientId, final String message) {
+        if (clientId == null || message == null) {
+            return;
+        }
+        if (shutdownInitiated || !isRunning) {
+            return;
+        }
         for (final ClientHandler client : connectedClients) {
             if (client.getClientId().equals(clientId)) {
                 try {
@@ -260,7 +273,9 @@ public class ServerSocketHandler implements NetworkMessageHandler {
                 return;
             }
         }
-        GameLogger.warn("Client not found: " + clientId);
+        if (!shutdownInitiated) {
+            GameLogger.debug("Client no longer available for message delivery: " + clientId);
+        }
     }
     
     /**
@@ -291,8 +306,8 @@ public class ServerSocketHandler implements NetworkMessageHandler {
         final LinkedBlockingQueue<String> queue = clientResponseQueues.get(clientId);
         if (queue != null) {
             queue.offer(message);
-        } else {
-            GameLogger.warn("No response queue found for client: " + clientId);
+        } else if (!shutdownInitiated) {
+            GameLogger.debug("Dropping response for disconnected client: " + clientId);
         }
     }
 
@@ -333,8 +348,12 @@ public class ServerSocketHandler implements NetworkMessageHandler {
      * Stops the server and cleans up resources.
      */
     public void stopServer() {
+        if (shutdownInitiated && !isRunning) {
+            return;
+        }
         GameLogger.info("Stopping server...");
         isRunning = false;
+        shutdownInitiated = true;
         
         // Close server socket
         if (serverSocket != null && !serverSocket.isClosed()) {
@@ -358,7 +377,17 @@ public class ServerSocketHandler implements NetworkMessageHandler {
         // Shutdown thread pool
         if (clientExecutor != null && !clientExecutor.isShutdown()) {
             clientExecutor.shutdown();
+            try {
+                if (!clientExecutor.awaitTermination(2, TimeUnit.SECONDS)) {
+                    clientExecutor.shutdownNow();
+                }
+            } catch (final InterruptedException e) {
+                Thread.currentThread().interrupt();
+                clientExecutor.shutdownNow();
+            }
         }
+
+        clientResponseQueues.clear();
         
         GameLogger.info("Server stopped");
     }
