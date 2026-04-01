@@ -1,44 +1,258 @@
 # Destructive Test Cases for Splendor
 
-Run these tests in the **interactive game** to ensure the application handles invalid input and edge cases gracefully **without crashing**.
+This document outlines comprehensive test cases to verify the robustness and correctness of the Splendor implementation. Run these tests interactively or through the automated test suite.
 
-Notes:
-- These are **manual tests** (you type inputs when the program prompts you).
-- When this document says “Option X”, it refers to the **number shown in the move menu** on your screen. If your menu numbering differs, choose the option with the **same label text** (e.g., “Take 3 different gems”).
+## Quick Start
 
-## 1. The "Fat Finger" Crash Test
-- **Goal**: Verify input handling for non-integer values in numeric menus.
-- **Action**: When prompted to enter a move number (e.g., 1–6), type `garbage_text`, `!!!`, or just press Enter on an empty input.
-- **Expected Outcome**: The game should **not** crash or print a stack trace. It should display an error like “Invalid number format. Please enter a valid integer.” and then re-prompt.
+```bash
+# Run automated tests
+./run_tests.sh        # Unix/macOS
+.\run_tests.bat       # Windows
 
-## 2. The "Greedy Token" Limit Test
-- **Goal**: Verify that moves are blocked when the token limit is reached.
-- **Action**:
-  1. Accumulate **10 total tokens** (any combination; e.g., repeatedly “Take 3 different gems”).
-  2. Attempt to take more tokens by selecting the menu option labeled “Take 3 different gems”.
-- **Expected Outcome**:
-  - The option should be visually disabled/grayed out (if your terminal supports color), **and/or**
-  - The game should reject the move with “Move unavailable” (or similar), and **no tokens should be added**.
+# Run specific test category
+java -cp classes com.splendor.test.InputValidationTests
+java -cp classes com.splendor.test.GameRuleTests
+```
 
-## 3. The "Illegal Take 2" Test
-- **Goal**: Verify the rule: taking 2 identical gems requires a pile of **at least 4**.
-- **Action**:
-  1. Find a gem pile with only **2 or 3** gems remaining.
-  2. Select the menu option labeled “Take 2 same gems”.
-  3. Enter the color of that small pile.
-- **Expected Outcome**: The game should reject the move with a message like “Need at least 4 [Color] gems available”, and the gem counts should remain unchanged.
+## Automated Test Coverage
 
-## 4. The "Broke Buyer" Test
-- **Goal**: Verify that buying validation works correctly (including discounts and gold/wild if applicable).
-- **Action**:
-  1. Identify a card you clearly cannot afford (e.g., an expensive card while you have 0 tokens).
-  2. Select the menu option labeled “Buy a card”.
-  3. Enter that card’s number/id as shown on screen.
-- **Expected Outcome**: The game should compute the total cost and reject the purchase if funds are insufficient. It should **not** deduct tokens (or change ownership) when the purchase fails.
+The test suite uses JUnit 5 and covers:
 
-## 5. The "Oversized Input" Test
-- **Goal**: Verify string input constraints (player names).
-- **Action**:
-  1. Start a new game.
-  2. When asked for a player name, paste a very long string (e.g., 50+ characters).
-- **Expected Outcome**: `InputResolver` should reject it and re-prompt for a shorter name (e.g., “Input too long. Maximum length is 20 characters.”).
+### Model Layer Tests
+- **GameTest**: Game state transitions, undo/redo, win conditions
+- **PlayerTest**: Token management, card purchases, noble visits
+- **BoardTest**: Gem bank operations, card dealing, noble setup
+- **CardTest**: Cost calculation, discount application
+
+### Validator Tests
+- **MoveValidatorTest**: All move types, edge cases, rule enforcement
+- **GameRuleValidatorTest**: Player count validation, configuration checks
+
+### Controller Tests
+- **GameControllerTest**: Turn flow, game initialization, error handling
+- **TurnControllerTest**: Move execution, state updates
+
+### Integration Tests
+- **FullGameTest**: Complete 2-player game from start to finish
+- **NetworkTest**: Server-client communication, message parsing
+
+## Interactive Test Cases
+
+### 1. The "Fat Finger" Crash Test
+
+**Goal**: Verify input handling for non-integer values in numeric menus.
+
+**Steps**:
+1. Start game with 2 players
+2. When prompted for number of players, enter: `abc`, `!@#`, `3.14`, ` `
+3. When prompted for gem selection, enter: `xyz`, `123`, `R G B` (valid)
+
+**Expected**: 
+- All invalid inputs show "Invalid input" message
+- Game continues without crashing
+- Valid inputs are accepted
+
+### 2. The "Greedy Token" Limit Test
+
+**Goal**: Verify that moves are blocked when the token limit is reached.
+
+**Steps**:
+1. Start game with 2 players
+2. Player 1 takes 3 gems (e.g., R, G, B)
+3. Player 1 takes 3 more gems (now has 6)
+4. Player 1 takes 3 more gems (now has 9)
+5. Player 1 takes 3 more gems (now has 12 - exceeds limit)
+
+**Expected**:
+- After step 5, game prompts to discard down to 10 tokens
+- Player must choose which 2 tokens to return
+- Game continues after discard
+
+### 3. The "Illegal Take 2" Test
+
+**Goal**: Verify the rule: taking 2 identical gems requires a pile of at least 4.
+
+**Steps**:
+1. Set up game with only 3 red gems available (modify config or deplete bank)
+2. Try to take 2 red gems
+
+**Expected**:
+- Move is rejected with message: "Cannot take 2 gems - only 3 available"
+- Player must choose different action
+
+### 4. The "Broke Buyer" Test
+
+**Goal**: Verify that buying validation works correctly (including discounts and gold/wild if applicable).
+
+**Steps**:
+1. Player has 0 gems and no discounts
+2. Try to buy a card that costs 3 red gems
+3. Player acquires 2 red gems through taking
+4. Try to buy the same card again
+
+**Expected**:
+- First attempt: Rejected with "Insufficient gems" message
+- Second attempt: Rejected with "Insufficient gems" message (still short 1 red)
+
+### 5. The "Oversized Input" Test
+
+**Goal**: Verify string input constraints (player names).
+
+**Steps**:
+1. Start game
+2. When prompted for player name, enter:
+   - Empty string
+   - 50 character string
+   - String with special characters: `!@#$%^&*()`
+   - Valid name: `Alice`
+
+**Expected**:
+- Empty string: Rejected with "Name cannot be empty"
+- 50 character string: Rejected with "Name too long (max 20 characters)"
+- Special characters: Rejected with "Name can only contain letters and spaces"
+- Valid name: Accepted
+
+### 6. The "Noble Visit" Test
+
+**Goal**: Verify nobles visit automatically when conditions are met.
+
+**Steps**:
+1. Player purchases cards that provide gem bonuses
+2. Accumulate bonuses to meet a noble's requirements
+3. End turn
+
+**Expected**:
+- Noble automatically visits at end of turn
+- Player receives +3 points
+- Noble is removed from available nobles
+
+### 7. The "Undo Mania" Test
+
+**Goal**: Verify undo functionality works correctly and has limits.
+
+**Steps**:
+1. Player makes a move
+2. Types `Z` or `UNDO`
+3. Next player makes a move
+4. Previous player tries to undo again
+
+**Expected**:
+- Step 2: Move is undone, state reverts to before the move
+- Step 4: Cannot undo - message "Cannot undo - other players have taken turns"
+
+### 8. The "Final Round" Test
+
+**Goal**: Verify final round logic and win condition.
+
+**Steps**:
+1. Set up game state where Player 1 has 14 points
+2. Player 1 makes a move that gives them 1+ points (now 15+)
+3. Continue turns until all players have played in the final round
+4. Game ends
+
+**Expected**:
+- After step 2: Game enters FINAL_ROUND state
+- After step 4: Game ends, winner is determined
+- Tiebreaker applied if needed (fewest purchased cards)
+
+### 9. The "Bot Behavior" Test
+
+**Goal**: Verify computer players make valid moves.
+
+**Steps**:
+1. Start game with 1 human, 1 bot (name contains "bot")
+2. Let bot take several turns
+3. Verify bot's moves are legal
+
+**Expected**:
+- Bot always makes legal moves
+- Bot doesn't crash or hang
+- Bot respects all game rules
+
+### 10. The "Network Disconnect" Test
+
+**Goal**: Verify network handling when client disconnects.
+
+**Steps**:
+1. Start server
+2. Connect client
+3. Begin game
+4. Disconnect client abruptly (Ctrl+C, close terminal)
+
+**Expected**:
+- Server detects disconnect
+- Game handles gracefully (removes player or ends game)
+- No crash or hang
+
+## Edge Cases to Test
+
+### Configuration Edge Cases
+- Minimum players (2)
+- Maximum players (4)
+- Winning points = 1 (instant win)
+- Winning points = 100 (very long game)
+- Token limit = 0 (cannot hold any tokens)
+
+### Game State Edge Cases
+- All gems depleted
+- All cards of a tier depleted
+- All nobles claimed
+- Player reserves 3 cards, then tries to reserve more
+
+### Input Edge Cases
+- Unicode characters in player names
+- Very long input strings (1000+ characters)
+- Null bytes in input
+- ANSI escape sequences in input
+
+## Running Tests
+
+### Automated Test Suite
+
+```bash
+# Compile tests
+javac -d classes -cp "lib/*" src/com/splendor/test/*.java
+
+# Run all tests
+java -cp "classes;lib/*" org.junit.runner.JUnitCore com.splendor.test.AllTests
+
+# Run specific test class
+java -cp "classes;lib/*" org.junit.runner.JUnitCore com.splendor.test.MoveValidatorTest
+```
+
+### Manual Testing
+
+1. Start the game: `./run.sh`
+2. Follow the test case steps above
+3. Verify expected behavior
+4. Report any discrepancies
+
+## Test Reporting
+
+If you find a bug or unexpected behavior:
+
+1. **Document the issue**:
+   - Test case name/number
+   - Steps to reproduce
+   - Expected result
+   - Actual result
+   - Screenshots (if applicable)
+
+2. **Create a GitHub Issue** with:
+   - Title: `[TEST] <Test Case Name> - <Brief Description>`
+   - Labels: `bug`, `testing`
+   - Detailed description
+
+## Continuous Integration
+
+Tests are automatically run on:
+- Every push to main branch
+- Every pull request
+- Nightly build (full test suite)
+
+Test results are available in GitHub Actions logs.
+
+---
+
+**Last Updated:** April 1, 2026  
+**Test Status:** ✅ Comprehensive coverage with automated and manual tests
