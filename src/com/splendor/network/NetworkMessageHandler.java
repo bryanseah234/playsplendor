@@ -1,9 +1,9 @@
+package com.splendor.network;
+
 /**
  * Abstraction over the network transport used by remote views.
  * Allows RemoteView to depend on an interface instead of socket implementation details.
  */
-package com.splendor.network;
-
 public interface NetworkMessageHandler {
 
     /**

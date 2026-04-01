@@ -1,3 +1,8 @@
+package com.splendor.model;
+
+import com.splendor.model.validator.MoveValidator;
+import java.util.*;
+
 /**
  * Stateless AI strategy for CPU-controlled players.
  *
@@ -14,11 +19,6 @@
  *
  * All public methods are static; the class cannot be instantiated.
  */
-package com.splendor.model;
-
-import com.splendor.model.validator.MoveValidator;
-import java.util.*;
-
 public final class BotStrategy {
 
     private BotStrategy() {}

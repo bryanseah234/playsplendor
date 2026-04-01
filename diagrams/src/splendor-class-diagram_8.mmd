@@ -1,0 +1,34 @@
+classDiagram
+    class ServerSocketHandler {
+        -serverPort: int
+        -gameLogger: GameLogger
+        -configProvider: IConfigProvider
+        +ServerSocketHandler(port, config)
+        +startServer() void
+        +waitForClients(count, timeoutMs) boolean
+        +sendToClient(clientId, message) void
+        +pollClientResponse(clientId, timeoutMs) String
+        +getConnectedClientIds() List~String~
+        +getActualPort() int
+        +markGameStarted() void
+    }
+    
+    class ClientHandler {
+        -clientId: String
+        -gameLogger: GameLogger
+        -socket: Socket
+        +ClientHandler(clientId, socket)
+        +sendMessage(message) void
+        +receiveMessage(timeoutMs) String
+        +close() void
+    }
+    
+    class NetworkException {
+        +NetworkException(message)
+        +NetworkException(message, cause)
+    }
+    
+    ServerSocketHandler --> ClientHandler
+    ServerSocketHandler --> IConfigProvider
+    ServerSocketHandler --> GameLogger
+    ClientHandler --> GameLogger

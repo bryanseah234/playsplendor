@@ -134,7 +134,7 @@ public class DocumentationTest {
     @Test
     @DisplayName("Documentation guidelines should exist")
     void testDocumentationGuidelines() {
-        File guidelinesFile = new File(DOCS_DIR, "DOCUMENTATION_GUIDELINES.md");
+        File guidelinesFile = new File(DOCS_DIR, "DOCUMENTATION.md");
         assertTrue(guidelinesFile.exists(), "Documentation guidelines should exist");
         assertTrue(guidelinesFile.length() > 0, "Documentation guidelines should not be empty");
     }

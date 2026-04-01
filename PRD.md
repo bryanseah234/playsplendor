@@ -48,7 +48,7 @@ splendor/
 ├── PRD.md                    # Project Requirements Document
 ├── RULES.md                  # Game Rules
 ├── README.md                 # Project Documentation
-├── DOCUMENTATION_STANDARDS.md # Javadoc Standards
+├── docs/DOCUMENTATION.md      # Javadoc Standards
 ├── src/                      # Java source files
 ├── classes/                  # Compiled class files (empty on submission)
 ├── media/                    # Media files (empty for console app)
