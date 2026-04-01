@@ -160,10 +160,9 @@ class GameLogicTest {
         TurnController turnController = new TurnController(game, new StubView());
 
         Card target = card(7301, 1, 0, Gem.WHITE, Map.of(Gem.RED, 1));
-        Card burned = card(7302, 1, 0, Gem.BLUE, Map.of());
         Card replacement = card(7303, 1, 0, Gem.GREEN, Map.of());
         game.getBoard().setAvailableCards(availableCardsWithTierOne(target));
-        game.getBoard().restoreDecks(decksWithTierOne(burned, replacement));
+        game.getBoard().restoreDecks(decksWithTierOne(replacement));
         int bankRedBefore = game.getBoard().getGemCount(Gem.RED);
 
         player.addTokens(Gem.RED, 1);
@@ -326,9 +325,9 @@ class GameLogicTest {
         return decks;
     }
 
-    private static Map<Integer, List<Card>> decksWithTierOne(Card first, Card second) {
+    private static Map<Integer, List<Card>> decksWithTierOne(Card... cards) {
         Map<Integer, List<Card>> decks = emptyDecks();
-        decks.put(1, new ArrayList<>(List.of(first, second)));
+        decks.put(1, new ArrayList<>(List.of(cards)));
         return decks;
     }
 
