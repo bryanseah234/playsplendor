@@ -12,7 +12,6 @@ import com.splendor.controller.GameController;
 import com.splendor.exception.ConfigException;
 import com.splendor.exception.SplendorException;
 import com.splendor.network.ServerSocketHandler;
-import com.splendor.util.Constants;
 import com.splendor.view.ConsoleView;
 import com.splendor.view.IGameView;
 import com.splendor.view.NetworkGameView;
@@ -29,6 +28,7 @@ import java.util.Map;
  */
 public class Main {
     
+    public static final String SERVER_MODE_FLAG = "--server";
     /**
      * Application entry point.
      * 
@@ -76,7 +76,7 @@ public class Main {
         }
         
         for (final String arg : args) {
-            if (Constants.SERVER_MODE_FLAG.equals(arg)) {
+            if (Main.SERVER_MODE_FLAG.equals(arg)) {
                 return true;
             }
         }

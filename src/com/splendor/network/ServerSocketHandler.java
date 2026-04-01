@@ -8,7 +8,6 @@ package com.splendor.network;
 import com.splendor.config.IConfigProvider;
 import com.splendor.exception.NetworkException;
 import com.splendor.exception.SplendorException;
-import com.splendor.util.Constants;
 import com.splendor.util.GameLogger;
 import java.io.IOException;
 import java.net.ServerSocket;
