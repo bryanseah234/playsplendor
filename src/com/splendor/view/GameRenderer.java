@@ -421,28 +421,6 @@ public class GameRenderer {
     }
 
     /**
-     * Delegates card ASCII rendering to CardRenderer (used by ConsoleView for
-     * displaying reserved card details outside the main board render).
-     *
-     * @param card The card to render at full brightness.
-     * @return 8-line ASCII card string.
-     */
-    public String formatCardAscii(Card card) {
-        return CardRenderer.formatCardAscii(card);
-    }
-
-    /**
-     * Delegates card ASCII rendering to CardRenderer with affordability colouring.
-     *
-     * @param card       The card to render.
-     * @param affordable false to dim the card.
-     * @return 8-line ASCII card string.
-     */
-    public String formatCardAscii(Card card, boolean affordable) {
-        return CardRenderer.formatCardAscii(card, affordable);
-    }
-
-    /**
      * Prints each of the player's tokens that has a non-zero count to stdout,
      * coloured in its gem colour. Used when prompting for token discards.
      *

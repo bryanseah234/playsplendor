@@ -5,10 +5,12 @@
  */
 package com.splendor.network;
 
+import com.splendor.exception.NetworkException;
+import com.splendor.exception.SplendorException;
+import com.splendor.util.GameLogger;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -16,10 +18,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import com.splendor.config.IConfigProvider;
-import com.splendor.exception.NetworkException;
-import com.splendor.exception.SplendorException;
-import com.splendor.util.GameLogger;
 
 /**
  * Network server that handles remote client connections.
@@ -158,18 +156,6 @@ public class ServerSocketHandler implements NetworkMessageHandler {
         }
     }
     
-    /**
-     * Blocks until the given number of clients have connected, or the timeout elapses.
-     *
-     * @param count     Number of clients to wait for
-     * @param timeoutMs Maximum wait time in milliseconds (0 = wait forever)
-     * @return true if the required clients connected in time, false on timeout
-     */
-    public boolean waitForClients(final int count, final long timeoutMs) {
-        final int targetClients = getConnectedClientCount() + Math.max(0, count);
-        return waitForAtLeastClients(targetClients, timeoutMs);
-    }
-
     /**
      * Blocks until at least {@code targetClients} are connected, or timeout elapses.
      *
@@ -351,8 +337,7 @@ public class ServerSocketHandler implements NetworkMessageHandler {
     }
 
     /**
-     * Backward-compatible alias for polling a client response.
-     * Stops the server and cleans up resources.
+     * Stops the server and cleans up all resources.
      */
     public void stopServer() {
         if (shutdownInitiated && !isRunning) {
@@ -406,24 +391,6 @@ public class ServerSocketHandler implements NetworkMessageHandler {
      */
     public int getConnectedClientCount() {
         return connectedClients.size();
-    }
-
-    /**
-     * Gets the list of currently connected clients.
-     * 
-     * @return List of client handlers
-     */
-    public List<ClientHandler> getConnectedClients() {
-        return Collections.unmodifiableList(connectedClients);
-    }
-    
-    /**
-     * Checks if the server is running.
-     * 
-     * @return true if server is running, false otherwise
-     */
-    public boolean isRunning() {
-        return isRunning;
     }
 
     /**

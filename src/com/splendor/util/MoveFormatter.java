@@ -50,13 +50,13 @@ public final class MoveFormatter {
         // Append card information when a specific card was chosen.
         if (move.hasCardSelection()) {
             final int cardId = move.getCardId();
-            sb.append(" Card ").append(cardId);
+            sb.append(" #").append(cardId);
             if (move.isReservedCard()) {
                 sb.append(" (Res)");
             }
         } else if (move.hasDeckSelection()) {
             final int deckTier = move.getDeckTier();
-            sb.append(" Deck ").append(deckTier);
+            sb.append(" Tier ").append(deckTier);
         }
         return sb.toString();
     }

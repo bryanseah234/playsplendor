@@ -10,6 +10,7 @@ import com.splendor.model.*;
 import com.splendor.model.validator.MoveValidator;
 import com.splendor.network.NetworkMessageHandler;
 import com.splendor.util.GameLogger;
+import com.splendor.util.MoveFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -573,12 +574,11 @@ public class RemoteView implements IGameView {
             final String status = affordable
                     ? Colors.colorize("[CAN BUY]", Colors.GREEN)
                     : Colors.colorize("[NOT AFFORDABLE]", Colors.RED);
+            final String bonus = card.getBonusGem() == null ? "-"
+                    : Colors.colorize(card.getBonusGem().getShortCode(), Colors.getGemColor(card.getBonusGem()));
+            final String cost = MoveFormatter.formatGemCounts(card.getCost());
             send(String.format("  ID:%d | Pts:%d | Bonus:%s | Cost:%s | %s",
-                    card.getId(),
-                    card.getPoints(),
-                    card.getBonusGem() == null ? "-" : card.getBonusGem(),
-                    card.getCost(),
-                    status));
+                    card.getId(), card.getPoints(), bonus, cost, status));
         }
     }
 

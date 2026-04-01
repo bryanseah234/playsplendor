@@ -47,7 +47,7 @@ public class ClientHandler {
         try {
             serverHandler.registerClientQueue(clientId);
             initializeStreams();
-            GameLogger.info("Client handler initialized for: " + getClientAddress());
+            GameLogger.info("Client handler initialized for: " + clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort());
             sendMessage("Connected to Splendor server. Awaiting lobby instructions...");
             
             // Main message processing loop
@@ -161,22 +161,11 @@ public class ClientHandler {
     public String getClientId() {
         return clientId;
     }
-    
+
     /**
-     * Gets the client network address.
-     * 
-     * @return Client address string
+     * Returns true if the client socket is open and the connection is active.
      */
-    public String getClientAddress() {
-        return clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort();
-    }
-    
-    /**
-     * Checks if the client is connected.
-     * 
-     * @return true if connected, false otherwise
-     */
-    public boolean isConnected() {
+    boolean isConnected() {
         return isConnected && !clientSocket.isClosed();
     }
 }

@@ -43,7 +43,7 @@ public class ConsoleView implements IGameView {
 
     @Override
     public void displayPlayerTurn(final Player player) {
-        // Handled by displayStatus now
+        // Console view shows turn info as part of the full game state render.
     }
 
     @Override
