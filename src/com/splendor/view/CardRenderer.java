@@ -60,8 +60,8 @@ public final class CardRenderer {
         final String bonusLabel = card.getBonusGem() == null
                 ? "-"
                 : (affordable
-                        ? Colors.colorize(gemLabel(card.getBonusGem()), Colors.getGemColor(card.getBonusGem()))
-                        : Colors.colorize(gemLabel(card.getBonusGem()), Colors.DIM));
+                       ? Colors.colorize(card.getBonusGem().getShortCode(), Colors.getGemColor(card.getBonusGem()))
+                        : Colors.colorize(card.getBonusGem().getShortCode(), Colors.DIM));
 
         final String points = card.getPoints() > 0 ? String.valueOf(card.getPoints()) : "-";
 
@@ -130,7 +130,7 @@ public final class CardRenderer {
             final int count = card.getCost().getOrDefault(gem, 0);
             if (count > 0) {
                 final String color = dimmed ? Colors.DIM : Colors.getGemColor(gem);
-                tokens.add(Colors.colorize(gemLabel(gem) + count, color));
+                tokens.add(Colors.colorize(gem.getShortCode() + count, color));
             }
         }
 
@@ -172,20 +172,4 @@ public final class CardRenderer {
         return lines;
     }
 
-    /**
-     * Returns the single- or two-character abbreviation used to represent a gem
-     * inside the card's cost display.
-     *
-     * @param gem The gem type to abbreviate.
-     * @return "W", "B", "G", "R", "K", "Au", or "" for an unknown gem.
-     */
-    static String gemLabel(final Gem gem) {
-        if (gem == Gem.WHITE) return "W";
-        if (gem == Gem.BLUE) return "B";
-        if (gem == Gem.GREEN) return "G";
-        if (gem == Gem.RED) return "R";
-        if (gem == Gem.BLACK) return "K";
-        if (gem == Gem.GOLD) return "Au";
-        return "";
-    }
 }

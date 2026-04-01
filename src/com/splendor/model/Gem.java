@@ -1,87 +1,67 @@
-/**
- * Enumeration of gem types in the Splendor game.
- * Defines the five standard gem colors plus gold (wild card).
- */
 package com.splendor.model;
 
-/**
- * Enumeration of all gem types available in Splendor.
- * 
- * Gems are the core resource in Splendor, used both as currency for purchasing cards
- * and as permanent bonuses (discounts) that reduce the cost of future purchases.
- * Each gem type corresponds to a colored token in the physical game.
- * 
- * <p>The six gem types are:
- * <ul>
- *   <li>{@link #RED} - Red gem token</li>
- *   <li>{@link #GREEN} - Green gem token</li>
- *   <li>{@link #BLUE} - Blue gem token</li>
- *   <li>{@link #WHITE} - White gem token</li>
- *   <li>{@link #BLACK} - Black gem token</li>
- *   <li>{@link #GOLD} - Gold token (wild card, used only for reservations)</li>
- * </ul>
- * 
- * <p>Gems serve two purposes in the game:
- * <ol>
- *   <li><b>Temporary tokens</b>: Taken from the bank during a player's turn, spent to buy cards</li>
- *   <li><b>Permanent discounts</b>: Earned when purchasing development cards, permanently reduce
- *       the cost of future purchases of the same color</li>
- * </ol>
- * 
- * <p>The gold gem ({@link #GOLD}) is special: it acts as a wild card that can substitute
- * for any other gem type, but can only be obtained when reserving a card.
- * 
- * @see Card#getCost() For gem costs of development cards
- * @see Noble#requirementsMet(Map) For gem requirements of noble tiles
- */
-public enum Gem {
-    RED("Red", "R"),
-    GREEN("Green", "G"),
-    BLUE("Blue", "B"),
-    WHITE("White", "W"),
-    BLACK("Black", "K"),
-    GOLD("Gold", "Au");
+import java.util.ArrayList;
+import java.util.List;
 
-    private final String displayName;
+public enum Gem {
+    WHITE("W", "White"),
+    BLUE("B", "Blue"),
+    GREEN("G", "Green"),
+    RED("R", "Red"),
+    BLACK("K", "Black"),
+    GOLD("Au", "Gold");
+
+    private final String shortCode;
     private final String label;
 
-    /**
-     * Creates a new Gem with the specified display name and abbreviation label.
-     *
-     * @param displayName Human-readable name for the gem
-     * @param label Single or two-character abbreviation used in UI display
-     */
-    Gem(final String displayName, final String label) {
-        this.displayName = displayName;
+    Gem(String shortCode, String label) {
+        this.shortCode = shortCode;
         this.label = label;
     }
 
-    /**
-     * Gets the display name of the gem.
-     *
-     * @return Human-readable gem name
-     */
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    /**
-     * Gets the single or two-character label for the gem.
-     * Used for compact gem token display in the UI.
-     *
-     * @return Abbreviation: "R", "G", "B", "W", "K", or "Au"
-     */
-    public String label() {
-        return label;
-    }
-
-    /**
-     * Returns a string representation of the gem.
-     *
-     * @return Display name of the gem
-     */
+    public String getShortCode() { return shortCode; }
+    public String getLabel() { return label; }
+    
     @Override
     public String toString() {
-        return displayName;
+        return this.shortCode; 
+    }
+
+    /**
+     * Parses a single string (like "R", "Red", "RED") into a Gem.
+     */
+    public static Gem parseGem(String input) {
+        if (input == null || input.trim().isEmpty()) {
+            throw new IllegalArgumentException("Gem input cannot be empty.");
+        }
+        String normalized = input.trim().toUpperCase();
+        for (Gem gem : values()) {
+            if (gem.name().equals(normalized) || gem.shortCode.equalsIgnoreCase(normalized)) {
+                return gem;
+            }
+        }
+        throw new IllegalArgumentException("Invalid gem type: " + input);
+    }
+
+    /**
+     * Parses a string payload (like "R G B" or "RGB") into a List of Gems.
+     */
+    public static List<Gem> parseGemSelection(String input) {
+        List<Gem> gems = new ArrayList<>();
+        if (input == null || input.trim().isEmpty()) return gems;
+        
+        // Handle space-separated like "R G B"
+        if (input.contains(" ")) {
+            String[] tokens = input.trim().split("\\s+");
+            for (String token : tokens) {
+                gems.add(parseGem(token));
+            }
+        } else {
+            // Handle concatenated like "RGB"
+            for (char c : input.toCharArray()) {
+                gems.add(parseGem(String.valueOf(c)));
+            }
+        }
+        return gems;
     }
 }
