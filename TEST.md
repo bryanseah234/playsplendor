@@ -36,6 +36,40 @@ The test suite uses JUnit 5 and covers:
 - **FullGameTest**: Complete 2-player game from start to finish
 - **NetworkTest**: Server-client communication, message parsing
 
+### Test Coverage Targets
+- **Line Coverage**: 85% minimum
+- **Branch Coverage**: 80% minimum  
+- **Method Coverage**: 90% minimum
+- **Class Coverage**: 95% minimum
+
+### Test Execution Commands
+
+```bash
+# Run all tests with coverage report
+./run_tests.bat --coverage    # Windows
+./run_tests.sh --coverage     # Unix/macOS
+
+# Run specific test categories
+java -cp "classes;lib/*" org.junit.runner.JUnitCore com.splendor.test.ModelTests
+java -cp "classes;lib/*" org.junit.runner.JUnitCore com.splendor.test.ControllerTests
+java -cp "classes;lib/*" org.junit.runner.JUnitCore com.splendor.test.ValidatorTests
+java -cp "classes;lib/*" org.junit.runner.JUnitCore com.splendor.test.IntegrationTests
+
+# Run tests with verbose output
+java -cp "classes;lib/*" org.junit.runner.JUnitCore com.splendor.test.AllTests --verbose
+
+# Generate HTML coverage report
+java -cp "classes;lib/jacoco/*" org.jacoco.core.tools.ExecFileLoader --report html coverage/
+```
+
+### Coverage Report Generation
+
+The test suite automatically generates coverage reports in multiple formats:
+- **HTML**: `coverage/html/index.html` - Interactive coverage dashboard
+- **XML**: `coverage/coverage.xml` - CI/CD integration
+- **CSV**: `coverage/coverage.csv` - Data analysis
+- **Console**: Real-time coverage feedback during test execution
+
 ## Interactive Test Cases
 
 ### 1. The "Fat Finger" Crash Test

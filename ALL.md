@@ -80,12 +80,13 @@ flowchart LR
 | **Domain** | `com.splendor.model` | Game, Board, Player, Card, Noble, Move, Gem, BotStrategy | Game entities and state |
 | **Controllers** | `com.splendor.controller` | GameController, TurnController, PlayerController, MenuBuilder | Game flow orchestration |
 | **Validators** | `com.splendor.model.validator` | MoveValidator, GameRuleValidator, ValidationResult | Rule enforcement |
-| **Network** | `com.splendor.network` | ServerSocketHandler, ClientHandler, NetworkProtocol, NetworkException | Online multiplayer |
+| **Network** | `com.splendor.network` | ServerSocketHandler, ClientHandler, NetworkException | Online multiplayer |
 | **Views** | `com.splendor.view` | ConsoleView, RemoteView, NetworkGameView, GameRenderer, CardRenderer, Colors | Display and input |
 | **Exceptions** | `com.splendor.exception` | SplendorException hierarchy (7 classes) | Error handling |
 | **Config** | `com.splendor.config` | FileConfigProvider, ConfigKeys, ConfigException | Settings management |
-| **Util** | `com.splendor.util` | CardLoader, InputResolver, MoveParser, MoveFormatter, GameLogger, AnsiUtils, GemParser, Constants | Helper utilities |
-| **Total** | **51 classes** ||
+| **Util** | `com.splendor.util` | InputResolver, MoveFormatter, GameLogger, AnsiUtils, GemParser, Constants | Helper utilities |
+| **Data** | `com.splendor.data` | CardLoader, CsvCardParser | Data loading utilities |
+| **Total** | **44 classes** ||
 
 ---
 
@@ -114,8 +115,9 @@ flowchart LR
 | Views | IGameView, ConsoleView, RemoteView, NetworkGameView, GameRenderer, CardRenderer, Colors, NetworkMessageHandler | 8 |
 | Exceptions | SplendorException, GameStateException, InvalidMoveException, InsufficientTokensException, InvalidPlayerActionException, NetworkException, ConfigException | 7 |
 | Config | IConfigProvider, FileConfigProvider, ConfigKeys, ConfigException | 4 |
-| Data | CardDataProvider, CardLoader, CsvCardParser, CustomCardDeckProvider, DataLoadException | 5 |`n| Util | Constants, GameLogger, AnsiUtils, GemParser, InputResolver, MoveFormatter | 6 |
-| **Total** | | **53** |
+| Data | CardLoader, CsvCardParser | 2 |
+| Util | Constants, GameLogger, AnsiUtils, GemParser, InputResolver, MoveFormatter | 6 |
+| **Total** | | **44** |
 
 ---
 
@@ -133,6 +135,12 @@ flowchart LR
 | `FileConfigProvider` | Class | Loads settings from `config.properties` file |
 | `ConfigKeys` | Class | Constants for config property names |
 | `ConfigException` | Exception | Configuration loading errors |
+
+### 📦 **com.splendor.data** (Data Loading)
+| Class | Description |
+|-------|-------------|
+| `CardLoader` | Loads Card and Noble objects from CSV files |
+| `CsvCardParser` | Parses CSV card data format |
 
 ### 📦 **com.splendor.exception** (Error Handling)
 | Class | Extends | Description |
@@ -180,7 +188,6 @@ flowchart LR
 |-------|-------------|
 | `ServerSocketHandler` | TCP server: accepts connections, manages clients, broadcasts messages |
 | `ClientHandler` | Handles individual client communication in separate thread |
-| `NetworkProtocol` | Defines message formats and parsing (MOVE, QUERY, DISCONNECT commands) |
 | `NetworkException` | Network-specific errors, extends SplendorException |
 
 ### 📦 **com.splendor.util** (Utilities)
@@ -189,11 +196,9 @@ flowchart LR
 | `Constants` | Game-wide constants (MIN_PLAYERS, MAX_PLAYERS, etc.) |
 | `GameLogger` | Logging utility with timestamps |
 | `AnsiUtils` | ANSI color code handling and text formatting |
-| `CardLoader` | Loads Card and Noble objects from resources |
 | `GemParser` | Parses gem input from players |
 | `InputResolver` | User input handling with validation |
 | `MoveFormatter` | Formats moves for display and logging |
-| `MoveParser` | Parses move commands from network strings |
 
 ### 📦 **com.splendor.view** (Views)
 | Class | Type | Description |
@@ -429,20 +434,10 @@ classDiagram
         disconnect()
     }
     
-    class NetworkProtocol {
-        MOVE_COMMAND
-        QUERY_COMMAND
-        DISCONNECT_COMMAND
-        isValidMessage()
-        createMessage()
-        parseMessage()
-    }
-    
     class NetworkException
     
     ServerSocketHandler "1" *-- "*" ClientHandler : manages
     ClientHandler --> ServerSocketHandler : references
-    ClientHandler --> NetworkProtocol : uses
     NetworkException --|> SplendorException
 ```
 
@@ -731,8 +726,8 @@ ServerSocketHandler.acceptClientConnections()
 ClientHandler.processClientMessages()
   └── While isConnected:
         ├── message = inputReader.readLine()
-        ├── NetworkProtocol.isValidMessage(message) → check format
-        ├── String[] parts = NetworkProtocol.parseMessage(message)
+        ├── Parse message format
+        ├── Process command from message
         └── Switch on parts[0] (command type):
               │
               ├── Case "MOVE":
