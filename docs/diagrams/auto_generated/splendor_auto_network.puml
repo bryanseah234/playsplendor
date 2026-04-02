@@ -1,0 +1,42 @@
+@startuml Auto-Generated: network Package
+!define ENTITY_COLOR #E1F5FE
+!define INTERFACE_COLOR #E8F5E8
+!define ENUM_COLOR #FFF3E0
+!define ABSTRACT_COLOR #F3E5F5
+
+skinparam class {
+    BackgroundColor ENTITY_COLOR
+    BorderColor #1565C0
+    ArrowColor #424242
+}
+
+skinparam interface {
+    BackgroundColor INTERFACE_COLOR
+    BorderColor #2E7D32
+}
+
+skinparam enum {
+    BackgroundColor ENUM_COLOR
+    BorderColor #E65100
+}
+
+skinparam abstract {
+    BackgroundColor ABSTRACT_COLOR
+    BorderColor #6A1B9A
+}
+
+' Generated automatically from Java source code
+' Package: com/splendor/network
+' Generated on: Thu Apr  2 10:46:40 +08 2026
+
+class ClientHandler {
+}
+
+interface NetworkMessageHandler {
+}
+
+class ServerSocketHandler {
+}
+
+' Relationships (simplified)
+@enduml
