@@ -161,8 +161,8 @@ public final class MenuBuilder {
      */
     public static List<Gem> getAvailableDifferentGems(final Board board) {
         final List<Gem> gems = new ArrayList<>();
-        for (final Gem gem : Gem.values()) {
-            if (gem != Gem.GOLD && board.getGemCount(gem) > 0) gems.add(gem);
+        for (final Gem gem : Gem.displayOrderNoGold()) {
+            if (board.getGemCount(gem) > 0) gems.add(gem);
         }
         return gems;
     }
@@ -176,8 +176,8 @@ public final class MenuBuilder {
      */
     public static List<Gem> getAvailableTwoSameGems(final Board board) {
         final List<Gem> gems = new ArrayList<>();
-        for (final Gem gem : Gem.values()) {
-            if (gem != Gem.GOLD && board.getGemCount(gem) >= 4) gems.add(gem);
+        for (final Gem gem : Gem.displayOrderNoGold()) {
+            if (board.getGemCount(gem) >= 4) gems.add(gem);
         }
         return gems;
     }
@@ -325,5 +325,4 @@ public final class MenuBuilder {
         for (final Card card : player.getReservedCards()) ids.add(card.getId());
         return ids;
     }
-
 }

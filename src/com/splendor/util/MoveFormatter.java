@@ -1,8 +1,10 @@
 package com.splendor.util;
 
-import com.splendor.model.*;
+import com.splendor.model.Gem;
+import com.splendor.model.Move;
+import com.splendor.model.MoveType;
+import com.splendor.model.Player;
 import com.splendor.view.Colors;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -14,9 +16,6 @@ import java.util.Map;
  */
 public final class MoveFormatter {
 
-    /** Canonical ordering in which gems appear in formatted output. */
-    private static final List<Gem> GEM_ORDER = List.of(
-            Gem.WHITE, Gem.BLUE, Gem.GREEN, Gem.RED, Gem.BLACK, Gem.GOLD);
 
     /** Prevent instantiation of this utility class. */
     private MoveFormatter() {}
@@ -71,7 +70,7 @@ public final class MoveFormatter {
      */
     public static String formatGemCounts(final Map<Gem, Integer> counts) {
         final StringBuilder sb = new StringBuilder();
-        for (final Gem gem : GEM_ORDER) {
+        for (final Gem gem : Gem.displayOrder()) {
             final int count = counts.getOrDefault(gem, 0);
             if (count > 0) {
                 if (sb.length() > 0) sb.append(" ");

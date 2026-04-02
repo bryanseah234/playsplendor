@@ -21,6 +21,14 @@ public enum Gem {
     /** Gold token, acting as a wildcard for any other color. */
     GOLD("Au", "Gold");
 
+        /** Canonical display order used across UI and formatting output. */
+        private static final List<Gem> DISPLAY_ORDER = List.of(
+            RED, GREEN, BLUE, WHITE, BLACK, GOLD);
+
+        /** Canonical display order excluding Gold for non-gold-only menu actions. */
+        private static final List<Gem> DISPLAY_ORDER_NO_GOLD = List.of(
+            RED, GREEN, BLUE, WHITE, BLACK);
+
     private final String shortCode;
     private final String label;
 
@@ -42,6 +50,24 @@ public enum Gem {
      * @return The full label string
      */
     public String getLabel() { return label; }
+
+    /**
+     * Gets the canonical display order for all gem types, including Gold.
+     *
+     * @return Immutable gem display order used by renderer and formatters.
+     */
+    public static List<Gem> displayOrder() {
+        return DISPLAY_ORDER;
+    }
+
+    /**
+     * Gets the canonical display order excluding Gold.
+     *
+     * @return Immutable non-gold gem display order used by menu take-gem options.
+     */
+    public static List<Gem> displayOrderNoGold() {
+        return DISPLAY_ORDER_NO_GOLD;
+    }
     
     @Override
     public String toString() {

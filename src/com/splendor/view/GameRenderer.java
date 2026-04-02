@@ -1,10 +1,20 @@
 package com.splendor.view;
 
 import com.splendor.config.IConfigProvider;
-import com.splendor.model.*;
+import com.splendor.model.Board;
+import com.splendor.model.Card;
+import com.splendor.model.Game;
+import com.splendor.model.Gem;
+import com.splendor.model.MenuOption;
+import com.splendor.model.Noble;
+import com.splendor.model.Player;
 import com.splendor.model.validator.MoveValidator;
 import com.splendor.util.AnsiUtils;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.StringJoiner;
 
 /**
  * Responsible for composing and printing the full terminal game screen.
@@ -25,10 +35,6 @@ import java.util.*;
  * cards, and the active player's box is highlighted in gold.
  */
 public class GameRenderer {
-
-    /** Canonical gem display order used throughout all rendering methods. */
-    private static final List<Gem> GEM_ORDER = List.of(
-            Gem.WHITE, Gem.BLUE, Gem.GREEN, Gem.RED, Gem.BLACK, Gem.GOLD);
 
     /** Visible content width (excluding border characters) of the menu panel. */
     private static final int MENU_CONTENT_WIDTH = 60;
@@ -412,7 +418,7 @@ public class GameRenderer {
         lines.add(Colors.colorize("Bank", Colors.WHITE));
         int bw = 6; // fixed inner width for the bank box
         lines.add(colorBorder("┌" + "─".repeat(bw + 2) + "┐", Colors.WHITE));
-        for (final Gem gem : GEM_ORDER) {
+        for (final Gem gem : Gem.displayOrder()) {
             final int count = board.getGemCount(gem);
             String label = gem.getShortCode() + ":" + count;
             String colText = Colors.colorize(label, Colors.getGemColor(gem));
@@ -488,7 +494,7 @@ public class GameRenderer {
      */
     private String formatGemCounts(final Map<Gem, Integer> counts, final boolean includeZero) {
         final List<String> parts = new ArrayList<>();
-        for (final Gem gem : GEM_ORDER) {
+        for (final Gem gem : Gem.displayOrder()) {
             final int count = counts.getOrDefault(gem, 0);
             if (includeZero || count > 0) {
                 parts.add(Colors.colorize(gem.getShortCode() + count, Colors.getGemColor(gem)));
@@ -507,7 +513,7 @@ public class GameRenderer {
      */
     private List<String> formatRequirementsLines(final Map<Gem, Integer> requirements, final int contentWidth) {
         final List<String> tokens = new ArrayList<>();
-        for (final Gem gem : GEM_ORDER) {
+        for (final Gem gem : Gem.displayOrder()) {
             final int count = requirements.getOrDefault(gem, 0);
             if (count > 0) {
                 tokens.add(Colors.colorize(gem.getShortCode() + count, Colors.getGemColor(gem)));
