@@ -211,8 +211,9 @@ public final class MenuBuilder {
     /**
      * Produces a human-readable explanation for why reserving a visible card is unavailable.
      *
-     * @param player The player attempting to reserve.
-     * @param board  The current board.
+     * @param player        The player attempting to reserve.
+     * @param board         The current board.
+     * @param moveValidator Validator used to read reserve-limit configuration.
      * @return Reason string shown in the greyed-out menu entry.
      */
     private static String reserveVisibleReason(final Player player, final Board board,
@@ -226,8 +227,9 @@ public final class MenuBuilder {
     /**
      * Produces a human-readable explanation for why reserving from a deck is unavailable.
      *
-     * @param player The player attempting to reserve.
-     * @param board  The current board.
+     * @param player        The player attempting to reserve.
+     * @param board         The current board.
+     * @param moveValidator Validator used to read reserve-limit configuration.
      * @return Reason string shown in the greyed-out menu entry.
      */
     private static String reserveDeckReason(final Player player, final Board board,

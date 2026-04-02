@@ -270,6 +270,18 @@ public class CsvCardParser {
         return new Noble(id, points, requirements);
     }
 
+    /**
+     * Parses a contiguous set of CSV numeric columns into a gem-to-amount map.
+     * Empty values are ignored, zero values are omitted from the returned map,
+     * and negative values are rejected.
+     *
+     * @param parts      Full CSV row values.
+     * @param startCol   Starting column index for the gem amount sequence.
+     * @param gems       Ordered gem columns corresponding to the CSV fields.
+     * @param lineNumber Source line number for error context.
+     * @return Map of gem amounts with only positive entries.
+     * @throws DataLoadException if a parsed amount is negative.
+     */
     private Map<Gem, Integer> parseCostColumns(final String[] parts, final int startCol,
             final Gem[] gems, final int lineNumber) throws DataLoadException {
         final Map<Gem, Integer> cost = new HashMap<>();

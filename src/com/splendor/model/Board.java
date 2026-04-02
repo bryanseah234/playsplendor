@@ -226,6 +226,11 @@ public class Board {
     /**
      * Restores the board state from a snapshot.
      * Package-private to restrict access strictly to the model layer's memento mechanism (Game.java).
+        *
+        * @param gemBank         Snapshot gem-bank counts.
+        * @param decks           Snapshot per-tier deck card lists.
+        * @param availableCards  Snapshot per-tier face-up available cards.
+        * @param availableNobles Snapshot list of currently available nobles.
      */
     void restoreState(final Map<Gem, Integer> gemBank, final Map<Integer, List<Card>> decks,
                       final Map<Integer, List<Card>> availableCards, final List<Noble> availableNobles) {
@@ -249,6 +254,10 @@ public class Board {
         }
     }
 
+    /**
+     * Ensures internal tier-indexed collections contain entries for tiers 1-3.
+     * Creates empty deck/available-card containers for any missing tier keys.
+     */
     private void ensureTierSlotsPresent() {
         for (int tier = 1; tier <= 3; tier++) {
             cardDecks.putIfAbsent(tier, new LinkedList<>());

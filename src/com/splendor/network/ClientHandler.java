@@ -164,6 +164,8 @@ public class ClientHandler {
 
     /**
      * Returns true if the client socket is open and the connection is active.
+     *
+     * @return true when the handler is marked connected and the socket is not closed.
      */
     boolean isConnected() {
         return isConnected && !clientSocket.isClosed();

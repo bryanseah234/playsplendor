@@ -22,6 +22,7 @@ import java.util.*;
  */
 public final class BotStrategy {
 
+    /** Prevent instantiation of this utility class. */
     private BotStrategy() {}
 
     /**
@@ -156,6 +157,10 @@ public final class BotStrategy {
      * Computes a weighted importance score per bonus gem color across all available nobles.
      * Nobles the player is closer to achieving get higher weight (weight = 1 / cards_still_needed).
      * Colors needed by multiple close nobles accumulate higher scores.
+        *
+        * @param player The current player whose discounts determine missing requirements.
+        * @param board  The board containing currently available nobles.
+        * @return Map of gem bonus colors to weighted importance scores.
      */
     private static Map<Gem, Double> getWeightedBonusImportance(final Player player, final Board board) {
         final List<Noble> nobles = board.getAvailableNobles();
@@ -189,6 +194,12 @@ public final class BotStrategy {
     /**
      * Finds the best affordable visible card whose bonus color has noble importance.
      * Scored by: bonus importance * 10 + card points.
+        *
+        * @param player          The player attempting to buy a visible card.
+        * @param board           The board containing visible cards by tier.
+        * @param bonusImportance Precomputed noble-driven bonus importance weights.
+        * @param moveValidator   Validator used to check affordability.
+        * @return Best visible card ID to buy, or null if none qualify.
      */
     private static Integer getBestAffordableCardForNoble(final Player player, final Board board,
                                                           final Map<Gem, Double> bonusImportance,
@@ -215,6 +226,11 @@ public final class BotStrategy {
 
     /**
      * Finds the best affordable reserved card whose bonus color has noble importance.
+        *
+        * @param player          The player whose reserved cards are evaluated.
+        * @param bonusImportance Precomputed noble-driven bonus importance weights.
+        * @param moveValidator   Validator used to check affordability.
+        * @return Best reserved card ID to buy, or null if none qualify.
      */
     private static Integer getBestAffordableReservedForNoble(final Player player,
                                                               final Map<Gem, Double> bonusImportance,
@@ -239,6 +255,11 @@ public final class BotStrategy {
 
     /**
      * Finds the best affordable visible card by points (fallback when no noble card is affordable).
+        *
+        * @param player        The player attempting to buy a visible card.
+        * @param board         The board containing visible cards by tier.
+        * @param moveValidator Validator used to check affordability.
+        * @return Best affordable visible card ID, or null if none are affordable.
      */
     private static Integer getBestAffordableVisibleId(final Player player, final Board board,
                                                        final MoveValidator moveValidator) {
@@ -263,6 +284,11 @@ public final class BotStrategy {
      * Takes gems toward buying cards that give bonus colors needed for nobles.
      * Each card's gem deficit is weighted by the importance of its bonus color,
      * so gems needed for higher-priority cards are preferred.
+        *
+        * @param player          The player taking tokens.
+        * @param board           The board providing current bank token counts and visible cards.
+        * @param bonusImportance Precomputed noble-driven bonus importance weights.
+        * @return A gem-taking move (take two same or take three different), or null when no useful gem can be taken.
      */
     private static Move takeGemsTowardNoble(final Player player, final Board board,
                                              final Map<Gem, Double> bonusImportance) {
@@ -330,6 +356,7 @@ public final class BotStrategy {
      * Returns the card IDs of all reserved cards the player can currently afford.
      *
      * @param player The player whose reserved hand is checked.
+         * @param moveValidator Validator used to check card affordability.
      * @return List of affordable reserved card IDs (may be empty).
      */
     private static List<Integer> getAffordableReservedIds(final Player player,

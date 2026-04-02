@@ -33,6 +33,7 @@ public class Game {
     private int finalRoundPlayerIndex;
     
     
+    /** Immutable snapshot of game-level state used for undo. */
     private static class GameSnapshot {
         final List<PlayerSnapshot> playerSnapshots;
         final BoardSnapshot boardSnapshot;
@@ -43,6 +44,11 @@ public class Game {
 
         final List<String> recentMoves;
 
+        /**
+         * Captures a full snapshot of the current game state for undo.
+         *
+         * @param game Source game whose state is copied.
+         */
         GameSnapshot(Game game) {
             this.playerSnapshots = new ArrayList<>();
             for (Player p : game.getPlayers()) {
@@ -57,6 +63,7 @@ public class Game {
         }
     }
 
+    /** Immutable snapshot of a single player's state used for undo. */
     private static class PlayerSnapshot {
         final String name;
         final Map<Gem, Integer> tokens;
@@ -64,6 +71,11 @@ public class Game {
         final List<Card> reservedCards;
         final List<Noble> nobles;
 
+        /**
+         * Captures a player's mutable state for later restoration.
+         *
+         * @param p Source player whose state is copied.
+         */
         PlayerSnapshot(Player p) {
             this.name = p.getName();
             this.tokens = new HashMap<>(p.getTokens());
@@ -72,17 +84,28 @@ public class Game {
             this.nobles = new ArrayList<>(p.getNobles());
         }
 
+        /**
+         * Restores this snapshot into the provided player instance.
+         *
+         * @param p Target player to restore.
+         */
         void restore(Player p) {
             p.restoreState(name, tokens, purchasedCards, reservedCards, nobles);
         }
     }
 
+    /** Immutable snapshot of board state used for undo. */
     private static class BoardSnapshot {
         final Map<Gem, Integer> gemBank;
         final Map<Integer, List<Card>> cardDecks;
         final Map<Integer, List<Card>> availableCards;
         final List<Noble> availableNobles;
 
+        /**
+         * Captures board token/card/noble state for later restoration.
+         *
+         * @param b Source board whose state is copied.
+         */
         BoardSnapshot(Board b) {
             this.gemBank = new HashMap<>(b.getGemBank());
             this.cardDecks = b.copyDecks(); // Need to add this to Board
@@ -93,6 +116,11 @@ public class Game {
             this.availableNobles = new ArrayList<>(b.getAvailableNobles());
         }
 
+        /**
+         * Restores this snapshot into the provided board instance.
+         *
+         * @param b Target board to restore.
+         */
         void restore(Board b) {
             b.restoreState(gemBank, cardDecks, availableCards, availableNobles);
         }

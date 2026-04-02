@@ -240,6 +240,12 @@ public class Player {
     /**
      * Package-private method to restore full player state for undo operations.
      * Keeps state encapsulated from outside the model package.
+        *
+        * @param restoredName      Snapshot player name.
+        * @param restoredTokens    Snapshot token counts.
+        * @param restoredPurchased Snapshot purchased cards.
+        * @param restoredReserved  Snapshot reserved cards.
+        * @param restoredNobles    Snapshot nobles claimed by the player.
      */
     void restoreState(final String restoredName, final Map<Gem, Integer> restoredTokens,
                       final List<Card> restoredPurchased, final List<Card> restoredReserved,
