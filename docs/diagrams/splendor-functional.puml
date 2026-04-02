@@ -1,0 +1,91 @@
+@startuml splendor_functional
+
+title Splendor Functional Flow
+
+autonumber
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+skinparam sequenceMessageAlign center
+skinparam ParticipantPadding 20
+
+actor User
+participant Main
+participant GameController
+participant IGameView as View
+participant MenuBuilder
+participant MoveValidator
+participant TurnController
+participant PlayerController
+participant Game
+participant Board
+
+== Startup ==
+User -> Main: launch app
+Main -> Main: resolve mode (console/server)
+Main -> Main: load config.properties
+Main -> GameController: initializeGame()
+GameController -> View: displayWelcomeMessage()
+GameController -> View: promptForPlayerCount()
+loop for each player
+  GameController -> View: promptForPlayerName()
+end
+GameController -> Game: new Game(players, config)
+
+== Main Game Loop ==
+Main -> GameController: startGame()
+loop until game finished
+  GameController -> Game: saveUndoState()
+  GameController -> Game: getCurrentPlayer()
+  GameController -> View: displayGameState(game)
+  GameController -> View: displayPlayerTurn(player)
+
+  alt Computer player
+    GameController -> MenuBuilder: buildMenuOptions(player, game)
+    GameController -> View: displayAvailableMoves(options, game)
+    GameController -> GameController: BotStrategy.chooseBotMove(...)
+    GameController -> MoveValidator: validateMove(move, player, game)
+  else Human player
+    GameController -> MenuBuilder: buildMenuOptions(player, game)
+    GameController -> View: promptForMove(player, game, options)
+    GameController -> MoveValidator: getRuleExplanation(...)
+    GameController -> MoveValidator: validateMove(move, player, game)
+  end
+
+  GameController -> TurnController: executeMove(move, player)
+  TurnController -> Game: mutate state
+  TurnController -> Board: take/add tokens, cards
+
+  GameController -> PlayerController: checkNobleVisits(player)
+  opt token limit exceeded
+    alt Computer player
+      GameController -> GameController: BotStrategy.chooseBotDiscard(...)
+    else Human player
+      GameController -> View: promptForTokenDiscard(...)
+    end
+    GameController -> MoveValidator: validateMove(discardMove, player, game)
+    GameController -> PlayerController: executeTokenDiscard(...)
+  end
+
+  opt move/discard validation failure after state mutation
+    GameController -> Game: undo()
+    GameController -> View: displayError(...)
+  end
+
+  GameController -> View: displayMessage("Move executed successfully!")
+  opt undo requested (human)
+    GameController -> Game: undo()
+    GameController -> View: displayNotification("Move undone!")
+  end
+
+  GameController -> Game: advanceToNextPlayer()
+end
+
+== Game End ==
+note over Game
+winner is determined inside Game.advanceToNextPlayer()
+when final round closes
+end note
+GameController -> View: displayWinner(winner, scores)
+GameController -> View: close()
+
+@enduml

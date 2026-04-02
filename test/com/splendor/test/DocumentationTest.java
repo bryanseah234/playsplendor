@@ -66,11 +66,11 @@ public class DocumentationTest {
         
         // Essential diagram files
         String[] expectedDiagrams = {
-            "splendor.png",
-            "splendor_class_light.png",
-            "splendor_dependency.png",
-            "splendor_functional.png",
-            "splendor_inheritance.png"
+            "auto_generated/splendor.png",
+            "auto_generated/splendor_class_light.png",
+            "auto_generated/splendor_dependency.png",
+            "auto_generated/splendor_functional.png",
+            "auto_generated/splendor_inheritance.png"
         };
         
         for (String diagram : expectedDiagrams) {
