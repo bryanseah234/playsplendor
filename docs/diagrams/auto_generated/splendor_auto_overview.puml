@@ -27,7 +27,7 @@ skinparam abstract {
 
 ' Generated automatically from Java source code
 ' Package: com/splendor
-' Generated on: Thu Apr  2 10:46:37 +08 2026
+' Generated on: Thu Apr  2 10:48:15 +08 2026
 
 class FileConfigProvider {
 }

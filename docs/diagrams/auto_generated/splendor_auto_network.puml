@@ -27,7 +27,7 @@ skinparam abstract {
 
 ' Generated automatically from Java source code
 ' Package: com/splendor/network
-' Generated on: Thu Apr  2 10:46:40 +08 2026
+' Generated on: Thu Apr  2 10:48:18 +08 2026
 
 class ClientHandler {
 }

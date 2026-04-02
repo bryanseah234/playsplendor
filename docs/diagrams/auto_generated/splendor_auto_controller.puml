@@ -27,7 +27,7 @@ skinparam abstract {
 
 ' Generated automatically from Java source code
 ' Package: com/splendor/controller
-' Generated on: Thu Apr  2 10:46:39 +08 2026
+' Generated on: Thu Apr  2 10:48:17 +08 2026
 
 class GameController {
 }
