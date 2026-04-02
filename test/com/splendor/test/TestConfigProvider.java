@@ -17,14 +17,4 @@ public class TestConfigProvider implements IConfigProvider {
     public int getIntProperty(String key, int defaultValue) {
         return defaultValue;
     }
-
-    @Override
-    public boolean getBooleanProperty(String key, boolean defaultValue) {
-        return defaultValue;
-    }
-
-    @Override
-    public boolean hasProperty(String key) {
-        return false;
-    }
 }

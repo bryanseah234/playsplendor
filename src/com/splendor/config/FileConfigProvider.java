@@ -59,19 +59,4 @@ public class FileConfigProvider implements IConfigProvider {
             return defaultValue;
         }
     }
-    
-    @Override
-    public boolean getBooleanProperty(final String key, final boolean defaultValue) {
-        final String value = properties.getProperty(key);
-        if (value == null || value.trim().isEmpty()) {
-            return defaultValue;
-        }
-        
-        return Boolean.parseBoolean(value.trim());
-    }
-    
-    @Override
-    public boolean hasProperty(final String key) {
-        return properties.containsKey(key);
-    }
 }

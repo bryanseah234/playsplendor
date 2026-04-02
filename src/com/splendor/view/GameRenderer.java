@@ -24,12 +24,13 @@ import java.util.StringJoiner;
  * It deliberately contains no input logic; ConsoleView handles that separately.
  *
  * Layout overview (two-column terminal layout):
- *
- *   LEFT COLUMN                  RIGHT COLUMN
- *   ─────────────────────        ─────────────────────────
- *   Card tiers (3 → 1)           Noble tiles (horizontal)
- *   Menu box | Bank box          Recent move history
- *                                Player track boxes (2 × 2)
+ * <pre>
+ * LEFT COLUMN                  RIGHT COLUMN
+ * ---------------------        -------------------------
+ * Card tiers (3 -> 1)          Noble tiles (horizontal)
+ * Menu box | Bank box          Recent move history
+ *                              Player track boxes (2 x 2)
+ * </pre>
  *
  * All rendering is ANSI-colour aware; card boxes are dimmed for unaffordable
  * cards, and the active player's box is highlighted in gold.
