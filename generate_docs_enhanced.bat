@@ -81,6 +81,21 @@ if exist "%DIAGRAMS_DIR%\plantuml.jar" (
     echo [INFO] To enable UML generation, ensure plantuml.jar is in %DIAGRAMS_DIR%
 )
 
+REM Generate Mermaid diagrams
+echo [INFO] Generating Mermaid diagrams...
+node --version >nul 2>&1
+if %errorlevel% equ 0 (
+    node render_diagrams.js
+    if %errorlevel% equ 0 (
+        echo [SUCCESS] Mermaid diagrams rendered successfully
+    ) else (
+        echo [WARNING] Mermaid diagram rendering failed ^(non-fatal^)
+    )
+) else (
+    echo [INFO] Node.js not found. Skipping Mermaid diagram generation.
+    echo [INFO] To enable Mermaid rendering, install Node.js and run: npm install
+)
+
 REM Generate documentation index
 echo [INFO] Creating documentation index...
 setlocal disabledelayedexpansion

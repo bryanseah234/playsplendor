@@ -1,3 +1,4 @@
+%%{init: {"theme": "default", "classDiagram": {"nodeSpacing": 20, "rankSpacing": 30}}}%%
 ---
 title: Splendor — Model Layer (com.splendor.model)
 ---
@@ -6,12 +7,7 @@ classDiagram
 
   class Gem {
     <<enumeration>>
-    WHITE
-    BLUE
-    GREEN
-    RED
-    BLACK
-    GOLD
+    WHITE BLUE GREEN RED BLACK GOLD
     +getShortCode() String
     +getLabel() String
     +displayOrder()$ List~Gem~
@@ -22,32 +18,19 @@ classDiagram
   }
   class MoveType {
     <<enumeration>>
-    TAKE_THREE_DIFFERENT
-    TAKE_TWO_SAME
-    RESERVE_CARD
-    BUY_CARD
-    DISCARD_TOKENS
-    EXIT_GAME
+    TAKE_THREE_DIFFERENT TAKE_TWO_SAME RESERVE_CARD BUY_CARD DISCARD_TOKENS EXIT_GAME
     +getDisplayName() String
     +toString() String
   }
   class GameState {
     <<enumeration>>
-    ONGOING
-    FINAL_ROUND
-    FINISHED
+    ONGOING FINAL_ROUND FINISHED
     +getDisplayName() String
     +toString() String
   }
   class MenuAction {
     <<enumeration>>
-    TAKE_THREE
-    TAKE_TWO
-    RESERVE_VISIBLE
-    RESERVE_DECK
-    BUY_VISIBLE
-    BUY_RESERVED
-    EXIT_GAME
+    TAKE_THREE TAKE_TWO RESERVE_VISIBLE RESERVE_DECK BUY_VISIBLE BUY_RESERVED EXIT_GAME
   }
   class Card {
     +Card(id int, tier int, points int, bonusGem Gem, cost Map)

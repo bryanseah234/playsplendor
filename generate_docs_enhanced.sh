@@ -103,6 +103,20 @@ else
     print_status "To enable UML generation, ensure plantuml.jar is in $DIAGRAMS_DIR"
 fi
 
+# Generate Mermaid diagrams
+print_status "Generating Mermaid diagrams..."
+if command -v node &> /dev/null; then
+    node render_diagrams.js
+    if [ $? -eq 0 ]; then
+        print_success "Mermaid diagrams rendered successfully"
+    else
+        print_error "Mermaid diagram rendering failed (non-fatal)"
+    fi
+else
+    print_status "Node.js not found. Skipping Mermaid diagram generation."
+    print_status "To enable Mermaid rendering, install Node.js and run: npm install"
+fi
+
 # Generate documentation index
 print_status "Creating documentation index..."
 cat > "docs/index.html" << 'EOF'

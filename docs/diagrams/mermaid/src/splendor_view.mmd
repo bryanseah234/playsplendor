@@ -1,0 +1,124 @@
+%%{init: {"theme": "default", "classDiagram": {"nodeSpacing": 20, "rankSpacing": 30}}}%%
+---
+title: Splendor — View Package (com.splendor.view)
+---
+classDiagram
+  direction LR
+
+  class IGameView {
+    <<interface>>
+    +displayGameState(game Game) void
+    +displayPlayerTurn(player Player) void
+    +displayMessage(message String) String
+    +displayNotification(message String) void
+    +displayError(errorMessage String) String
+    +promptForCommand(player Player, game Game) String
+    +promptForMove(player Player, game Game, options List) Move
+    +promptForTokenDiscard(player Player, excessCount int) Move
+    +displayWinner(winner Player, finalScores Map) void
+    +clearDisplay() void
+    +displayAvailableMoves(options List, game Game) void
+    +promptForNobleChoice(player Player, nobles List) Noble
+    +promptForPlayerName(playerNumber int, totalPlayers int) String
+    +promptForPlayerCount() int
+    +displayWelcomeMessage() void
+    +waitForEnter() String
+    +close() void
+  }
+  class ConsoleView {
+    +ConsoleView(config IConfigProvider)
+    +displayGameState(game Game) void
+    +displayPlayerTurn(player Player) void
+    +displayMessage(message String) String
+    +displayNotification(message String) void
+    +displayError(errorMessage String) String
+    +promptForCommand(player Player, game Game) String
+    +promptForMove(player Player, game Game, options List) Move
+    +promptForTokenDiscard(player Player, excessCount int) Move
+    +displayWinner(winner Player, finalScores Map) void
+    +clearDisplay() void
+    +displayAvailableMoves(options List, game Game) void
+    +promptForNobleChoice(player Player, nobles List) Noble
+    +promptForPlayerName(playerNumber int, totalPlayers int) String
+    +promptForPlayerCount() int
+    +displayWelcomeMessage() void
+    +waitForEnter() String
+    +close() void
+  }
+  class NetworkGameView {
+    +NetworkGameView(playerViews List, playerCount int)
+    +NetworkGameView(playerViews List, playerCount int, predefinedPlayerNames List)
+    +displayGameState(game Game) void
+    +displayPlayerTurn(player Player) void
+    +displayMessage(message String) String
+    +displayNotification(message String) void
+    +displayError(errorMessage String) String
+    +displayWinner(winner Player, finalScores Map) void
+    +displayAvailableMoves(options List, game Game) void
+    +displayWelcomeMessage() void
+    +clearDisplay() void
+    +close() void
+    +waitForEnter() String
+    +promptForCommand(player Player, game Game) String
+    +promptForMove(player Player, game Game, options List) Move
+    +promptForTokenDiscard(player Player, excessCount int) Move
+    +promptForNobleChoice(player Player, nobles List) Noble
+    +promptForPlayerCount() int
+    +promptForPlayerName(playerNumber int, totalPlayers int) String
+  }
+  class RemoteView {
+    +RemoteView(clientId String, messageHandler NetworkMessageHandler, config IConfigProvider)
+    +displayGameState(game Game) void
+    +displayPlayerTurn(player Player) void
+    +displayMessage(message String) String
+    +displayError(errorMessage String) String
+    +displayNotification(message String) void
+    +promptForCommand(player Player, game Game) String
+    +promptForMove(player Player, game Game, options List) Move
+    +promptForTokenDiscard(player Player, excessCount int) Move
+    +displayWinner(winner Player, finalScores Map) void
+    +clearDisplay() void
+    +displayAvailableMoves(options List, game Game) void
+    +promptForNobleChoice(player Player, nobles List) Noble
+    +promptForPlayerName(playerNumber int, totalPlayers int) String
+    +promptForPlayerCount() int
+    +displayWelcomeMessage() void
+    +waitForEnter() String
+    +close() void
+  }
+  class GameRenderer {
+    +GameRenderer(config IConfigProvider)
+    +clearDisplay() void
+    +displayGameState(game Game) void
+    +renderToString(game Game) String
+    +displayPlayerTokens(player Player) void
+    +setMenuLines(menuLines List) void
+    +buildMenuLines(options List, winningPoints int) List~String~
+  }
+  class CardRenderer {
+    +formatCardAscii(card Card)$ String
+    +formatCardAscii(card Card, affordable boolean)$ String
+  }
+  class Colors {
+    +RESET$ String
+    +RED$ String
+    +GREEN$ String
+    +BLUE$ String
+    +WHITE$ String
+    +BLACK$ String
+    +GOLD$ String
+    +CYAN$ String
+    +PURPLE$ String
+    +GRAY$ String
+    +DIM$ String
+    +colorize(text String, colorCode String)$ String
+    +getGemColor(gem Gem)$ String
+  }
+
+  IGameView <|.. ConsoleView
+  IGameView <|.. NetworkGameView
+  IGameView <|.. RemoteView
+  NetworkGameView *-- "1..*" RemoteView
+  ConsoleView --> GameRenderer
+  RemoteView --> GameRenderer
+  GameRenderer --> CardRenderer

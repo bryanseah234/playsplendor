@@ -1,0 +1,28 @@
+%%{init: {"theme": "default", "classDiagram": {"nodeSpacing": 20, "rankSpacing": 30}}}%%
+---
+title: Splendor — Validator Package (com.splendor.model.validator)
+---
+classDiagram
+  direction LR
+
+  class GameRuleValidator {
+    +GameRuleValidator()
+    +validateGameStart(playerCount int, winningPoints int, maxTokens int) void
+    +validateNobleAssignment(game Game, player Player, noble Noble) void
+  }
+  class MoveValidator {
+    +MoveValidator(configProvider IConfigProvider)
+    +validateMove(move Move, player Player, game Game) void
+    +getRuleExplanation(move Move, player Player, game Game) ValidationResult
+    +canPlayerAffordCard(player Player, card Card) boolean
+    +getMaxReservedCards() int
+  }
+  class ValidationResult {
+    +ValidationResult(valid boolean, message String)
+    +isValid() boolean
+    +getMessage() String
+    +ok()$ ValidationResult
+    +fail(reason String)$ ValidationResult
+  }
+
+  MoveValidator ..> ValidationResult : returns

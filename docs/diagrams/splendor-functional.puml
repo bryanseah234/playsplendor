@@ -3,10 +3,10 @@ skinparam backgroundColor #FFFFFF
 skinparam linetype ortho
 skinparam rankdir LR
 skinparam shadowing false
-skinparam defaultFontSize 14
-skinparam padding 6
-skinparam nodesep 50
-skinparam ranksep 70
+skinparam defaultFontSize 11
+skinparam padding 2
+skinparam nodesep 20
+skinparam ranksep 30
 
 title Splendor — Functional Flow (Game Turn Sequence)
 
