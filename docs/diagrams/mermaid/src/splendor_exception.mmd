@@ -4,6 +4,7 @@ title: Splendor — Exception Hierarchy (com.splendor.exception)
 classDiagram
   direction LR
 
+  class Exception:::java
   class SplendorException {
     +SplendorException(message String)
     +SplendorException(messageFormat String, args Object...)
@@ -38,6 +39,9 @@ classDiagram
     +DataLoadException(message String, cause Throwable)
   }
 
+  Exception <|-- SplendorException
+  Exception <|-- ConfigException
+  Exception <|-- DataLoadException
   SplendorException <|-- GameStateException
   SplendorException <|-- InsufficientTokensException
   SplendorException <|-- InvalidMoveException

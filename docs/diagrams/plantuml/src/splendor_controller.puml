@@ -44,6 +44,7 @@ package "com.splendor.controller" {
     +{static} getReservedCardIds(player: Player): List<Integer>
   }
 }
+
 package "com.splendor.view" {
   interface IGameView
 }
@@ -73,4 +74,5 @@ PlayerController --> Game : uses
 PlayerController --> IGameView : uses
 PlayerController --> GameRuleValidator : uses
 PlayerController --> MoveValidator : uses
+
 @enduml

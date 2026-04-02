@@ -120,6 +120,7 @@ package "com.splendor.view" {
     +{static} getGemColor(gem: Gem): String
   }
 }
+
 package "com.splendor.network" {
   interface NetworkMessageHandler
 }
@@ -130,12 +131,13 @@ package "com.splendor.util" {
 IGameView <|.. ConsoleView
 IGameView <|.. NetworkGameView
 IGameView <|.. RemoteView
+NetworkGameView "1" *-- "1..*" RemoteView : playerViews
 ConsoleView --> GameRenderer : uses
 ConsoleView --> InputResolver : uses
-NetworkGameView "1" *-- "1..*" RemoteView : playerViews
 RemoteView --> GameRenderer : uses
 RemoteView --> NetworkMessageHandler : uses
 GameRenderer --> CardRenderer : uses
 GameRenderer --> Colors : uses
 CardRenderer --> Colors : uses
+
 @enduml

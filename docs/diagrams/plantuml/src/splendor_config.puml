@@ -37,6 +37,7 @@ package "com.splendor.config" {
     +{static} TIER3_CARD_COUNT: String
   }
 }
+
 package "com.splendor.exception" {
   class ConfigException
 }
@@ -45,4 +46,5 @@ IConfigProvider <|.. FileConfigProvider
 ConfigValidator ..> IConfigProvider : uses
 ConfigValidator ..> ConfigException : throws
 FileConfigProvider ..> ConfigException : throws
+
 @enduml

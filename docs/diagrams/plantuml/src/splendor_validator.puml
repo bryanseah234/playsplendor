@@ -31,6 +31,7 @@ package "com.splendor.model.validator" {
   }
   MoveValidator ..> ValidationResult : returns
 }
+
 package "com.splendor.exception" {
   class GameStateException
   class InvalidMoveException
@@ -42,4 +43,5 @@ GameRuleValidator ..> GameStateException : throws
 MoveValidator ..> InvalidMoveException : throws
 MoveValidator ..> InsufficientTokensException : throws
 MoveValidator ..> SplendorException : throws
+
 @enduml

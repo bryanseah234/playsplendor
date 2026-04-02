@@ -10,12 +10,7 @@ skinparam padding 3
 title Splendor — Model Layer (com.splendor.model)
 
 enum Gem {
-  WHITE
-  BLUE
-  GREEN
-  RED
-  BLACK
-  GOLD
+  WHITE / BLUE / GREEN / RED / BLACK / GOLD
   --
   +{static} values(): Gem[]
   +{static} valueOf(name: String): Gem
@@ -28,12 +23,9 @@ enum Gem {
   +{static} parseGemSelection(input: String): List<Gem>
 }
 enum MoveType {
-  TAKE_THREE_DIFFERENT
-  TAKE_TWO_SAME
-  RESERVE_CARD
-  BUY_CARD
-  DISCARD_TOKENS
-  EXIT_GAME
+  TAKE_THREE_DIFFERENT / TAKE_TWO_SAME
+  RESERVE_CARD / BUY_CARD
+  DISCARD_TOKENS / EXIT_GAME
   --
   +{static} values(): MoveType[]
   +{static} valueOf(name: String): MoveType
@@ -41,9 +33,7 @@ enum MoveType {
   +toString(): String
 }
 enum GameState {
-  ONGOING
-  FINAL_ROUND
-  FINISHED
+  ONGOING / FINAL_ROUND / FINISHED
   --
   +{static} values(): GameState[]
   +{static} valueOf(name: String): GameState
@@ -51,17 +41,14 @@ enum GameState {
   +toString(): String
 }
 enum MenuAction {
-  TAKE_THREE
-  TAKE_TWO
-  RESERVE_VISIBLE
-  RESERVE_DECK
-  BUY_VISIBLE
-  BUY_RESERVED
-  EXIT_GAME
+  TAKE_THREE / TAKE_TWO
+  RESERVE_VISIBLE / RESERVE_DECK
+  BUY_VISIBLE / BUY_RESERVED / EXIT_GAME
   --
   +{static} values(): MenuAction[]
   +{static} valueOf(name: String): MenuAction
 }
+
 class Card {
   +Card(id: int, tier: int, points: int, bonusGem: Gem, cost: Map<Gem,Integer>)
   +getId(): int
@@ -178,4 +165,5 @@ Board "1" *-- "0..*" Noble : availableNobles
 Move --> MoveType
 MenuOption --> MenuAction
 Card --> Gem : bonusGem
+
 @enduml

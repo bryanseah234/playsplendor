@@ -12,12 +12,14 @@ title Splendor — Package Overview
 package "com.splendor" #LightYellow {
   class Main
 }
+
 package "com.splendor.config" #LightBlue {
   interface IConfigProvider
   class FileConfigProvider
   class ConfigValidator
   class ConfigKeys
 }
+
 package "com.splendor.exception" #MistyRose {
   class SplendorException
   class GameStateException
@@ -28,6 +30,7 @@ package "com.splendor.exception" #MistyRose {
   class ConfigException
   class DataLoadException
 }
+
 package "com.splendor.model" #LightGreen {
   class Player
   class ComputerPlayer
@@ -42,11 +45,13 @@ package "com.splendor.model" #LightGreen {
   enum MenuAction
   class MenuOption
 }
+
 package "com.splendor.model.validator" #PaleGreen {
   class GameRuleValidator
   class MoveValidator
   class ValidationResult
 }
+
 package "com.splendor.controller" #LightCoral {
   class GameController
   class TurnController
@@ -54,6 +59,7 @@ package "com.splendor.controller" #LightCoral {
   class BotStrategy
   class MenuBuilder
 }
+
 package "com.splendor.view" #LightCyan {
   interface IGameView
   class ConsoleView
@@ -63,19 +69,23 @@ package "com.splendor.view" #LightCyan {
   class RemoteView
   class Colors
 }
+
 package "com.splendor.network" #Lavender {
   interface NetworkMessageHandler
   class ServerSocketHandler
   class ClientHandler
 }
+
 package "com.splendor.data" #Wheat {
   class CardLoader
   class CsvCardParser
 }
+
 package "com.splendor.util" #LightGray {
   class AnsiUtils
   class GameLogger
   class InputResolver
   class MoveFormatter
 }
+
 @enduml

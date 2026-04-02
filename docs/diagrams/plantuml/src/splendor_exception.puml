@@ -48,7 +48,7 @@ class DataLoadException {
 
 Exception <|-- SplendorException
 Exception <|-- ConfigException
-Exception <|-- DataLoadExion
+Exception <|-- DataLoadException
 SplendorException <|-- GameStateException
 SplendorException <|-- InsufficientTokensException
 SplendorException <|-- InvalidMoveException
@@ -63,4 +63,5 @@ note bottom of DataLoadException
   extends Exception directly
   (NOT SplendorException)
 end note
+
 @enduml

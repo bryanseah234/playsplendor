@@ -7,7 +7,7 @@ skinparam defaultFontSize 10
 skinparam classAttributeIconSize 0
 skinparam padding 3
 
-title Splendor — Network, Data and Util Packages
+title Splendor — Network, Data & Util Packages
 
 package "com.splendor.network" {
   interface NetworkMessageHandler {
@@ -84,4 +84,5 @@ package "com.splendor.util" {
     +{static} formatGemCounts(counts: Map<Gem,Integer>): String
   }
 }
+
 @enduml

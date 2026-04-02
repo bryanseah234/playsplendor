@@ -47,5 +47,4 @@ dist/
 .DS_Store
 Thumbs.db
 
-# docs/ - unignored so diagrams and javadoc are tracked
-# docs/
+# docs/ intentionally NOT ignored — diagrams and javadoc are tracked
