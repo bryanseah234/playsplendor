@@ -1,1 +1,10 @@
 com.splendor
+com.splendor.config
+com.splendor.controller
+com.splendor.data
+com.splendor.exception
+com.splendor.model
+com.splendor.model.validator
+com.splendor.network
+com.splendor.util
+com.splendor.view
