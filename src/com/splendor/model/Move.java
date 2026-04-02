@@ -1,3 +1,5 @@
+// Generated and inline suggested by ChatGPT-4 and Claude Code; modified for clarity
+
 /**
  * Represents a player move in the game.
  * Encapsulates all information about a player's action during their turn.
@@ -6,8 +8,8 @@
 package com.splendor.model;
 
 import java.util.Collections;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Represents a move made by a player during their turn.

@@ -1,3 +1,5 @@
+// Generated and inline suggested by ChatGPT-4 and Claude Code; modified for clarity
+
 /**
  * Handles turn execution and move processing.
  * Manages the execution of individual player moves and their effects.
@@ -5,8 +7,6 @@
  */
 package com.splendor.controller;
 
-import java.util.HashMap;
-import java.util.Map;
 import com.splendor.exception.InsufficientTokensException;
 import com.splendor.exception.InvalidMoveException;
 import com.splendor.exception.SplendorException;
@@ -17,6 +17,8 @@ import com.splendor.model.Gem;
 import com.splendor.model.Move;
 import com.splendor.model.Player;
 import com.splendor.view.IGameView;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Manages turn execution and move processing.

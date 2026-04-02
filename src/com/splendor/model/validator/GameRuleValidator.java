@@ -1,3 +1,5 @@
+// Generated and inline suggested by ChatGPT-4 and Claude Code; modified for clarity
+
 /**
  * Validates game rules and state transitions.
  * Ensures game mechanics are properly enforced and state transitions are valid.

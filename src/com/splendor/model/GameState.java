@@ -1,3 +1,5 @@
+// Generated and inline suggested by ChatGPT-4 and Claude Code; modified for clarity
+
 /**
  * Enumeration of game states for proper end-game handling.
  * Manages the game flow from ongoing play through final round to finished state.

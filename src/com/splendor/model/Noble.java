@@ -1,3 +1,5 @@
+// Generated and inline suggested by ChatGPT-4 and Claude Code; modified for clarity
+
 /**
  * Represents a noble tile in the Splendor game.
  * Nobles are automatically awarded to players who meet their gem requirements.

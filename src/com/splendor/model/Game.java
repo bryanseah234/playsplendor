@@ -1,3 +1,5 @@
+// Generated and inline suggested by ChatGPT-4 and Claude Code; modified for clarity
+
 /**
  * Represents the complete game state including players, board, and game flow.
  * Central model class that coordinates all game components and enforces rules.

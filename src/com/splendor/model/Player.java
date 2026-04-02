@@ -1,3 +1,5 @@
+// Generated and inline suggested by ChatGPT-4 and Claude Code; modified for clarity
+
 /**
  * Represents a player in the Splendor game.
  * Tracks player state including tokens, cards, reserved cards, and score.

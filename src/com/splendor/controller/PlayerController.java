@@ -1,3 +1,5 @@
+// Generated and inline suggested by ChatGPT-4 and Claude Code; modified for clarity
+
 /**
  * Manages player-specific operations and state updates.
  * Handles player actions such as noble visits and token management.
@@ -7,12 +9,10 @@ package com.splendor.controller;
 
 import com.splendor.exception.*;
 import com.splendor.model.*;
-import com.splendor.model.validator.MoveValidator;
 import com.splendor.model.validator.GameRuleValidator;
+import com.splendor.model.validator.MoveValidator;
 import com.splendor.view.IGameView;
-
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 

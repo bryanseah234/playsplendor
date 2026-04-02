@@ -1,3 +1,5 @@
+// Generated and inline suggested by ChatGPT-4 and Claude Code; modified for clarity
+
 /**
  * Configuration property keys used throughout the application.
  * Centralizes all configuration key names to prevent typos and ensure consistency.

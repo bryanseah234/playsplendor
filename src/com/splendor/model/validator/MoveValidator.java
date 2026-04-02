@@ -1,3 +1,5 @@
+// Generated and inline suggested by ChatGPT-4 and Claude Code; modified for clarity
+
 package com.splendor.model.validator;
 
 import com.splendor.config.ConfigKeys;

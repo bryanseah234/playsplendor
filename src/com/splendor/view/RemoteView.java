@@ -1,3 +1,5 @@
+// Generated and inline suggested by ChatGPT-4 and Claude Code; modified for clarity
+
 /**
  * Network-based implementation of the game view.
  * Provides remote client display and input handling for network gameplay.

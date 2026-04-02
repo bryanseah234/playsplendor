@@ -1,3 +1,5 @@
+// Generated and inline suggested by ChatGPT-4 and Claude Code; modified for clarity
+
 /**
  * Central loader for card and noble data in the Splendor game.
  * Provides a unified interface for loading game data from various sources.

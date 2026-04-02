@@ -1,3 +1,5 @@
+// Generated and inline suggested by ChatGPT-4 and Claude Code; modified for clarity
+
 /**
  * Handles network server functionality for remote client connections.
  * Manages client connections and message routing for multiplayer network play.

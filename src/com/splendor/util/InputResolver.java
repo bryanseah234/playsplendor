@@ -1,3 +1,5 @@
+// Generated and inline suggested by ChatGPT-4 and Claude Code; modified for clarity
+
 /**
  * Safe input parsing utility for handling user input.
  * Provides robust input validation and parsing to prevent crashes.

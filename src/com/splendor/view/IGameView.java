@@ -1,3 +1,5 @@
+// Generated and inline suggested by ChatGPT-4 and Claude Code; modified for clarity
+
 /**
  * Interface for game view implementations.
  * Defines the contract for displaying game state and receiving user input.

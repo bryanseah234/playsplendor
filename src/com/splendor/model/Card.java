@@ -1,3 +1,5 @@
+// Generated and inline suggested by ChatGPT-4 and Claude Code; modified for clarity
+
 /**
  * Represents a development card in the Splendor game.
  * Contains card properties including cost, points, tier, and gem bonuses.

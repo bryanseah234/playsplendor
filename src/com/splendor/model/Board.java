@@ -1,3 +1,5 @@
+// Generated and inline suggested by ChatGPT-4 and Claude Code; modified for clarity
+
 /**
  * Represents the game board containing all shared game elements.
  * Manages the gem bank, card decks, and available nobles.
@@ -5,6 +7,9 @@
  */
 package com.splendor.model;
 
+import com.splendor.config.ConfigKeys;
+import com.splendor.config.IConfigProvider;
+import com.splendor.data.CardLoader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -12,9 +17,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import com.splendor.config.ConfigKeys;
-import com.splendor.config.IConfigProvider;
-import com.splendor.data.CardLoader;
 
 /**
  * Represents the game board containing all shared resources and cards.

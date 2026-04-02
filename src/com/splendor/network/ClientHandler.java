@@ -1,3 +1,5 @@
+// Generated and inline suggested by ChatGPT-4 and Claude Code; modified for clarity
+
 /**
  * Handles individual client connections in the network layer.
  * Manages communication with a single remote client.

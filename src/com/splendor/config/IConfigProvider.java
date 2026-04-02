@@ -1,3 +1,5 @@
+// Generated and inline suggested by ChatGPT-4 and Claude Code; modified for clarity
+
 /**
  * Configuration provider interface for dependency injection and testability.
  * Defines the contract for loading and accessing configuration properties.

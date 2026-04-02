@@ -1,3 +1,5 @@
+// Generated and inline suggested by ChatGPT-4 and Claude Code; modified for clarity
+
 /**
  * Console-based implementation of the game view.
  * Provides text-based display and user input handling for console gameplay.
@@ -5,11 +7,6 @@
  */
 package com.splendor.view;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
 import com.splendor.config.IConfigProvider;
 import com.splendor.model.Card;
 import com.splendor.model.Game;
@@ -22,6 +19,11 @@ import com.splendor.model.Player;
 import com.splendor.model.validator.MoveValidator;
 import com.splendor.util.InputResolver;
 import com.splendor.util.MoveFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
 
 /**
  * Console-based implementation of IGameView.

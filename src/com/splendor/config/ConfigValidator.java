@@ -1,3 +1,5 @@
+// Generated and inline suggested by ChatGPT-4 and Claude Code; modified for clarity
+
 /**
  * Validates game configuration and data files at startup.
  * Implements fail-fast validation to prevent runtime errors.

@@ -1,3 +1,5 @@
+// Generated and inline suggested by ChatGPT-4 and Claude Code; modified for clarity
+
 /**
  * File-based configuration provider implementation.
  * Loads configuration properties from a properties file in the resources directory.

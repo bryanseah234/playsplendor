@@ -1,3 +1,5 @@
+// Generated and inline suggested by ChatGPT-4 and Claude Code; modified for clarity
+
 /**
  * Enumeration of move types available to players.
  * Defines all possible actions a player can take during their turn.

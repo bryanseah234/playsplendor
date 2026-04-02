@@ -1,3 +1,5 @@
+// Generated and inline suggested by ChatGPT-4 and Claude Code; modified for clarity
+
 /**
  * Multi-client view for network multiplayer.
  * Routes prompts to the correct client's RemoteView based on whose turn it is,

@@ -1,3 +1,5 @@
+// Generated and inline suggested by ChatGPT-4 and Claude Code; modified for clarity
+
 /**
  * Main entry point for the Splendor game application.
  * Supports both console and server modes based on command line arguments.
