@@ -20,12 +20,9 @@ import java.util.List;
  */
 public final class CardRenderer {
 
-    /** Number of visible characters available inside the card border for content. */
-    private static final int CARD_CONTENT_WIDTH = 14;
 
-    /** Canonical gem display order used when listing cost tokens inside the card. */
-    private static final List<Gem> GEM_ORDER = List.of(
-            Gem.WHITE, Gem.BLUE, Gem.GREEN, Gem.RED, Gem.BLACK, Gem.GOLD);
+	/** Number of visible characters available inside the card border for content. */
+    private static final int CARD_CONTENT_WIDTH = 14;
 
     /** Prevent instantiation of this utility class. */
     private CardRenderer() {}
@@ -126,7 +123,7 @@ public final class CardRenderer {
         final List<String> tokens = new ArrayList<>();
 
         // Build one coloured token string per gem type that has a non-zero cost.
-        for (final Gem gem : GEM_ORDER) {
+        for (final Gem gem : Gem.displayOrder()) {
             final int count = card.getCost().getOrDefault(gem, 0);
             if (count > 0) {
                 final String color = dimmed ? Colors.DIM : Colors.getGemColor(gem);
@@ -171,5 +168,4 @@ public final class CardRenderer {
 
         return lines;
     }
-
 }

@@ -222,19 +222,5 @@ class ConfigValidatorTest {
             }
             return defaultValue;
         }
-
-        @Override
-        public boolean getBooleanProperty(String key, boolean defaultValue) {
-            Object val = overrides.get(key);
-            if (val instanceof Boolean) {
-                return (Boolean) val;
-            }
-            return defaultValue;
-        }
-
-        @Override
-        public boolean hasProperty(String key) {
-            return overrides.containsKey(key);
-        }
     }
 }

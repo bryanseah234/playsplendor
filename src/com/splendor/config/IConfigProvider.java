@@ -65,21 +65,4 @@ public interface IConfigProvider {
      * @return Property value or default
      */
     int getIntProperty(String key, int defaultValue);
-    
-    /**
-     * Gets a boolean property value.
-     * 
-     * @param key Property key
-     * @param defaultValue Default value if key not found
-     * @return Property value or default
-     */
-    boolean getBooleanProperty(String key, boolean defaultValue);
-    
-    /**
-     * Checks if a property exists.
-     * 
-     * @param key Property key
-     * @return true if property exists
-     */
-    boolean hasProperty(String key);
 }
