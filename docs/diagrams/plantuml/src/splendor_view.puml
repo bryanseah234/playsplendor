@@ -3,9 +3,11 @@ skinparam backgroundColor #FFFFFF
 skinparam linetype ortho
 skinparam rankdir LR
 skinparam shadowing false
-skinparam defaultFontSize 10
+skinparam defaultFontSize 14
 skinparam classAttributeIconSize 0
-skinparam padding 3
+skinparam padding 6
+skinparam nodesep 50
+skinparam ranksep 70
 
 title Splendor — View Layer (com.splendor.view)
 

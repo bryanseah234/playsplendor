@@ -1,4 +1,4 @@
-@startuml splendor_architecture
+@startuml splendor
 skinparam backgroundColor #FFFFFF
 skinparam linetype ortho
 skinparam rankdir LR
@@ -6,13 +6,13 @@ skinparam shadowing false
 skinparam defaultFontSize 14
 skinparam classAttributeIconSize 0
 skinparam padding 6
+skinparam nodesep 50
+skinparam ranksep 70
 skinparam packageStyle rectangle
-skinparam nodesep 40
-skinparam ranksep 60
 
 title Splendor — Full Architecture
 
-package "Entry Point" #LightYellow {
+package "com.splendor" #LightYellow {
   class Main {
     +{static} SERVER_MODE_FLAG: String
     +Main()
@@ -48,6 +48,7 @@ package "com.splendor.config" #LightBlue {
     +{static} TIER3_CARD_COUNT: String
   }
   IConfigProvider <|.. FileConfigProvider
+  ConfigValidator ..> IConfigProvider : uses
 }
 
 package "com.splendor.exception" #MistyRose {
@@ -137,7 +138,6 @@ package "com.splendor.model" #LightGreen {
   }
   class Player {
     +Player(name: String)
-    +Player(name: String, tokens: Map<Gem,Integer>, purchasedCards: List<Card>, reservedCards: List<Card>, nobles: List<Noble>)
     +getName(): String
     +getTokens(): Map<Gem,Integer>
     +getTokenCount(gem: Gem): int
@@ -218,12 +218,16 @@ package "com.splendor.model" #LightGreen {
     +getReason(): String
   }
   Player <|-- ComputerPlayer
-  Game *-- Board
-  Game *-- Player
-  Game --> GameState
+  Game "1" *-- "1" Board
+  Game "1" *-- "1..*" Player
+  Game --> GameState : currentState
+  Player "1" *-- "0..*" Card : purchasedCards / reservedCards
+  Player "1" *-- "0..*" Noble : nobles
+  Board "1" *-- "0..*" Card : availableCards
+  Board "1" *-- "0..*" Noble : availableNobles
   Move --> MoveType
   MenuOption --> MenuAction
-  Card --> Gem
+  Card --> Gem : bonusGem
 }
 
 package "com.splendor.model.validator" #PaleGreen {
@@ -246,7 +250,7 @@ package "com.splendor.model.validator" #PaleGreen {
     +{static} ok(): ValidationResult
     +{static} fail(reason: String): ValidationResult
   }
-  MoveValidator ..> ValidationResult
+  MoveValidator ..> ValidationResult : returns
 }
 
 package "com.splendor.controller" #LightCoral {
@@ -398,10 +402,12 @@ package "com.splendor.view" #LightCyan {
   IGameView <|.. ConsoleView
   IGameView <|.. NetworkGameView
   IGameView <|.. RemoteView
-  NetworkGameView *-- RemoteView
-  ConsoleView --> GameRenderer
-  RemoteView --> GameRenderer
-  GameRenderer --> CardRenderer
+  NetworkGameView "1" *-- "1..*" RemoteView : playerViews
+  ConsoleView --> GameRenderer : uses
+  RemoteView --> GameRenderer : uses
+  GameRenderer --> CardRenderer : uses
+  GameRenderer --> Colors : uses
+  CardRenderer --> Colors : uses
 }
 
 package "com.splendor.network" #Lavender {
@@ -431,7 +437,7 @@ package "com.splendor.network" #Lavender {
     +getClientId(): String
   }
   NetworkMessageHandler <|.. ServerSocketHandler
-  ServerSocketHandler *-- ClientHandler
+  ServerSocketHandler "1" *-- "0..4" ClientHandler : connectedClients
 }
 
 package "com.splendor.data" #Wheat {
@@ -444,7 +450,7 @@ package "com.splendor.data" #Wheat {
     +loadCards(tier: int): List<Card>
     +loadNobles(): List<Noble>
   }
-  CardLoader ..> CsvCardParser
+  CardLoader ..> CsvCardParser : creates / uses
 }
 
 package "com.splendor.util" #LightGray {
@@ -480,7 +486,7 @@ package "com.splendor.util" #LightGray {
   }
 }
 
-' Cross-package relationships
+' Cross-package arrows
 Main --> IConfigProvider : uses
 Main --> GameController : creates
 Main --> ServerSocketHandler : creates (server mode)
@@ -492,18 +498,16 @@ GameController ..> TurnController : creates
 GameController ..> PlayerController : creates
 GameController ..> BotStrategy : uses
 GameController ..> MenuBuilder : uses
-TurnController --> Game
-TurnController --> IGameView
-PlayerController --> Game
-PlayerController --> IGameView
-PlayerController --> GameRuleValidator
-PlayerController --> MoveValidator
-RemoteView --> NetworkMessageHandler
+TurnController --> Game : uses
+TurnController --> IGameView : uses
+PlayerController --> Game : uses
+PlayerController --> IGameView : uses
+PlayerController --> GameRuleValidator : uses
+PlayerController --> MoveValidator : uses
+RemoteView --> NetworkMessageHandler : uses
 Board ..> CardLoader : uses
 ConfigValidator ..> CardLoader : uses
-ConsoleView --> InputResolver
-GameRenderer --> Colors
-CardRenderer --> Colors
-MoveFormatter --> Colors
+ConsoleView --> InputResolver : uses
+MoveFormatter --> Colors : uses
 
 @enduml
