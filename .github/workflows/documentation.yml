@@ -191,8 +191,6 @@ jobs:
     - name: Prepare commit message
       if: steps.doc-changes.outputs.changes == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: |
-        echo "COMMIT_MESSAGE=docs: auto-update documentation from CI" >> $GITHUB_ENV
-        
         # Generate detailed commit message
         echo "Detailed changes:" > commit-details.txt
         git diff --name-only docs/ >> commit-details.txt
@@ -209,7 +207,7 @@ jobs:
         
         # Check if there are changes to commit
         if ! git diff --staged --quiet; then
-          git commit -m "${{ env.COMMIT_MESSAGE }}" -m "$(cat commit-details.txt)"
+          git commit -m "docs: auto-update documentation from CI" -m "$(cat commit-details.txt)"
           git push
           echo "✅ Documentation committed and pushed"
         else
@@ -271,7 +269,7 @@ jobs:
         path: docs/
     
     - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
+      uses: peaceiris/actions-gh-pages@v4
       if: success()
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}

@@ -10,7 +10,7 @@ COVERAGE=""
 VERBOSE=""
 CATEGORY=""
 SPECIFIC_CLASS=""
-EXCLUDE_PACKAGE=""
+EXCLUDE_PACKAGES=()
 INCLUDE_NETWORK=""
 
 while [[ "$#" -gt 0 ]]; do
@@ -19,7 +19,7 @@ while [[ "$#" -gt 0 ]]; do
         --verbose) VERBOSE="--details verbose" ;;
         --category) CATEGORY="$2"; shift ;;
         --class) SPECIFIC_CLASS="$2"; shift ;;
-        --exclude-package) EXCLUDE_PACKAGE="$2"; shift ;;
+        --exclude-package) EXCLUDE_PACKAGES+=("$2"); shift ;;
         --include-network) INCLUDE_NETWORK="true" ;;
         *) echo "Unknown parameter passed: $1"; exit 1 ;;
     esac
@@ -99,9 +99,9 @@ else
     JUNIT_CMD="$JUNIT_CMD --scan-class-path test-classes"
 fi
 
-if [ -n "$EXCLUDE_PACKAGE" ]; then
-    JUNIT_CMD="$JUNIT_CMD --exclude-package $EXCLUDE_PACKAGE"
-fi
+for pkg in "${EXCLUDE_PACKAGES[@]}"; do
+    JUNIT_CMD="$JUNIT_CMD --exclude-package $pkg"
+done
 
 # Network integration tests are opt-in to keep local and CI-like runs deterministic.
 if [ -z "$INCLUDE_NETWORK" ]; then

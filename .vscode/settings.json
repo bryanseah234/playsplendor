@@ -97,11 +97,11 @@
     
     // Code actions on save
     "editor.codeActionsOnSave": {
-        "source.organizeImports": true,
-        "source.generate.toString": true,
-        "source.generate.hashCodeEquals": true,
-        "source.generate.constructors": true,
-        "source.generate.delegateMethods": true
+        "source.organizeImports": "explicit",
+        "source.generate.toString": "explicit",
+        "source.generate.hashCodeEquals": "explicit",
+        "source.generate.constructors": "explicit",
+        "source.generate.delegateMethods": "explicit"
     },
     
     // Documentation-specific snippets

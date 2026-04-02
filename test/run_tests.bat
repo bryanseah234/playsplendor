@@ -19,7 +19,7 @@ if /i "%~1"=="--coverage" set "COVERAGE=true" & shift & goto parse_args
 if /i "%~1"=="--verbose" set "VERBOSE=--details verbose" & shift & goto parse_args
 if /i "%~1"=="--category" set "CATEGORY=%~2" & shift & shift & goto parse_args
 if /i "%~1"=="--class" set "SPECIFIC_CLASS=%~2" & shift & shift & goto parse_args
-if /i "%~1"=="--exclude-package" set "EXCLUDE_PACKAGE=%~2" & shift & shift & goto parse_args
+if /i "%~1"=="--exclude-package" set "EXCLUDE_PACKAGE=!EXCLUDE_PACKAGE! %~2" & shift & shift & goto parse_args
 if /i "%~1"=="--include-network" set "INCLUDE_NETWORK=true" & shift & goto parse_args
 echo Unknown parameter passed: %~1
 exit /b 1
@@ -108,7 +108,9 @@ if defined SPECIFIC_CLASS (
 )
 
 if defined EXCLUDE_PACKAGE (
-    set "JUNIT_CMD=!JUNIT_CMD! --exclude-package !EXCLUDE_PACKAGE!"
+    for %%p in (!EXCLUDE_PACKAGE!) do (
+        set "JUNIT_CMD=!JUNIT_CMD! --exclude-package %%p"
+    )
 )
 
 REM Network integration tests are opt-in to keep local and CI-like runs deterministic.
