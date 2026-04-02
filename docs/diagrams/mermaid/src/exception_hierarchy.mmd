@@ -1,0 +1,51 @@
+classDiagram
+    direction LR
+    class ConfigException {
+        +ConfigException(String message)
+        +ConfigException(String message, Throwable cause)
+    }
+
+    ConfigException --|> Exception
+    class DataLoadException {
+        +DataLoadException(String message)
+        +DataLoadException(String message, Throwable cause)
+    }
+
+    DataLoadException --|> Exception
+    class GameStateException {
+        +GameStateException(String message)
+        +GameStateException(String messageFormat, Object... args)
+    }
+
+    GameStateException --|> SplendorException
+    class InsufficientTokensException {
+        +InsufficientTokensException(String message)
+        +InsufficientTokensException(String messageFormat, Object... args)
+    }
+
+    InsufficientTokensException --|> SplendorException
+    class InvalidMoveException {
+        +InvalidMoveException(String message)
+        +InvalidMoveException(String messageFormat, Object... args)
+    }
+
+    InvalidMoveException --|> SplendorException
+    class InvalidPlayerActionException {
+        +InvalidPlayerActionException(String message)
+        +InvalidPlayerActionException(String messageFormat, Object... args)
+    }
+
+    InvalidPlayerActionException --|> SplendorException
+    class NetworkException {
+        +NetworkException(String message)
+        +NetworkException(String message, Throwable cause)
+    }
+
+    NetworkException --|> SplendorException
+    class SplendorException {
+        +SplendorException(String message)
+        +SplendorException(String messageFormat, Object... args)
+        +SplendorException(String message, Throwable cause)
+    }
+
+    SplendorException --|> Exception

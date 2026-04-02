@@ -1,0 +1,49 @@
+classDiagram
+    direction LR
+    class ClientHandler {
+        -String clientId
+        -Socket clientSocket
+        -ServerSocketHandler serverHandler
+        -BufferedReader inputReader
+        -PrintWriter outputWriter
+        +ClientHandler(Socket clientSocket, ServerSocketHandler serverHandler)
+        +handleClient() void
+        -initializeStreams() void
+        -processClientMessages() void
+        -processMessage(String message) void
+        -sendError(String errorMessage) void
+        +sendMessage(String message) void
+        +disconnect() void
+        -cleanup() void
+        +getClientId() String
+    }
+
+    class NetworkMessageHandler {
+        <<interface>>
+    }
+
+    class ServerSocketHandler {
+        -ServerSocket serverSocket
+        -ExecutorService clientExecutor
+        -List~ClientHandler~ connectedClients
+        +ServerSocketHandler()
+        +startServer() void
+        -acceptClientConnections() void
+        -handleClientConnection(Socket clientSocket) void
+        +waitForAtLeastClients(int targetClients, long timeoutMs) boolean
+        +getConnectedClientIds() List~String~
+        +isClientConnected(String clientId) boolean
+        -removeClient(ClientHandler clientHandler) void
+        +broadcastToAllClients(String message) void
+        +sendToClient(String clientId, String message) void
+        +waitForClientResponse(String clientId, int timeoutMs) String
+        +stopServer() void
+        +getConnectedClientCount() int
+        +getActualPort() int
+        +setGameStarted(boolean started) void
+        -closeSocket(Socket socket) void
+    }
+
+    ServerSocketHandler ..|> NetworkMessageHandler
+    ClientHandler --> ServerSocketHandler
+    ServerSocketHandler --> ClientHandler

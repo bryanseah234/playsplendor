@@ -8,7 +8,7 @@ This file is now a navigation stub to avoid duplicated architecture content.
 - `docs/DOCUMENTATION.md` — documentation-generation standards and tooling.
 
 ## Diagram assets
-- Source files: `diagrams/src/`
-- Rendered PNGs: `diagrams/png/`
+- Source files: `docs/diagrams/mermaid/src/`
+- Rendered PNGs: `docs/diagrams/mermaid/png/`
 
 All cross-references should point to the canonical files above to keep one authoritative copy per topic.

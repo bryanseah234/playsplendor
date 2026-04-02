@@ -4,8 +4,8 @@ import struct
 import sys
 
 root = Path(__file__).resolve().parents[2]
-src_dir = root / 'diagrams' / 'src'
-png_dir = root / 'diagrams' / 'png'
+src_dir = root / 'docs' / 'diagrams' / 'mermaid' / 'src'
+png_dir = root / 'docs' / 'diagrams' / 'mermaid' / 'png'
 docs_png_fallback = root / 'docs' / 'diagrams'
 
 errors = []

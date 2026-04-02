@@ -1,0 +1,55 @@
+classDiagram
+    direction LR
+    class GameController {
+        -IGameView gameView
+        -IConfigProvider configProvider
+        -MoveValidator moveValidator
+        -GameRuleValidator gameRuleValidator
+        -Game game
+        -List~Player~ players
+        +GameController(IGameView gameView, IConfigProvider configProvider)
+        +initializeGame() void
+        +startGame() void
+        -performUndo() boolean
+        -processTurn() void
+        -getPlayerMove(Player player) Move
+        -handleTokenLimit(Player player) void
+        -createPlayers(int playerCount) void
+        -executeMove(Move move, Player player) void
+        -checkNobleVisits(Player player) void
+        -displayGameResults() void
+        +getGame() Game
+        +getPlayers() List~Player~
+        -isUndoInput(String input) boolean
+    }
+
+    class PlayerController {
+        -Game game
+        -IGameView gameView
+        -GameRuleValidator gameRuleValidator
+        -MoveValidator moveValidator
+        +PlayerController(Game game, IGameView gameView, MoveValidator moveValidator)
+        +checkNobleVisits(Player player) void
+        -assignNobleToPlayer(Player player, Noble noble) void
+        +executeTokenDiscard(Player player, Move discardMove) void
+        -formatDiscounts(Map~Gem, Integer~ discounts) String
+        -validateTokenDiscard(Player player, Map~Gem, Integer~ tokensToDiscard) void
+    }
+
+    class TurnController {
+        -Game game
+        -IGameView gameView
+        +TurnController(Game game, IGameView gameView)
+        +executeMove(Move move, Player player) void
+        -executeTakeThreeDifferent(Move move, Player player) void
+        -executeTakeTwoSame(Move move, Player player) void
+        -executeReserveCard(Move move, Player player) void
+        -executeBuyCard(Move move, Player player) void
+        -executeDiscardTokens(Move move, Player player) void
+        -findCardToReserve(Move move, Board board) Card
+        -findAvailableCardById(Board board, int cardId) Card
+        -findCardToBuy(Move move, Player player, Board board) Card
+        -processCardPayment(Player player, Board board, Map~Gem, Integer~ effectiveCost) void
+        -formatGemMap(Map~Gem, Integer~ gems) String
+    }
+

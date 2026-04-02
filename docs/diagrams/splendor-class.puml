@@ -1,0 +1,1109 @@
+@startuml splendor
+
+left to right direction
+skinparam classAttributeIconSize 0
+skinparam monochrome false
+skinparam shadowing false
+skinparam linetype polyline
+skinparam packageStyle rectangle
+skinparam ranksep 90
+skinparam nodesep 50
+skinparam padding 10
+skinparam classFontSize 11
+skinparam packageTitleFontSize 13
+skinparam class {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor Black
+}
+
+' ─────────────────────────────────────────────
+'  PACKAGE: com.splendor
+' ─────────────────────────────────────────────
+package "com.splendor" {
+    class Main {
+        + {static} main(args : String[]) : void
+        - {static} isServerMode(args : String[]) : boolean
+        - {static} startConsoleMode(configProvider : IConfigProvider) : void
+        - {static} startServerMode(configProvider : IConfigProvider) : void
+    }
+}
+
+' ─────────────────────────────────────────────
+'  PACKAGE: com.splendor.config
+' ─────────────────────────────────────────────
+package "com.splendor.config" {
+
+    interface IConfigProvider {
+        + loadConfiguration() : void
+        + getStringProperty(key : String, defaultValue : String) : String
+        + getIntProperty(key : String, defaultValue : int) : int
+        + getBooleanProperty(key : String, defaultValue : boolean) : boolean
+        + hasProperty(key : String) : boolean
+    }
+
+    class FileConfigProvider {
+        - {static} CONFIG_FILE_PATH : String
+        - properties : Properties
+        + FileConfigProvider()
+        + loadConfiguration() : void
+        + getStringProperty(key : String, defaultValue : String) : String
+        + getIntProperty(key : String, defaultValue : int) : int
+        + getBooleanProperty(key : String, defaultValue : boolean) : boolean
+        + hasProperty(key : String) : boolean
+        - validateRequiredProperties() : void
+    }
+
+    class ConfigValidator {
+        + {static} validateAll(configProvider : IConfigProvider) : void
+    }
+
+    class ConfigKeys <<final>> {
+        + {static} WINNING_POINTS : String
+        + {static} MAX_TOKENS : String
+        + {static} SETUP_2P_GEMS : String
+        + {static} SETUP_3P_GEMS : String
+        + {static} SETUP_4P_GEMS : String
+        + {static} SETUP_NOBLES_ADD : String
+        + {static} SERVER_PORT : String
+        + {static} MAX_CLIENTS : String
+        + {static} CONNECTION_TIMEOUT : String
+        - ConfigKeys()
+    }
+
+    class ConfigException {
+        + ConfigException(message : String)
+        + ConfigException(message : String, cause : Throwable)
+    }
+
+    ConfigException --|> Exception
+    FileConfigProvider ..|> IConfigProvider
+    FileConfigProvider --> ConfigKeys
+    FileConfigProvider --> ConfigException
+}
+
+' ─────────────────────────────────────────────
+'  PACKAGE: com.splendor.exception
+' ─────────────────────────────────────────────
+package "com.splendor.exception" as excpkg {
+
+    class SplendorException {
+        + SplendorException(message : String)
+        + SplendorException(message : String, cause : Throwable)
+    }
+
+    class GameStateException {
+        + GameStateException(message : String)
+        + GameStateException(messageFormat : String, args : Object...)
+    }
+
+    class InsufficientTokensException {
+        + InsufficientTokensException(message : String)
+        + InsufficientTokensException(messageFormat : String, args : Object...)
+    }
+
+    class InvalidMoveException {
+        + InvalidMoveException(message : String)
+        + InvalidMoveException(messageFormat : String, args : Object...)
+    }
+
+    class InvalidPlayerActionException {
+        + InvalidPlayerActionException(message : String)
+        + InvalidPlayerActionException(messageFormat : String, args : Object...)
+    }
+
+    SplendorException --|> Exception
+    GameStateException --|> SplendorException
+    InsufficientTokensException --|> SplendorException
+    InvalidMoveException --|> SplendorException
+    InvalidPlayerActionException --|> SplendorException
+}
+
+' ─────────────────────────────────────────────
+'  PACKAGE: com.splendor.model
+' ─────────────────────────────────────────────
+package "com.splendor.model" {
+
+    enum Gem {
+        RED
+        GREEN
+        BLUE
+        WHITE
+        BLACK
+        GOLD
+        - displayName : String
+        + getDisplayName() : String
+        + toString() : String
+    }
+
+    enum MoveType {
+        TAKE_THREE_DIFFERENT
+        TAKE_TWO_SAME
+        RESERVE_CARD
+        BUY_CARD
+        DISCARD_TOKENS
+        EXIT_GAME
+        - displayName : String
+        + getDisplayName() : String
+        + toString() : String
+    }
+
+    enum MenuAction {
+        TAKE_THREE
+        TAKE_TWO
+        RESERVE_VISIBLE
+        RESERVE_DECK
+        BUY_VISIBLE
+        BUY_RESERVED
+        EXIT_GAME
+    }
+
+    class MenuOption <<final>> {
+        - number : int
+        - action : MenuAction
+        - available : boolean
+        - label : String
+        - detail : String
+        - reason : String
+        + MenuOption(number : int, action : MenuAction, available : boolean, label : String, detail : String, reason : String)
+        + getNumber() : int
+        + getAction() : MenuAction
+        + isAvailable() : boolean
+        + getLabel() : String
+        + getDetail() : String
+        + getReason() : String
+    }
+
+    class Card {
+        - id : int
+        - tier : int
+        - points : int
+        - bonusGem : Gem
+        - cost : Map<Gem, Integer>
+        + Card()
+        + Card(id : int, tier : int, points : int, bonusGem : Gem, cost : Map<Gem, Integer>)
+        + getId() : int
+        + setId(id : int) : void
+        + getTier() : int
+        + setTier(tier : int) : void
+        + getPoints() : int
+        + setPoints(points : int) : void
+        + getBonusGem() : Gem
+        + setBonusGem(bonusGem : Gem) : void
+        + getCost() : Map<Gem, Integer>
+        + setCost(cost : Map<Gem, Integer>) : void
+        + providesPoints() : boolean
+        + providesDiscount() : boolean
+        + getTotalCost() : int
+        + requiresGem(gem : Gem) : boolean
+        + toString() : String
+    }
+
+    class Noble {
+        - id : int
+        - points : int
+        - requirements : Map<Gem, Integer>
+        + Noble()
+        + Noble(id : int, points : int, requirements : Map<Gem, Integer>)
+        + getId() : int
+        + setId(id : int) : void
+        + getPoints() : int
+        + setPoints(points : int) : void
+        + getRequirements() : Map<Gem, Integer>
+        + setRequirements(requirements : Map<Gem, Integer>) : void
+        + requirementsMet(playerGemCounts : Map<Gem, Integer>) : boolean
+        + getTotalRequirementCount() : int
+        + toString() : String
+    }
+
+    class Player {
+        - name : String
+        - tokens : Map<Gem, Integer>
+        - purchasedCards : List<Card>
+        - reservedCards : List<Card>
+        - nobles : List<Noble>
+        + Player()
+        + Player(name : String)
+        + Player(name : String, tokens : Map<Gem, Integer>, purchasedCards : List<Card>, reservedCards : List<Card>, nobles : List<Noble>)
+        - ensureTokenEntries() : void
+        + getName() : String
+        + setName(name : String) : void
+        + getTokens() : Map<Gem, Integer>
+        + setTokens(tokens : Map<Gem, Integer>) : void
+        + getTokenCount(gem : Gem) : int
+        + getTotalTokenCount() : int
+        + getPurchasedCards() : List<Card>
+        + setPurchasedCards(cards : List<Card>) : void
+        + getReservedCards() : List<Card>
+        + setReservedCards(cards : List<Card>) : void
+        + getNobles() : List<Noble>
+        + setNobles(nobles : List<Noble>) : void
+        + getTotalPoints() : int
+        + getGemDiscounts() : Map<Gem, Integer>
+        + addTokens(gem : Gem, quantity : int) : void
+        + removeTokens(gem : Gem, quantity : int) : void
+        + addPurchasedCard(card : Card) : void
+        + addReservedCard(card : Card) : void
+        + removeReservedCard(card : Card) : boolean
+        + addNoble(noble : Noble) : void
+        + canReserveCard() : boolean
+        + toString() : String
+    }
+
+    class ComputerPlayer {
+        + ComputerPlayer(name : String)
+    }
+
+    class Move {
+        - moveType : MoveType
+        - selectedGems : Map<Gem, Integer>
+        - cardId : Integer
+        - isReservedCard : boolean
+        - deckTier : Integer
+        + Move(moveType : MoveType)
+        + Move(moveType : MoveType, selectedGems : Map<Gem, Integer>)
+        + Move(moveType : MoveType, cardId : Integer, isReservedCard : boolean)
+        + Move(moveType : MoveType, selectedGems : Map<Gem, Integer>, cardId : Integer, isReservedCard : boolean, deckTier : Integer)
+        + {static} reserveFromDeck(tier : int) : Move
+        + getMoveType() : MoveType
+        + getSelectedGems() : Map<Gem, Integer>
+        + getCardId() : Integer
+        + isReservedCard() : boolean
+        + getDeckTier() : Integer
+        + hasCardSelection() : boolean
+        + hasDeckSelection() : boolean
+        + hasGemSelection() : boolean
+        + toString() : String
+    }
+
+    class Board {
+        - gemBank : Map<Gem, Integer>
+        - cardDecks : Map<Integer, Queue<Card>>
+        - availableCards : Map<Integer, List<Card>>
+        - availableNobles : List<Noble>
+        - maxPlayers : int
+        + Board(maxPlayers : int)
+        + getGemBank() : Map<Gem, Integer>
+        + getGemCount(gem : Gem) : int
+        + setGemBank(gemBank : Map<Gem, Integer>) : void
+        + getAvailableCards() : Map<Integer, List<Card>>
+        + setAvailableCards(availableCards : Map<Integer, List<Card>>) : void
+        + getAvailableCards(tier : int) : List<Card>
+        + getDeckSize(tier : int) : int
+        + getAvailableNobles() : List<Noble>
+        + setAvailableNobles(availableNobles : List<Noble>) : void
+        + removeGems(gems : Map<Gem, Integer>) : void
+        + addGems(gems : Map<Gem, Integer>) : void
+        + drawCard(tier : int) : Card
+        + drawBlindCard(tier : int) : Card
+        + removeAvailableCard(tier : int, card : Card) : boolean
+        + addAvailableCard(tier : int, card : Card) : void
+        + copyDecks() : Map<Integer, List<Card>>
+        + restoreDecks(decks : Map<Integer, List<Card>>) : void
+        + removeAvailableNoble(noble : Noble) : boolean
+        - initializeGemBank() : void
+        - initializeCardDecks() : void
+        - initializeAvailableCards() : void
+        - initializeNobles() : void
+        - getBaseGemCountForPlayers(playerCount : int) : int
+        + toString() : String
+    }
+
+    class GameState {
+        + {static} ONGOING : GameState
+        + {static} FINAL_ROUND : GameState
+        + {static} FINISHED : GameState
+        - phase : Phase
+        + GameState()
+        + GameState(phase : Phase)
+        + getPhase() : Phase
+        + setPhase(phase : Phase) : void
+        + getDisplayName() : String
+        + isOngoing() : boolean
+        + isFinalRound() : boolean
+        + isFinished() : boolean
+        + toString() : String
+    }
+
+    class Game {
+        - recentMoves : Deque<String>
+        - undoHistory : Deque<GameSnapshot>
+        - players : List<Player>
+        - board : Board
+        - winningPoints : int
+        - maxTokens : int
+        - currentState : GameState
+        - currentPlayerIndex : int
+        - winner : Player
+        - isFinalRound : boolean
+        - finalRoundPlayerIndex : int
+        + Game(players : List<Player>, winningPoints : int, maxTokens : int)
+        + saveUndoState() : void
+        + undo() : boolean
+        + getPlayers() : List<Player>
+        + getCurrentPlayer() : Player
+        + getBoard() : Board
+        + getCurrentState() : GameState
+        + getWinningPoints() : int
+        + getMaxTokens() : int
+        + addRecentMove(entry : String) : void
+        + getRecentMoves() : List<String>
+        + getWinner() : Player
+        + isFinalRound() : boolean
+        + isGameFinished() : boolean
+        + advanceToNextPlayer() : void
+        + hasPlayerReachedWinningScore() : boolean
+        - startFinalRound() : void
+        - determineWinner() : void
+        + getGameStateSummary() : Map<String, Object>
+        + toString() : String
+    }
+
+    class BotStrategy <<final>> {
+        - BotStrategy()
+        + {static} chooseBotMove(player : Player, game : Game) : Move
+        + {static} chooseBotDiscard(player : Player, excessCount : int, game : Game) : Move
+        - {static} getWeightedBonusImportance(player : Player, board : Board) : Map<Gem, Double>
+        - {static} getBestAffordableCardForNoble(player : Player, board : Board, bonusImportance : Map<Gem, Double>) : Integer
+        - {static} getBestAffordableReservedForNoble(player : Player, bonusImportance : Map<Gem, Double>) : Integer
+        - {static} getBestAffordableVisibleId(player : Player, board : Board) : Integer
+        - {static} takeGemsTowardNoble(player : Player, board : Board, bonusImportance : Map<Gem, Double>) : Move
+        - {static} getAffordableReservedIds(player : Player) : List<Integer>
+        - {static} getAvailableDifferentGems(board : Board) : List<Gem>
+        - {static} getAvailableTwoSameGems(board : Board) : List<Gem>
+    }
+
+    ComputerPlayer --|> Player
+    Game *-- Board
+    Game *-- "many" Player
+    Game *-- GameState
+    Board *-- "many" Card
+    Board *-- "many" Noble
+    Player *-- "many" Card
+    Player *-- "many" Noble
+    Card --> Gem
+    Noble --> Gem
+    Move --> MoveType
+    Move --> Gem
+    MenuOption --> MenuAction
+    Board --> Gem
+    BotStrategy --> Player
+    BotStrategy --> Game
+    BotStrategy --> Board
+    BotStrategy --> Move
+    BotStrategy --> Gem
+    BotStrategy --> Card
+    BotStrategy --> MoveType
+    BotStrategy --> Noble
+}
+
+' ─────────────────────────────────────────────
+'  PACKAGE: com.splendor.data
+' ─────────────────────────────────────────────
+package "com.splendor.data" {
+    class CsvCardParser {
+        - configProvider : IConfigProvider
+        - allCards : List<Card>
+        - allNobles : List<Noble>
+        + CsvCardParser(configProvider : IConfigProvider)
+        + loadCards(tier : int) : List<Card>
+        + loadNobles() : List<Noble>
+        - loadData() : void
+        - validateHeader(headerLine : String) : void
+        - parseCsvRow(line : String, lineNumber : int) : void
+        - parseCardRow(parts : String[], lineNumber : int) : Card
+        - parseNobleRow(parts : String[], lineNumber : int) : Noble
+        - getTargetCardCount(tier : int) : int
+    }
+}
+
+CsvCardParser --> IConfigProvider
+CsvCardParser --> Card
+CsvCardParser --> Noble
+CsvCardParser --> Gem
+CsvCardParser --> ConfigKeys
+CsvCardParser --> DataLoadException
+
+' ─────────────────────────────────────────────
+'  PACKAGE: com.splendor.model.validator
+' ─────────────────────────────────────────────
+package "com.splendor.model.validator" {
+
+    class ValidationResult {
+        - valid : boolean
+        - message : String
+        + ValidationResult(valid : boolean, message : String)
+        + isValid() : boolean
+        + getMessage() : String
+        + {static} ok() : ValidationResult
+        + {static} fail(reason : String) : ValidationResult
+    }
+
+    class GameRuleValidator {
+        - {static} MIN_PLAYERS : int
+        - {static} MAX_PLAYERS : int
+        + validateGameStart(playerCount : int, winningPoints : int, maxTokens : int) : void
+        + validateStateTransition(currentState : GameState, targetState : GameState) : void
+        - validateFromOngoing(targetState : GameState) : void
+        - validateFromFinalRound(targetState : GameState) : void
+        + validatePlayerTurn(game : Game, player : Player) : void
+        + validateNobleAssignment(game : Game, player : Player, noble : Noble) : void
+    }
+
+    class MoveValidator {
+        - {static} MAX_RESERVED_CARDS : int
+        - {static} MIN_GEMS_FOR_TWO_SAME : int
+        - {static} MAX_GEMS_PER_TURN : int
+        + validateMove(move : Move, player : Player, game : Game) : void
+        - validateTakeThreeDifferent(move : Move, player : Player, game : Game) : void
+        - validateTakeTwoSame(move : Move, player : Player, game : Game) : void
+        - validateReserveCard(move : Move, player : Player, game : Game) : void
+        - validateBuyCard(move : Move, player : Player, game : Game) : void
+        - validateDiscardTokens(move : Move, player : Player, game : Game) : void
+        + canPlayerAffordCard(player : Player, card : Card) : boolean
+        - findAvailableCardById(board : Board, cardId : int) : Card
+        - findReservedCardById(player : Player, cardId : int) : Card
+        + validateTakeTwo(gem : Gem, board : Board) : ValidationResult
+        + getRuleExplanation(move : Move, player : Player, game : Game) : ValidationResult
+    }
+
+    GameRuleValidator --> GameState
+    GameRuleValidator --> Game
+    GameRuleValidator --> Player
+    GameRuleValidator --> Noble
+    MoveValidator --> Move
+    MoveValidator --> Player
+    MoveValidator --> Game
+    MoveValidator --> Board
+    MoveValidator --> Card
+    MoveValidator --> Gem
+    MoveValidator --> ValidationResult
+    MoveValidator --> MoveType
+}
+
+' ─────────────────────────────────────────────
+'  PACKAGE: com.splendor.controller
+' ─────────────────────────────────────────────
+package "com.splendor.controller" {
+
+    class GameController {
+        - gameView : IGameView
+        - configProvider : IConfigProvider
+        - moveValidator : MoveValidator
+        - gameRuleValidator : GameRuleValidator
+        - game : Game
+        - players : List<Player>
+        + GameController(gameView : IGameView, configProvider : IConfigProvider)
+        + initializeGame() : void
+        + startGame() : void
+        - performUndo() : boolean
+        - processTurn() : void
+        - getPlayerMove(player : Player) : Move
+        - handleTokenLimit(player : Player) : void
+        - createPlayers(playerCount : int) : void
+        - executeMove(move : Move, player : Player) : void
+        - checkNobleVisits(player : Player) : void
+        - displayGameResults() : void
+        + getGame() : Game
+        + getPlayers() : List<Player>
+        - isUndoInput(input : String) : boolean
+    }
+
+    class MenuBuilder <<final>> {
+        - {static} moveValidator : MoveValidator
+        - MenuBuilder()
+        + {static} buildMenuOptions(player : Player, game : Game) : List<MenuOption>
+        + {static} formatColoredGemList(gems : List<Gem>) : String
+        + {static} formatIdList(ids : List<Integer>, maxCount : int) : String
+        + {static} getAvailableDifferentGems(board : Board) : List<Gem>
+        + {static} getAvailableTwoSameGems(board : Board) : List<Gem>
+        + {static} hasVisibleCards(board : Board) : boolean
+        + {static} hasAnyDeckCards(board : Board) : boolean
+        - {static} reserveVisibleReason(player : Player, board : Board) : String
+        - {static} reserveDeckReason(player : Player, board : Board) : String
+        - {static} buyVisibleReason(player : Player, board : Board) : String
+        - {static} buyReservedReason(player : Player) : String
+        + {static} getAffordableVisibleIds(player : Player, board : Board) : List<Integer>
+        + {static} getAffordableReservedIds(player : Player) : List<Integer>
+        + {static} getVisibleCardIds(board : Board) : List<Integer>
+        + {static} getReservedCardIds(player : Player) : List<Integer>
+        - {static} gemLabel(gem : Gem) : String
+    }
+
+    class PlayerController {
+        - game : Game
+        - gameView : IGameView
+        - gameRuleValidator : GameRuleValidator
+        + PlayerController(game : Game, gameView : IGameView)
+        + checkNobleVisits(player : Player) : void
+        - assignNobleToPlayer(player : Player, noble : Noble) : void
+        + executeTokenDiscard(player : Player, discardMove : Move) : void
+        - formatDiscounts(discounts : Map<Gem, Integer>) : String
+        - validateTokenDiscard(player : Player, tokensToDiscard : Map<Gem, Integer>) : void
+        + getPlayerStateSummary(player : Player) : Map<String, Object>
+        + canPlayerTakeAction(player : Player, actionType : String) : boolean
+        - hasAvailableCards() : boolean
+    }
+
+    class TurnController {
+        - game : Game
+        - gameView : IGameView
+        + TurnController(game : Game, gameView : IGameView)
+        + executeMove(move : Move, player : Player) : void
+        - executeTakeThreeDifferent(move : Move, player : Player) : void
+        - executeTakeTwoSame(move : Move, player : Player) : void
+        - executeReserveCard(move : Move, player : Player) : void
+        - executeBuyCard(move : Move, player : Player) : void
+        - executeDiscardTokens(move : Move, player : Player) : void
+        - findCardToReserve(move : Move, board : Board) : Card
+        - findAvailableCardById(board : Board, cardId : int) : Card
+        - findCardToBuy(move : Move, player : Player, board : Board) : Card
+        - calculateEffectiveCost(player : Player, card : Card) : Map<Gem, Integer>
+        - processCardPayment(player : Player, board : Board, effectiveCost : Map<Gem, Integer>) : void
+    }
+
+    GameController --> Game
+    GameController --> Player
+    GameController --> Move
+    GameController --> IGameView
+    GameController --> IConfigProvider
+    GameController --> MoveValidator
+    GameController --> GameRuleValidator
+    GameController --> TurnController
+    GameController --> PlayerController
+    GameController --> MenuBuilder
+    GameController --> CsvCardParser
+    GameController --> Board
+    GameController --> Card
+    GameController --> ComputerPlayer
+    GameController --> MoveFormatter
+    GameController --> MoveType
+    GameController --> ValidationResult
+    MenuBuilder --> Player
+    MenuBuilder --> Board
+    MenuBuilder --> Game
+    MenuBuilder --> Gem
+    MenuBuilder --> MoveValidator
+    MenuBuilder --> MenuOption
+    MenuBuilder --> Card
+    MenuBuilder --> ComputerPlayer
+    MenuBuilder --> MenuAction
+    MenuBuilder --> Colors
+    PlayerController --> Game
+    PlayerController --> Player
+    PlayerController --> Noble
+    PlayerController --> Move
+    PlayerController --> IGameView
+    PlayerController --> GameRuleValidator
+    PlayerController --> Board
+    PlayerController --> Gem
+    PlayerController --> MoveType
+    TurnController --> Game
+    TurnController --> Player
+    TurnController --> Move
+    TurnController --> Board
+    TurnController --> Card
+    TurnController --> Gem
+    TurnController --> IGameView
+    TurnController --> MoveType
+}
+
+' ─────────────────────────────────────────────
+'  PACKAGE: com.splendor.network
+' ─────────────────────────────────────────────
+package "com.splendor.network" {
+
+    class NetworkException {
+        + NetworkException(message : String)
+        + NetworkException(message : String, cause : Throwable)
+    }
+
+    class NetworkProtocol <<final>> {
+        + {static} MOVE_COMMAND : String
+        + {static} QUERY_COMMAND : String
+        + {static} DISCONNECT_COMMAND : String
+        + {static} SUCCESS_RESPONSE : String
+        + {static} ERROR_RESPONSE : String
+        + {static} STATE_RESPONSE : String
+        + {static} ACTION_TAKE_3 : String
+        + {static} ACTION_TAKE_2 : String
+        + {static} ACTION_BUY : String
+        + {static} ACTION_RESERVE : String
+        + {static} ACTION_DISCARD : String
+        + {static} QUERY_STATE : String
+        + {static} QUERY_PLAYERS : String
+        + {static} QUERY_BOARD : String
+        + {static} QUERY_MOVES : String
+        + {static} MESSAGE_DELIMITER : String
+        + {static} FIELD_DELIMITER : String
+        + {static} MAX_MESSAGE_LENGTH : int
+        + {static} MAX_COMMAND_PARTS : int
+        - NetworkProtocol()
+        + {static} isValidMessage(message : String) : boolean
+        + {static} createMessage(command : String, parameters : String...) : String
+        + {static} createSuccessResponse(data : String) : String
+        + {static} createErrorResponse(errorMessage : String) : String
+        + {static} parseMessage(message : String) : String[]
+        + {static} getCommandType(message : String) : String
+    }
+
+    class ClientHandler {
+        - clientId : String
+        - clientSocket : Socket
+        - serverHandler : ServerSocketHandler
+        - configProvider : IConfigProvider
+        - inputReader : BufferedReader
+        - outputWriter : PrintWriter
+        - isConnected : boolean
+        + ClientHandler(clientSocket : Socket, serverHandler : ServerSocketHandler, configProvider : IConfigProvider)
+        + handleClient() : void
+        - initializeStreams() : void
+        - processClientMessages() : void
+        - processMessage(message : String) : void
+        - sendError(errorMessage : String) : void
+        + sendMessage(message : String) : void
+        - sendWelcomeMessage() : void
+        - handleDisconnect() : void
+        + disconnect() : void
+        - cleanup() : void
+        + getClientId() : String
+        + getClientAddress() : String
+        + isConnected() : boolean
+    }
+
+    class ServerSocketHandler {
+        - serverPort : int
+        - configProvider : IConfigProvider
+        - serverSocket : ServerSocket
+        - clientExecutor : ExecutorService
+        - connectedClients : List<ClientHandler>
+        - isRunning : boolean
+        - clientResponseQueues : ConcurrentHashMap<String, LinkedBlockingQueue<String>>
+        - clientReadyLatch : CountDownLatch
+        - gameStarted : boolean
+        + ServerSocketHandler(serverPort : int, configProvider : IConfigProvider)
+        + startServer() : void
+        - acceptClientConnections() : void
+        - handleClientConnection(clientSocket : Socket) : void
+        + waitForClients(count : int, timeoutMs : long) : boolean
+        + getConnectedClientIds() : List<String>
+        + markGameStarted() : void
+        - removeClient(clientHandler : ClientHandler) : void
+        + broadcastToAllClients(message : String) : void
+        + sendToClient(clientId : String, message : String) : void
+        + registerClientQueue(clientId : String) : void
+        + unregisterClientQueue(clientId : String) : void
+        + enqueueClientResponse(clientId : String, message : String) : void
+        + pollClientResponse(clientId : String, timeoutMs : long) : String
+        + waitForClientResponse(clientId : String, timeoutMs : int) : String
+        + stopServer() : void
+        + getConnectedClientCount() : int
+        + getConnectedClients() : List<ClientHandler>
+        + isRunning() : boolean
+        + getActualPort() : int
+        - closeSocket(socket : Socket) : void
+    }
+
+    NetworkException --|> SplendorException
+    ServerSocketHandler *-- "many" ClientHandler
+    ClientHandler --> ServerSocketHandler
+    ClientHandler --> IConfigProvider
+    ClientHandler --> NetworkProtocol
+    ClientHandler --> GameLogger
+    ServerSocketHandler --> IConfigProvider
+    ServerSocketHandler --> GameLogger
+    ServerSocketHandler --> Constants
+}
+
+' ─────────────────────────────────────────────
+'  PACKAGE: com.splendor.util
+' ─────────────────────────────────────────────
+package "com.splendor.util" {
+
+    class Constants <<final>> {
+        + {static} SERVER_MODE_FLAG : String
+        + {static} DEFAULT_SERVER_PORT : int
+        + {static} MAX_CLIENT_CONNECTIONS : int
+        + {static} CONNECTION_TIMEOUT_MS : int
+        + {static} MIN_PLAYERS : int
+        + {static} MAX_PLAYERS : int
+        + {static} DEFAULT_WINNING_POINTS : int
+        + {static} DEFAULT_MAX_TOKENS : int
+        + {static} MAX_RESERVED_CARDS : int
+        + {static} MIN_CARD_TIER : int
+        + {static} MAX_CARD_TIER : int
+        + {static} CARDS_PER_TIER_DISPLAYED : int
+        + {static} GOLD_TOKENS_PER_PLAYER_COUNT : int
+        + {static} MIN_GEMS_FOR_TWO_SAME_ACTION : int
+        + {static} MAX_GEMS_PER_TURN : int
+        + {static} MIN_PLAYER_NAME_LENGTH : int
+        + {static} MAX_PLAYER_NAME_LENGTH : int
+        + {static} MAX_INPUT_RETRIES : int
+        + {static} PROTOCOL_DELIMITER : String
+        + {static} PROTOCOL_SUCCESS : String
+        + {static} PROTOCOL_ERROR : String
+        + {static} PROTOCOL_MOVE : String
+        + {static} LOG_FORMAT : String
+        + {static} LOG_LEVEL_INFO : String
+        + {static} LOG_LEVEL_ERROR : String
+        + {static} LOG_LEVEL_DEBUG : String
+        - Constants()
+    }
+
+    class GameLogger {
+        - {static} TIMESTAMP_FORMAT : DateTimeFormatter
+        - {static} debugEnabled : boolean
+        + {static} setDebugEnabled(enabled : boolean) : void
+        + {static} info(message : String) : void
+        + {static} error(message : String) : void
+        + {static} error(message : String, exception : Throwable) : void
+        + {static} debug(message : String) : void
+        + {static} warn(message : String) : void
+        - {static} log(level : String, message : String) : void
+        + {static} logGameState(context : String, gameState : Object) : void
+        + {static} logPlayerAction(playerName : String, action : String) : void
+        + {static} logConfigurationLoaded(configSource : String) : void
+        + {static} logNetworkEvent(event : String) : void
+    }
+
+    class AnsiUtils <<final>> {
+        - AnsiUtils()
+        + {static} stripAnsi(str : String) : String
+        + {static} padRightAnsi(s : String, visibleWidth : int) : String
+        + {static} truncateAnsi(s : String, maxVisible : int) : String
+        + {static} combineHorizontal(blocks : List<List<String>>, gap : int) : List<String>
+    }
+
+    class CardLoader {
+        + {static} loadCards(tier : int) : List<Card>
+        + {static} loadNobles() : List<Noble>
+        - {static} createCard(id : int, tier : int, points : int, bonusGem : Gem, cost : Map<Gem, Integer>) : Card
+    }
+
+    class GemParser <<final>> {
+        - GemParser()
+        + {static} parseGem(token : String) : Gem
+        + {static} parseGemCode(code : char) : Gem
+        + {static} parseGemSelection(input : String) : List<Gem>
+        + {static} parseGemSequence(input : String) : List<Gem>
+    }
+
+    class InputResolver {
+        - scanner : Scanner
+        + InputResolver()
+        + promptForInt(prompt : String, minValue : int, maxValue : int) : int
+        + promptForInt(prompt : String, minValue : int, maxValue : int, onInvalid : Runnable) : int
+        + promptForString(prompt : String, minLength : int, maxLength : int) : String
+        + promptForConfirmation(prompt : String) : boolean
+        + parseInt(input : String, defaultValue : int) : int
+        + isValidName(input : String) : boolean
+        + close() : void
+        - sanitizeInput(input : String) : String
+    }
+
+    class MoveFormatter <<final>> {
+        - {static} GEM_ORDER : List<Gem>
+        - MoveFormatter()
+        + {static} formatMoveEntry(player : Player, move : Move) : String
+        + {static} formatGemCounts(counts : Map<Gem, Integer>) : String
+        + {static} gemLabel(gem : Gem) : String
+    }
+
+    class MoveParser <<final>> {
+        - MoveParser()
+        + {static} parseMoveFromResponse(response : String) : Move
+        + {static} parseTakeThreeMove(gemCodes : String) : Move
+        + {static} parseTakeTwoMove(gemCode : String) : Move
+        + {static} parseBuyMove(param : String) : Move
+        + {static} parseReserveMove(param : String) : Move
+        + {static} parseDiscardMoveFromResponse(response : String) : Move
+        + {static} createDefaultMove() : Move
+    }
+
+    CardLoader --> Card
+    CardLoader --> Noble
+    CardLoader --> Gem
+    GemParser --> Gem
+    MoveFormatter --> Player
+    MoveFormatter --> Move
+    MoveFormatter --> Gem
+    MoveFormatter --> MoveType
+    MoveFormatter --> Colors
+    MoveParser --> Move
+    MoveParser --> Gem
+    MoveParser --> GemParser
+    MoveParser --> MoveType
+    GameLogger --> Constants
+}
+
+' ─────────────────────────────────────────────
+'  PACKAGE: com.splendor.view
+' ─────────────────────────────────────────────
+package "com.splendor.view" {
+
+    interface IGameView {
+        + displayGameState(game : Game) : void
+        + displayPlayerTurn(player : Player) : void
+        + displayMessage(message : String) : String
+        + displayNotification(message : String) : void
+        + displayError(errorMessage : String) : String
+        + promptForCommand(player : Player, game : Game) : String
+        + promptForMove(player : Player, game : Game, options : List<MenuOption>) : Move
+        + promptForTokenDiscard(player : Player, excessCount : int) : Move
+        + displayWinner(winner : Player, finalScores : Map<String, Integer>) : void
+        + clearDisplay() : void
+        + displayAvailableMoves(options : List<MenuOption>, game : Game) : void
+        + promptForNobleChoice(player : Player, nobles : List<Noble>) : Noble
+        + promptForPlayerName(playerNumber : int, totalPlayers : int) : String
+        + promptForPlayerCount() : int
+        + displayWelcomeMessage() : void
+        + waitForEnter() : String
+        + close() : void
+    }
+
+    class Colors {
+        + {static} RESET : String
+        + {static} RED : String
+        + {static} GREEN : String
+        + {static} BLUE : String
+        + {static} WHITE : String
+        + {static} BLACK : String
+        + {static} GOLD : String
+        + {static} CYAN : String
+        + {static} PURPLE : String
+        + {static} GRAY : String
+        + {static} DIM : String
+        - {static} ANSI_ENABLED : boolean
+        + {static} colorize(text : String, colorCode : String) : String
+        + {static} getGemColor(gem : Gem) : String
+        - {static} detectAnsiSupport() : boolean
+    }
+
+    class CardRenderer <<final>> {
+        - {static} CARD_CONTENT_WIDTH : int
+        - {static} GEM_ORDER : List<Gem>
+        - CardRenderer()
+        + {static} formatCardAscii(card : Card) : String
+        + {static} formatCardAscii(card : Card, affordable : boolean) : String
+        - {static} applyDim(text : String, dimColor : String) : String
+        - {static} formatCardCostLines(card : Card, maxLines : int, dimmed : boolean) : List<String>
+        + {static} gemLabel(gem : Gem) : String
+    }
+
+    class ConsoleView {
+        - scanner : Scanner
+        - inputResolver : InputResolver
+        - renderer : GameRenderer
+        - moveValidator : MoveValidator
+        - currentPlayer : Player
+        + ConsoleView()
+        + displayGameState(game : Game) : void
+        + displayPlayerTurn(player : Player) : void
+        + displayMessage(message : String) : String
+        + displayNotification(message : String) : void
+        + displayError(errorMessage : String) : String
+        + waitForEnter() : String
+        + promptForCommand(player : Player, game : Game) : String
+        + promptForMove(player : Player, game : Game, options : List<MenuOption>) : Move
+        + promptForTokenDiscard(player : Player, excessCount : int) : Move
+        + displayWinner(winner : Player, finalScores : Map<String, Integer>) : void
+        + clearDisplay() : void
+        + displayAvailableMoves(options : List<MenuOption>, game : Game) : void
+        + promptForNobleChoice(player : Player, nobles : List<Noble>) : Noble
+        + promptForPlayerName(playerNumber : int, totalPlayers : int) : String
+        + promptForPlayerCount() : int
+        + displayWelcomeMessage() : void
+        + close() : void
+        - formatRequirements(requirements : Map<Gem, Integer>) : String
+        - promptTakeThree(option : MenuOption) : Move
+        - promptTakeTwo(option : MenuOption) : Move
+        - promptReserveVisible(option : MenuOption) : Move
+        - promptReserveDeck(option : MenuOption) : Move
+        - promptBuyVisible(option : MenuOption) : Move
+        - promptBuyReserved(option : MenuOption) : Move
+        - displayReservedCardDetails(player : Player) : void
+        - gemShort(gem : Gem) : String
+    }
+
+    class GameRenderer {
+        - {static} GEM_ORDER : List<Gem>
+        - {static} MENU_CONTENT_WIDTH : int
+        - {static} RECENT_MOVES_CONTENT_WIDTH : int
+        - {static} PLAYER_BOX_WIDTH : int
+        - {static} NOBLE_CARD_WIDTH : int
+        - menuLines : List<String>
+        - moveValidator : MoveValidator
+        + GameRenderer()
+        + clearDisplay() : void
+        + displayHeader() : void
+        + displayGameState(game : Game) : void
+        + getRenderedGameState(game : Game) : String
+        + renderToString(game : Game) : String
+        + displayBoard(board : Board, currentPlayer : Player) : void
+        - renderGameStateInternal(board : Board, players : List<Player>, currentPlayer : Player, recentMoves : List<String>, maxTokens : int) : String
+        - combineSideBySideRaw(left : List<String>, right : List<String>) : String
+        - combineSideBySide(left : List<String>, right : List<String>) : List<String>
+        - renderCardTiersList(board : Board, currentPlayer : Player) : List<List<String>>
+        - renderNoblesHorizontal(board : Board) : List<String>
+        - renderRecentMovesBox(moves : List<String>) : List<String>
+        - renderPlayersTrackBoxes(players : List<Player>, currentPlayer : Player, maxTokens : int) : List<String>
+        - renderMenuBox(menu : List<String>) : List<String>
+        - renderBankVertical(board : Board) : List<String>
+        + formatCardAscii(card : Card) : String
+        + formatCardAscii(card : Card, affordable : boolean) : String
+        + displayPlayerTokens(player : Player) : void
+        + setMenuLines(menuLines : List<String>) : void
+        + buildMenuLines(options : List<MenuOption>) : List<String>
+        - formatGemCounts(counts : Map<Gem, Integer>, includeZero : boolean) : String
+        - formatRequirementsLines(requirements : Map<Gem, Integer>, contentWidth : int) : List<String>
+        - gemLabel(gem : Gem) : String
+        - frameLine(content : String, color : String, contentWidth : int) : String
+        - colorBorder(line : String, color : String) : String
+    }
+
+    class NetworkGameView {
+        - playerViews : List<RemoteView>
+        - playerCount : int
+        - playerOrder : List<Player>
+        - activePlayer : Player
+        + NetworkGameView(playerViews : List<RemoteView>, playerCount : int)
+        - initPlayerOrder(game : Game) : void
+        - viewForPlayer(player : Player) : RemoteView
+        - broadcast(action : Consumer<RemoteView>) : void
+        + displayGameState(game : Game) : void
+        + displayPlayerTurn(player : Player) : void
+        + displayMessage(message : String) : String
+        + displayNotification(message : String) : void
+        + displayError(errorMessage : String) : String
+        + displayWinner(winner : Player, finalScores : Map<String, Integer>) : void
+        + displayAvailableMoves(options : List<MenuOption>, game : Game) : void
+        + displayWelcomeMessage() : void
+        + clearDisplay() : void
+        + close() : void
+        + waitForEnter() : String
+        + promptForCommand(player : Player, game : Game) : String
+        + promptForMove(player : Player, game : Game, options : List<MenuOption>) : Move
+        + promptForTokenDiscard(player : Player, excessCount : int) : Move
+        + promptForNobleChoice(player : Player, nobles : List<Noble>) : Noble
+        + promptForPlayerCount() : int
+        + promptForPlayerName(playerNumber : int, totalPlayers : int) : String
+    }
+
+    class RemoteView {
+        - clientId : String
+        - messageHandler : NetworkMessageHandler
+        - renderer : GameRenderer
+        + RemoteView(clientId : String, messageHandler : NetworkMessageHandler)
+        + displayGameState(game : Game) : void
+        + displayPlayerTurn(player : Player) : void
+        + displayMessage(message : String) : String
+        + displayError(errorMessage : String) : String
+        + displayNotification(message : String) : void
+        - displayErrorNotification(errorMessage : String) : void
+        + promptForCommand(player : Player, game : Game) : String
+        + promptForMove(player : Player, game : Game, options : List<MenuOption>) : Move
+        - buildMoveFromOption(option : MenuOption) : Move
+        - isBackToMenuInput(input : String) : boolean
+        - parseId(input : String) : int
+        - send(message : String) : void
+        - sendErrorLine(errorMessage : String) : void
+        - waitForResponse(timeoutMs : int) : String
+        + promptForTokenDiscard(player : Player, excessCount : int) : Move
+        + displayWinner(winner : Player, finalScores : Map<String, Integer>) : void
+        + clearDisplay() : void
+        + displayAvailableMoves(options : List<MenuOption>, game : Game) : void
+        + promptForNobleChoice(player : Player, nobles : List<Noble>) : Noble
+        + promptForPlayerName(playerNumber : int, totalPlayers : int) : String
+        + promptForPlayerCount() : int
+        + displayWelcomeMessage() : void
+        + waitForEnter() : String
+        + close() : void
+        - createDefaultDiscardMove(player : Player, excessCount : int) : Move
+        - sendReservedCardDetails(player : Player) : void
+    }
+
+    interface NetworkMessageHandler {
+        + sendToClient(clientId : String, message : String) : void
+        + waitForClientResponse(clientId : String, timeoutMs : int) : String
+    }
+
+    ConsoleView ..|> IGameView
+    NetworkGameView ..|> IGameView
+    RemoteView ..|> IGameView
+    NetworkGameView *-- "many" RemoteView
+    ConsoleView --> GameRenderer
+    ConsoleView --> InputResolver
+    ConsoleView --> MoveValidator
+    ConsoleView --> Game
+    ConsoleView --> Player
+    ConsoleView --> Move
+    ConsoleView --> Noble
+    ConsoleView --> Gem
+    ConsoleView --> MenuOption
+    ConsoleView --> MoveType
+    ConsoleView --> GemParser
+    ConsoleView --> Colors
+    RemoteView --> GameRenderer
+    RemoteView --> NetworkMessageHandler
+    RemoteView --> Game
+    RemoteView --> Player
+    RemoteView --> Move
+    RemoteView --> Noble
+    RemoteView --> Gem
+    RemoteView --> MenuOption
+    RemoteView --> MoveType
+    RemoteView --> Card
+    RemoteView --> GameLogger
+    RemoteView --> GemParser
+    RemoteView --> MoveParser
+    RemoteView --> Colors
+    GameRenderer --> Board
+    GameRenderer --> Player
+    GameRenderer --> Card
+    GameRenderer --> MoveValidator
+    GameRenderer --> Gem
+    GameRenderer --> Game
+    GameRenderer --> Noble
+    GameRenderer --> AnsiUtils
+    GameRenderer --> CardRenderer
+    GameRenderer --> Colors
+    GameRenderer --> MenuOption
+    NetworkGameView --> Game
+    NetworkGameView --> Player
+    NetworkGameView --> Move
+    NetworkGameView --> Noble
+    NetworkGameView --> MenuOption
+    Colors --> Gem
+    CardRenderer --> Card
+    CardRenderer --> Gem
+    CardRenderer --> Colors
+    CardRenderer --> AnsiUtils
+}
+
+' ─────────────────────────────────────────────
+'  CROSS-PACKAGE RELATIONSHIPS
+' ─────────────────────────────────────────────
+ServerSocketHandler ..|> NetworkMessageHandler
+Main --> GameController
+Main --> IConfigProvider
+Main --> ServerSocketHandler
+Main --> IGameView
+Main --> ConsoleView
+Main --> FileConfigProvider
+Main --> NetworkGameView
+Main --> RemoteView
+Main --> Constants
+Board --> CardLoader
+BotStrategy --> MoveValidator
+
+' Exception package usage (package-level dependency)
+GameController ..> excpkg : <<throws>>
+TurnController ..> excpkg : <<throws>>
+PlayerController ..> excpkg : <<throws>>
+MoveValidator ..> excpkg : <<throws>>
+GameRuleValidator ..> excpkg : <<throws>>
+ServerSocketHandler ..> excpkg : <<throws>>
+ClientHandler ..> excpkg : <<throws>>
+Main ..> excpkg : <<throws>>
+
+@enduml

@@ -1,0 +1,17 @@
+classDiagram
+    direction LR
+    class FileConfigProvider {
+        -Properties properties
+        +FileConfigProvider()
+        +loadConfiguration() void
+        +getStringProperty(String key, String defaultValue) String
+        +getIntProperty(String key, int defaultValue) int
+        +getBooleanProperty(String key, boolean defaultValue) boolean
+        +hasProperty(String key) boolean
+    }
+
+    FileConfigProvider ..|> IConfigProvider
+    class IConfigProvider {
+        <<interface>>
+    }
+

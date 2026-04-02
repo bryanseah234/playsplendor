@@ -1,0 +1,34 @@
+classDiagram
+    direction LR
+    class GameRuleValidator {
+        +GameRuleValidator()
+        +validateGameStart(int playerCount, int winningPoints, int maxTokens) void
+        +validateNobleAssignment(Game game, Player player, Noble noble) void
+    }
+
+    class MoveValidator {
+        -int maxReservedCards
+        +MoveValidator(IConfigProvider configProvider)
+        +validateMove(Move move, Player player, Game game) void
+        +getRuleExplanation(Move move, Player player, Game game) ValidationResult
+        +canPlayerAffordCard(Player player, Card card) boolean
+        +getMaxReservedCards() int
+        -validateTakeThreeDifferent(Move move, Board board) void
+        -validateTakeTwoSame(Move move, Board board) void
+        -validateReserveCard(Move move, Player player, Board board) void
+        -validateBuyCard(Move move, Player player, Board board) void
+        -validateDiscardTokens(Move move, Player player, int maxTokens) void
+        -findVisibleCard(Board board, Integer cardId) Card
+        -findReservedCard(Player player, Integer cardId) Card
+    }
+
+    class ValidationResult {
+        -boolean valid
+        -String message
+        +ValidationResult(boolean valid, String message)
+        +isValid() boolean
+        +getMessage() String
+        +ok() ValidationResult$
+        +fail(String reason) ValidationResult$
+    }
+

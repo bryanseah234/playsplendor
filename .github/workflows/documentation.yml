@@ -5,7 +5,7 @@ on:
     branches: [ main, develop ]
     paths:
       - 'src/**/*.java'
-      - 'diagrams/src/**/*.mmd'
+      - 'docs/diagrams/mermaid/src/**/*.mmd'
       - 'docs/diagrams/*.puml'
       - 'test/ci/**'
       - 'render_diagrams.js'
@@ -15,7 +15,7 @@ on:
     branches: [ main ]
     paths:
       - 'src/**/*.java'
-      - 'diagrams/src/**/*.mmd'
+      - 'docs/diagrams/mermaid/src/**/*.mmd'
       - 'docs/diagrams/*.puml'
       - 'test/ci/**'
       - 'render_diagrams.js'

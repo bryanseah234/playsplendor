@@ -1,0 +1,23 @@
+classDiagram
+    direction LR
+    class GameLogger {
+        -GameLogger()
+        +setDebugEnabled(boolean enabled) void$
+        +info(String message) void$
+        +error(String message) void$
+        +error(String message, Throwable exception) void$
+        +debug(String message) void$
+        +warn(String message) void$
+        -log(String level, String message) void$
+    }
+
+    class InputResolver {
+        -Scanner scanner
+        +InputResolver()
+        +promptForInt(String prompt, int minValue, int maxValue) int
+        +promptForInt(String prompt, int minValue, int maxValue, Runnable onInvalid) int
+        +promptForString(String prompt, int minLength, int maxLength) String
+        +close() void
+        -sanitizeInput(String input) String
+    }
+
