@@ -60,12 +60,12 @@ java -cp classes com.splendor.Main --server
 
 The project follows a strict MVC pattern to ensure separation of concerns. The Controller layer orchestrates the game logic by delegating specific tasks to specialized sub-controllers and validators.
 
-![Architecture Diagram](./diagrams/png/splendor-class-diagram_1.png)
+![Architecture Diagram](./docs/diagrams/mermaid/png/system_architecture.png)
 
 <details>
 <summary>📋 View Architecture Diagram Source (.mmd)</summary>
 
-[`diagrams/src/splendor-class-diagram_1.mmd`](./diagrams/src/splendor-class-diagram_1.mmd)
+[`docs/diagrams/mermaid/src/system_architecture.mmd`](./docs/diagrams/mermaid/src/system_architecture.mmd)
 
 </details>
 
@@ -384,7 +384,8 @@ splendor/
 ├── classes/                      # Compiled classes (generated)
 ├── docs/
 │   ├── javadoc/                  # Generated API documentation
-│   └── diagrams/                 # Mermaid diagram exports
+│   └── diagrams/                 # PlantUML diagrams
+│       └── mermaid/              # Mermaid diagram exports
 ├── resources/
 │   ├── config.properties         # Game configuration
 │   └── card_data.csv             # Card data

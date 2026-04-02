@@ -2,8 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const { execSync, spawnSync } = require('child_process');
 
-const srcDir = path.join(__dirname, 'diagrams/src');
-const pngDir = path.join(__dirname, 'diagrams/png');
+const srcDir = path.join(__dirname, 'docs/diagrams/mermaid/src');
+const pngDir = path.join(__dirname, 'docs/diagrams/mermaid/png');
 
 function resolveMmdcCommand() {
     const direct = spawnSync('mmdc', ['--version'], { stdio: 'ignore', shell: true });

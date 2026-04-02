@@ -9,12 +9,12 @@ classDiagram
         +getAvailableCards(final int tier) List~Card~
         +getDeckSize(final int tier) int
         +getAvailableNobles() List~Noble~
-        +removeGems(final Map<Gem, Integer> gems) void
-        +addGems(final Map<Gem, Integer> gems) void
+        +removeGems(final Map~Gem, Integer~ gems) void
+        +addGems(final Map~Gem, Integer~ gems) void
         +drawCard(final int tier) Card
         +drawBlindCard(final int tier) Card
         +removeAvailableCard(final int tier, final Card card) boolean
-        +restoreDecks(final Map<Integer, List<Card>> decks) void
+        +restoreDecks(final Map~Integer, List~Card~~ decks) void
         -ensureTierSlotsPresent() void
         +removeAvailableNoble(final Noble noble) boolean
         -initializeGemBank() void
@@ -30,7 +30,7 @@ classDiagram
         -int tier
         -int points
         -Gem bonusGem
-        +Card(final int id, final int tier, final int points, final Gem bonusGem, final Map<Gem, Integer> cost)
+        +Card(final int id, final int tier, final int points, final Gem bonusGem, final Map~Gem, Integer~ cost)
         +getId() int
         +getTier() int
         +getPoints() int
@@ -135,7 +135,7 @@ classDiagram
         -boolean isReservedCard
         -Integer deckTier
         +Move(final MoveType moveType)
-        +Move(final MoveType moveType, final Map<Gem, Integer> selectedGems)
+        +Move(final MoveType moveType, final Map~Gem, Integer~ selectedGems)
         +Move(final MoveType moveType, final Integer cardId, final boolean isReservedCard)
         +reserveFromDeck(final int tier) Move$
         +getMoveType() MoveType
@@ -164,10 +164,10 @@ classDiagram
     class Noble {
         -int id
         -int points
-        +Noble(final int id, final int points, final Map<Gem, Integer> requirements)
+        +Noble(final int id, final int points, final Map~Gem, Integer~ requirements)
         +getId() int
         +getPoints() int
-        +requirementsMet(final Map<Gem, Integer> playerGemCounts) boolean
+        +requirementsMet(final Map~Gem, Integer~ playerGemCounts) boolean
         +toString() String
     }
 

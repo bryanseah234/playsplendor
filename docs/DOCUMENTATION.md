@@ -135,7 +135,7 @@ If your PR tool does not support binary files (PNG/JAR), do **not** include rege
 Instead:
 - Commit text/source changes first (`.java`, `.md`, `.mmd`, scripts/workflows).
 - Run diagram/Javadoc generation in CI or a follow-up artifact-producing pipeline.
-- Keep diagram source in `diagrams/src/` as source of truth.
+- Keep diagram source in `docs/diagrams/mermaid/src/` as source of truth.
 
 ### Verification Steps
 After documentation generation:

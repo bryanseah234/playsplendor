@@ -27,7 +27,7 @@
 
 This project follows a strict **MVC (Model-View-Controller)** architecture:
 
-![System Architecture](../diagrams/png/splendor-class-diagram_1.png)
+![System Architecture](diagrams/mermaid/png/system_architecture.png)
 
 **Six Main Portions:**
 1. **Domain** - Game entities and state
