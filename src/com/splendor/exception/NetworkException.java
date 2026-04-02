@@ -16,10 +16,21 @@ package com.splendor.exception;
  */
 public class NetworkException extends SplendorException {
 
+    /**
+     * Constructs a new NetworkException with the specified detail message.
+     *
+     * @param message The detail message
+     */
     public NetworkException(final String message) {
         super(message);
     }
 
+    /**
+     * Constructs a new NetworkException with the specified detail message and cause.
+     *
+     * @param message The detail message
+     * @param cause The underlying cause
+     */
     public NetworkException(final String message, final Throwable cause) {
         super(message, cause);
     }

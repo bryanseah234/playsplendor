@@ -58,6 +58,7 @@ public class Move {
      * @param selectedGems Map of selected gems and quantities
      * @param cardId ID of the selected card
      * @param isReservedCard Whether the card is from reserved cards
+     * @param deckTier The deck tier if reserving from a blind deck (can be null)
      */
     public Move(final MoveType moveType, final Map<Gem, Integer> selectedGems, 
                 final Integer cardId, final boolean isReservedCard, final Integer deckTier) {

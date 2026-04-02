@@ -8,11 +8,17 @@ import java.util.List;
  * Five collectible colors (White, Blue, Green, Red, Black) plus Gold (wildcard).
  */
 public enum Gem {
+    /** White gem, representing Diamond. */
     WHITE("W", "White"),
+    /** Blue gem, representing Sapphire. */
     BLUE("B", "Blue"),
+    /** Green gem, representing Emerald. */
     GREEN("G", "Green"),
+    /** Red gem, representing Ruby. */
     RED("R", "Red"),
+    /** Black gem, representing Onyx. */
     BLACK("K", "Black"),
+    /** Gold token, acting as a wildcard for any other color. */
     GOLD("Au", "Gold");
 
     private final String shortCode;
@@ -23,7 +29,18 @@ public enum Gem {
         this.label = label;
     }
 
+    /**
+     * Gets the single-character short code.
+     *
+     * @return The short code string
+     */
     public String getShortCode() { return shortCode; }
+
+    /**
+     * Gets the full label of the gem.
+     *
+     * @return The full label string
+     */
     public String getLabel() { return label; }
     
     @Override
@@ -33,6 +50,9 @@ public enum Gem {
 
     /**
      * Parses a single string (like "R", "Red", "RED") into a Gem.
+     *
+     * @param input The string to parse
+     * @return The corresponding Gem enum instance
      */
     public static Gem parseGem(String input) {
         if (input == null || input.trim().isEmpty()) {
@@ -49,6 +69,9 @@ public enum Gem {
 
     /**
      * Parses a string payload (like "R G B" or "RGB") into a List of Gems.
+     *
+     * @param input The string of multiple gems to parse
+     * @return A list of parsed Gem instances
      */
     public static List<Gem> parseGemSelection(String input) {
         List<Gem> gems = new ArrayList<>();

@@ -36,17 +36,34 @@ import com.splendor.model.Gem;
  * @see com.splendor.util.AnsiUtils For ANSI-aware string manipulation
  */
 public class Colors {
+
+    /**
+     * Default constructor for Colors.
+     */
+    public Colors() {}
+
+    /** Console reset code. */
     public static final String RESET = "\u001B[0m";
-    public static final String RED = "\u001B[31m"; // Red Gem
-    public static final String GREEN = "\u001B[32m"; // Green Gem
-    public static final String BLUE = "\u001B[34m"; // Blue Gem
-    public static final String WHITE = "\u001B[37m"; // White Gem
-    public static final String BLACK = "\u001B[90m"; // Black Gem (Dark Gray)
-    public static final String GOLD = "\u001B[33m"; // Gold Gem
-    public static final String CYAN = "\u001B[36m"; // Player Names / Info
-    public static final String PURPLE = "\u001B[35m"; // Nobles
-    public static final String GRAY = "\u001B[90m"; // Disabled / Info
-    public static final String DIM = "\u001B[38;5;240m"; // Unaffordable / Inaccessible
+    /** Red gem color. */
+    public static final String RED = "\u001B[31m";
+    /** Green gem color. */
+    public static final String GREEN = "\u001B[32m";
+    /** Blue gem color. */
+    public static final String BLUE = "\u001B[34m";
+    /** White gem color. */
+    public static final String WHITE = "\u001B[37m";
+    /** Black/Dark Gray gem color. */
+    public static final String BLACK = "\u001B[90m";
+    /** Gold token color. */
+    public static final String GOLD = "\u001B[33m";
+    /** Cyan color for players and info. */
+    public static final String CYAN = "\u001B[36m";
+    /** Purple color for nobles. */
+    public static final String PURPLE = "\u001B[35m";
+    /** Gray color for disabled options. */
+    public static final String GRAY = "\u001B[90m";
+    /** Dim color for unaffordable options. */
+    public static final String DIM = "\u001B[38;5;240m";
     private static final boolean ANSI_ENABLED = detectAnsiSupport();
 
     /**

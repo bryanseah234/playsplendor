@@ -28,8 +28,12 @@ import java.util.Map;
  */
 public class Main {
     
+    /**
+     * Default constructor for Main.
+     */
+    public Main() {}
 
-
+    /** Command line argument to trigger server mode. */
 	public static final String SERVER_MODE_FLAG = "--server";
     /**
      * Application entry point.

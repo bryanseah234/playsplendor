@@ -24,6 +24,15 @@ public final class BotStrategy {
 
     private BotStrategy() {}
 
+    /**
+     * Chooses the best move for the bot based on the current game state.
+     * It follows a fixed priority ladder to buy cards, reserve cards, or take gems.
+     *
+     * @param player The bot player making the move
+     * @param game The current game object
+     * @param moveValidator The validator to check if moves are legal and affordable
+     * @return The chosen move
+     */
     public static Move chooseBotMove(final Player player, final Game game,
             final MoveValidator moveValidator) {
         final Board board = game.getBoard();
@@ -96,6 +105,11 @@ public final class BotStrategy {
     /**
      * Smart discard: keep gems that are most needed for the noble path; discard least needed first.
      * Gold (wild) is always discarded last.
+     *
+     * @param player The bot player discarding tokens
+     * @param excessCount The number of tokens needed to be discarded
+     * @param game The current game object
+     * @return The move representing the discard action
      */
     public static Move chooseBotDiscard(final Player player, final int excessCount, final Game game) {
         final Map<Gem, Double> importance = getWeightedBonusImportance(player, game.getBoard());

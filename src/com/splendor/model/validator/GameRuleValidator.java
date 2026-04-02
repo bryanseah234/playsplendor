@@ -21,6 +21,11 @@ public class GameRuleValidator {
     private static final int MAX_PLAYERS = 4;
     
     /**
+     * Default constructor for GameRuleValidator.
+     */
+    public GameRuleValidator() {}
+    
+    /**
      * Validates that a game can be started with the specified parameters.
      * 
      * @param playerCount Number of players

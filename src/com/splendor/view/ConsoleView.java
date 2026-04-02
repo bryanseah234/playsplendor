@@ -37,6 +37,8 @@ public class ConsoleView implements IGameView {
 
     /**
      * Creates a new ConsoleView with config-aware components.
+     *
+     * @param config The configuration provider
      */
     public ConsoleView(final IConfigProvider config) {
         this.scanner = new Scanner(System.in);

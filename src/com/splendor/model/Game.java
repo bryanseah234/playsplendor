@@ -104,6 +104,7 @@ public class Game {
      * @param players List of players in the game
      * @param winningPoints Points required to win
      * @param maxTokens Maximum tokens allowed per player
+     * @param config The configuration provider
      */
     public Game(final List<Player> players, final int winningPoints, final int maxTokens,
             final com.splendor.config.IConfigProvider config) {

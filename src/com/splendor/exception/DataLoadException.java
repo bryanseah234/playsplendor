@@ -21,10 +21,21 @@ public class DataLoadException extends Exception {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Constructs a new DataLoadException with the specified detail message.
+     *
+     * @param message The detail message
+     */
     public DataLoadException(final String message) {
         super(message);
     }
 
+    /**
+     * Constructs a new DataLoadException with the specified detail message and cause.
+     *
+     * @param message The detail message
+     * @param cause The underlying cause
+     */
     public DataLoadException(final String message, final Throwable cause) {
         super(message, cause);
     }

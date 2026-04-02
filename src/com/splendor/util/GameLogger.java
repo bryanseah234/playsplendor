@@ -38,6 +38,8 @@ import java.time.format.DateTimeFormatter;
  */
 public class GameLogger {
     
+    /** Prevent instantiation of this static utility class. */
+    private GameLogger() {}
     @Override
 	public String toString() {
 		return "GameLogger []";
@@ -48,10 +50,15 @@ public class GameLogger {
     
     private static boolean debugEnabled = false;
     
+    /** Format string template for log messages. */
     public static final String LOG_FORMAT = "[%s] %s: %s";
+    /** Identifier for INFO level logs. */
     public static final String LOG_LEVEL_INFO = "INFO";
+    /** Identifier for ERROR level logs. */
     public static final String LOG_LEVEL_ERROR = "ERROR";
+    /** Identifier for DEBUG level logs. */
     public static final String LOG_LEVEL_DEBUG = "DEBUG";
+    /** Identifier for WARN level logs. */
     public static final String LOG_LEVEL_WARN = "WARN";
 
     /**
@@ -127,6 +134,4 @@ public class GameLogger {
         System.out.println(formattedMessage);
     }
 
-	public GameLogger() {}
-    
 }

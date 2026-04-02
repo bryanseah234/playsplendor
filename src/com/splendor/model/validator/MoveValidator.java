@@ -34,6 +34,11 @@ public class MoveValidator {
 
     /**
      * Validates a move and throws when the move is illegal.
+     *
+     * @param move The move to validate
+     * @param player The player attempting the move
+     * @param game The current game object
+     * @throws SplendorException if the move is invalid or breaks game rules
      */
     public void validateMove(final Move move, final Player player, final Game game) throws SplendorException {
         Objects.requireNonNull(move, "move");
@@ -65,6 +70,11 @@ public class MoveValidator {
 
     /**
      * Returns a non-throwing explanation of whether a move is valid.
+     *
+     * @param move The move to check
+     * @param player The player attempting the move
+     * @param game The current game object
+     * @return ValidationResult indicating success or failure reason
      */
     public ValidationResult getRuleExplanation(final Move move, final Player player, final Game game) {
         try {
@@ -77,6 +87,10 @@ public class MoveValidator {
 
     /**
      * Checks whether a player can pay for a card using discounts and gold.
+     *
+     * @param player The player attempting to buy the card
+     * @param card The card to check affordability against
+     * @return true if the player has enough tokens and discounts, false otherwise
      */
     public boolean canPlayerAffordCard(final Player player, final Card card) {
         final Map<Gem, Integer> discounts = player.getGemDiscounts();
@@ -96,6 +110,11 @@ public class MoveValidator {
         return player.getTokenCount(Gem.GOLD) >= requiredGold;
     }
 
+    /**
+     * Gets the maximum number of reserved cards allowed per player.
+     *
+     * @return The maximum number of reserved cards
+     */
     public int getMaxReservedCards() {
         return maxReservedCards;
     }

@@ -50,6 +50,8 @@ public class GameRenderer {
 
     /**
      * Creates a new GameRenderer with a config-aware MoveValidator.
+     *
+     * @param config The configuration provider specifying game parameters.
      */
     public GameRenderer(final IConfigProvider config) {
         this.moveValidator = new MoveValidator(config);

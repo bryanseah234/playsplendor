@@ -267,6 +267,7 @@ public final class MenuBuilder {
      *
      * @param player The player whose resources are checked.
      * @param board  The current game board.
+     * @param moveValidator Validator used to check card affordability.
      * @return List of affordable visible card IDs.
      */
     public static List<Integer> getAffordableVisibleIds(final Player player, final Board board,
