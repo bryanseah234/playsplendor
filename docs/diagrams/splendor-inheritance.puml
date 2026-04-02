@@ -1,0 +1,125 @@
+@startuml splendor_inheritance
+
+title Splendor Class Diagram — Inheritance & Interfaces
+
+left to right direction
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype polyline
+skinparam packageStyle rectangle
+skinparam monochrome false
+hide empty members
+
+package "com.splendor" {
+  class Main
+}
+
+package "com.splendor.config" {
+  interface IConfigProvider
+  class FileConfigProvider
+  class ConfigKeys
+  class ConfigValidator
+  class ConfigException
+}
+
+package "com.splendor.exception" {
+  class SplendorException
+  class DataLoadException
+  class NetworkException
+  class GameStateException
+  class InsufficientTokensException
+  class InvalidMoveException
+  class InvalidPlayerActionException
+}
+
+package "com.splendor.controller" {
+  class GameController
+  class TurnController
+  class PlayerController
+  class MenuBuilder
+  class BotStrategy
+}
+
+package "com.splendor.model" {
+  class Game
+  class Board
+  class Player
+  class ComputerPlayer
+  class Card
+  class Noble
+  class Move
+  class GameState
+  enum Gem
+  enum MoveType
+  enum MenuAction
+  class MenuOption
+}
+
+package "com.splendor.data" {
+  class CsvCardParser
+  class CardLoader
+}
+
+package "com.splendor.model.validator" {
+  class MoveValidator
+  class GameRuleValidator
+  class ValidationResult
+}
+
+package "com.splendor.view" {
+  interface IGameView
+  class Colors
+  class CardRenderer
+  class ConsoleView
+  class NetworkGameView
+  class RemoteView
+  class GameRenderer
+}
+
+package "com.splendor.network" {
+  class ServerSocketHandler
+  class ClientHandler
+  interface NetworkMessageHandler
+}
+
+package "com.splendor.util" {
+  class GameLogger
+  class AnsiUtils
+  class InputResolver
+  class MoveFormatter
+}
+
+' ── Config ──────────────────────────────────────
+FileConfigProvider ..|> IConfigProvider
+ConfigException --|> Exception
+
+' ── Exception hierarchy ─────────────────────────
+SplendorException --|> Exception
+DataLoadException --|> SplendorException
+NetworkException --|> SplendorException
+GameStateException --|> SplendorException
+InsufficientTokensException --|> SplendorException
+InvalidMoveException --|> SplendorException
+InvalidPlayerActionException --|> SplendorException
+
+' ── Network ─────────────────────────────────────
+ServerSocketHandler ..|> NetworkMessageHandler
+ServerSocketHandler *-- "many" ClientHandler
+
+' ── Model hierarchy & composition ───────────────
+ComputerPlayer --|> Player
+Game *-- Board
+Game *-- "many" Player
+Game *-- GameState
+Board *-- "many" Card
+Board *-- "many" Noble
+Player *-- "many" Card
+Player *-- "many" Noble
+
+' ── View implementations ─────────────────────────
+ConsoleView ..|> IGameView
+NetworkGameView ..|> IGameView
+RemoteView ..|> IGameView
+NetworkGameView *-- "many" RemoteView
+
+@enduml
