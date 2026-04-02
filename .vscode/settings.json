@@ -162,5 +162,6 @@
         "jebbs.plantuml",
         "visualstudioexptteam.vscodeintellicode",
         "sonarsource.sonarlint-vscode"
-    ]
+    ],
+    "kiroAgent.configureMCP": "Disabled"
 }
