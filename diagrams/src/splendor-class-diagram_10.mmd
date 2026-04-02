@@ -1,55 +1,51 @@
 classDiagram
-    class Exception {
-        +Exception(message)
-        +Exception(message, cause)
-    }
-    
-    class SplendorException {
-        <<abstract>>
-        +SplendorException(message)
-        +SplendorException(message, cause)
-    }
-    
-    class GameStateException {
-        +GameStateException(message)
-        +GameStateException(format, args)
-    }
-    
-    class InsufficientTokensException {
-        +InsufficientTokensException(message)
-        +InsufficientTokensException(format, args)
-    }
-    
-    class InvalidMoveException {
-        +InvalidMoveException(message)
-        +InvalidMoveException(format, args)
-    }
-    
-    class InvalidPlayerActionException {
-        +InvalidPlayerActionException(message)
-        +InvalidPlayerActionException(format, args)
-    }
-    
+    direction LR
     class ConfigException {
-        +ConfigException(message)
-        +ConfigException(message, cause)
+        +ConfigException(final String message)
+        +ConfigException(final String message, final Throwable cause)
     }
-    
+
+    ConfigException --|> Exception
     class DataLoadException {
-        +DataLoadException(message)
-        +DataLoadException(message, cause)
+        +DataLoadException(final String message)
+        +DataLoadException(final String message, final Throwable cause)
     }
-    
+
+    DataLoadException --|> Exception
+    class GameStateException {
+        +GameStateException(final String message)
+        +GameStateException(final String messageFormat, final Object... args)
+    }
+
+    GameStateException --|> SplendorException
+    class InsufficientTokensException {
+        +InsufficientTokensException(final String message)
+        +InsufficientTokensException(final String messageFormat, final Object... args)
+    }
+
+    InsufficientTokensException --|> SplendorException
+    class InvalidMoveException {
+        +InvalidMoveException(final String message)
+        +InvalidMoveException(final String messageFormat, final Object... args)
+    }
+
+    InvalidMoveException --|> SplendorException
+    class InvalidPlayerActionException {
+        +InvalidPlayerActionException(final String message)
+        +InvalidPlayerActionException(final String messageFormat, final Object... args)
+    }
+
+    InvalidPlayerActionException --|> SplendorException
     class NetworkException {
-        +NetworkException(message)
-        +NetworkException(message, cause)
+        +NetworkException(final String message)
+        +NetworkException(final String message, final Throwable cause)
     }
-    
-    Exception <|-- SplendorException
-    SplendorException <|-- GameStateException
-    SplendorException <|-- InsufficientTokensException
-    SplendorException <|-- InvalidMoveException
-    SplendorException <|-- InvalidPlayerActionException
-    SplendorException <|-- NetworkException
-    Exception <|-- ConfigException
-    Exception <|-- DataLoadException
+
+    NetworkException --|> SplendorException
+    class SplendorException {
+        +SplendorException(final String message)
+        +SplendorException(final String messageFormat, final Object... args)
+        +SplendorException(final String message, final Throwable cause)
+    }
+
+    SplendorException --|> Exception

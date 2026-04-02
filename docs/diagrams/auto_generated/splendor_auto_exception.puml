@@ -27,7 +27,7 @@ skinparam abstract {
 
 ' Generated automatically from Java source code
 ' Package: com/splendor/exception
-' Generated on: Thu Apr  2 11:11:11 +08 2026
+' Generated on: Thu Apr  2 14:40:29 +08 2026
 
 class ConfigException {
 }

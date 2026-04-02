@@ -66,10 +66,10 @@ if exist "%DIAGRAMS_DIR%\plantuml.jar" (
     REM Generate all PlantUML diagrams
     for %%f in ("%DIAGRAMS_DIR%\*.puml") do (
         echo [INFO] Processing %%~nxf...
-        java -jar "%DIAGRAMS_DIR%\plantuml.jar" -SbackgroundColor=#FFFFFF "%%f"
+        java -jar "%DIAGRAMS_DIR%\plantuml.jar" -SbackgroundColor=#FFFFFF -o "auto_generated" "%%f"
         
         if !errorlevel! equ 0 (
-            echo [SUCCESS] Generated %%~nf.png
+            echo [SUCCESS] Generated %%~nf.png in auto_generated directory
         ) else (
             echo [ERROR] Failed to generate %%~nf.png
         )

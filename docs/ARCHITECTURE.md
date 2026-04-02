@@ -27,7 +27,7 @@
 
 This project follows a strict **MVC (Model-View-Controller)** architecture:
 
-``![ALL Diagram 1](diagrams/ALL_diagram_1.png)``
+![System Architecture](../diagrams/png/splendor-class-diagram_1.png)
 
 **Six Main Portions:**
 1. **Domain** - Game entities and state
