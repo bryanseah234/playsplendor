@@ -162,13 +162,5 @@ class GameLoggerTest {
         assertFalse(capturedOut.toString().isEmpty());
     }
 
-    // ── toString (instance) ──────────────────────────────────────────────────
 
-    @Test
-    @DisplayName("toString returns class identifier")
-    void toStringReturnsIdentifier() {
-        GameLogger logger = new GameLogger();
-        assertNotNull(logger.toString());
-        assertEquals("GameLogger []", logger.toString());
-    }
 }

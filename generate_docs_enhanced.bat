@@ -46,7 +46,6 @@ javadoc ^
     -windowtitle "Splendor Game API Documentation" ^
     -doctitle "Splendor Board Game - API Documentation" ^
     -header "<b>Splendor v1.0</b>" ^
-    -footer "Generated on %date% %time%" ^
     -link "https://docs.oracle.com/en/java/javase/17/docs/api/" ^
     -Xdoclint:all ^
     -Xdoclint:-missing ^
@@ -84,20 +83,24 @@ if exist "%DIAGRAMS_DIR%\plantuml.jar" (
 
 REM Generate documentation index
 echo [INFO] Creating documentation index...
-powershell -NoProfile -Command ^
-  "$content = @'" ^
-  "<!DOCTYPE html>" ^
-  "<html lang=""en"">" ^
-  "<head>" ^
-  "  <meta charset=""UTF-8"">" ^
-  "  <meta http-equiv=""refresh"" content=""0; url=./javadoc/index.html"" />" ^
-  "  <title>Splendor Documentation</title>" ^
-  "</head>" ^
-  "<body>" ^
-  "  <p>Redirecting to <a href=""./javadoc/index.html"">Splendor Javadoc</a>...</p>" ^
-  "</body>" ^
-  "</html>" ^
-  "'@; New-Item -ItemType Directory -Force docs | Out-Null; Set-Content -Path 'docs/index.html' -Value $content -Encoding UTF8"
+setlocal disabledelayedexpansion
+(
+echo ^<!DOCTYPE html^>
+echo ^<html lang="en"^>
+echo ^<head^>
+echo   ^<meta charset="UTF-8"^>
+echo   ^<title^>Splendor Game Documentation^</title^>
+echo ^</head^>
+echo ^<body^>
+echo   ^<h1^>Splendor Game Documentation^</h1^>
+echo   ^<ul^>
+echo     ^<li^>^<a href="./javadoc/index.html"^>API Documentation^</a^>^</li^>
+echo     ^<li^>^<a href="./diagrams/"^>UML Diagrams^</a^>^</li^>
+echo   ^</ul^>
+echo ^</body^>
+echo ^</html^>
+) > docs\index.html
+endlocal
 if %errorlevel% neq 0 (
     echo [ERROR] Failed to create docs\index.html
     exit /b 1
