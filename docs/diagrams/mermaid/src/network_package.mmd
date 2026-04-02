@@ -6,13 +6,13 @@ classDiagram
         -ServerSocketHandler serverHandler
         -BufferedReader inputReader
         -PrintWriter outputWriter
-        +ClientHandler(final Socket clientSocket, final ServerSocketHandler serverHandler)
+        +ClientHandler(Socket clientSocket, ServerSocketHandler serverHandler)
         +handleClient() void
         -initializeStreams() void
         -processClientMessages() void
-        -processMessage(final String message) void
-        -sendError(final String errorMessage) void
-        +sendMessage(final String message) void
+        -processMessage(String message) void
+        -sendError(String errorMessage) void
+        +sendMessage(String message) void
         +disconnect() void
         -cleanup() void
         +getClientId() String
@@ -29,19 +29,19 @@ classDiagram
         +ServerSocketHandler()
         +startServer() void
         -acceptClientConnections() void
-        -handleClientConnection(final Socket clientSocket) void
-        +waitForAtLeastClients(final int targetClients, final long timeoutMs) boolean
+        -handleClientConnection(Socket clientSocket) void
+        +waitForAtLeastClients(int targetClients, long timeoutMs) boolean
         +getConnectedClientIds() List~String~
-        +isClientConnected(final String clientId) boolean
-        -removeClient(final ClientHandler clientHandler) void
-        +broadcastToAllClients(final String message) void
-        +sendToClient(final String clientId, final String message) void
-        +waitForClientResponse(final String clientId, final int timeoutMs) String
+        +isClientConnected(String clientId) boolean
+        -removeClient(ClientHandler clientHandler) void
+        +broadcastToAllClients(String message) void
+        +sendToClient(String clientId, String message) void
+        +waitForClientResponse(String clientId, int timeoutMs) String
         +stopServer() void
         +getConnectedClientCount() int
         +getActualPort() int
-        +setGameStarted(final boolean started) void
-        -closeSocket(final Socket socket) void
+        +setGameStarted(boolean started) void
+        -closeSocket(Socket socket) void
     }
 
     ServerSocketHandler ..|> NetworkMessageHandler

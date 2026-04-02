@@ -4,10 +4,10 @@ classDiagram
         -Properties properties
         +FileConfigProvider()
         +loadConfiguration() void
-        +getStringProperty(final String key, final String defaultValue) String
-        +getIntProperty(final String key, final int defaultValue) int
-        +getBooleanProperty(final String key, final boolean defaultValue) boolean
-        +hasProperty(final String key) boolean
+        +getStringProperty(String key, String defaultValue) String
+        +getIntProperty(String key, int defaultValue) int
+        +getBooleanProperty(String key, boolean defaultValue) boolean
+        +hasProperty(String key) boolean
     }
 
     FileConfigProvider ..|> IConfigProvider

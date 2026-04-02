@@ -1,51 +1,51 @@
 classDiagram
     direction LR
     class ConfigException {
-        +ConfigException(final String message)
-        +ConfigException(final String message, final Throwable cause)
+        +ConfigException(String message)
+        +ConfigException(String message, Throwable cause)
     }
 
     ConfigException --|> Exception
     class DataLoadException {
-        +DataLoadException(final String message)
-        +DataLoadException(final String message, final Throwable cause)
+        +DataLoadException(String message)
+        +DataLoadException(String message, Throwable cause)
     }
 
     DataLoadException --|> Exception
     class GameStateException {
-        +GameStateException(final String message)
-        +GameStateException(final String messageFormat, final Object... args)
+        +GameStateException(String message)
+        +GameStateException(String messageFormat, Object... args)
     }
 
     GameStateException --|> SplendorException
     class InsufficientTokensException {
-        +InsufficientTokensException(final String message)
-        +InsufficientTokensException(final String messageFormat, final Object... args)
+        +InsufficientTokensException(String message)
+        +InsufficientTokensException(String messageFormat, Object... args)
     }
 
     InsufficientTokensException --|> SplendorException
     class InvalidMoveException {
-        +InvalidMoveException(final String message)
-        +InvalidMoveException(final String messageFormat, final Object... args)
+        +InvalidMoveException(String message)
+        +InvalidMoveException(String messageFormat, Object... args)
     }
 
     InvalidMoveException --|> SplendorException
     class InvalidPlayerActionException {
-        +InvalidPlayerActionException(final String message)
-        +InvalidPlayerActionException(final String messageFormat, final Object... args)
+        +InvalidPlayerActionException(String message)
+        +InvalidPlayerActionException(String messageFormat, Object... args)
     }
 
     InvalidPlayerActionException --|> SplendorException
     class NetworkException {
-        +NetworkException(final String message)
-        +NetworkException(final String message, final Throwable cause)
+        +NetworkException(String message)
+        +NetworkException(String message, Throwable cause)
     }
 
     NetworkException --|> SplendorException
     class SplendorException {
-        +SplendorException(final String message)
-        +SplendorException(final String messageFormat, final Object... args)
-        +SplendorException(final String message, final Throwable cause)
+        +SplendorException(String message)
+        +SplendorException(String messageFormat, Object... args)
+        +SplendorException(String message, Throwable cause)
     }
 
     SplendorException --|> Exception

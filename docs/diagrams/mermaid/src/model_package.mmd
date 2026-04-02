@@ -4,24 +4,24 @@ classDiagram
         -List~Noble~ availableNobles
         -int maxPlayers
         -IConfigProvider config
-        +Board(final int maxPlayers, final IConfigProvider config)
-        +getGemCount(final Gem gem) int
-        +getAvailableCards(final int tier) List~Card~
-        +getDeckSize(final int tier) int
+        +Board(int maxPlayers, IConfigProvider config)
+        +getGemCount(Gem gem) int
+        +getAvailableCards(int tier) List~Card~
+        +getDeckSize(int tier) int
         +getAvailableNobles() List~Noble~
-        +removeGems(final Map~Gem, Integer~ gems) void
-        +addGems(final Map~Gem, Integer~ gems) void
-        +drawCard(final int tier) Card
-        +drawBlindCard(final int tier) Card
-        +removeAvailableCard(final int tier, final Card card) boolean
-        +restoreDecks(final Map~Integer, List~Card~~ decks) void
+        +removeGems(Map~Gem, Integer~ gems) void
+        +addGems(Map~Gem, Integer~ gems) void
+        +drawCard(int tier) Card
+        +drawBlindCard(int tier) Card
+        +removeAvailableCard(int tier, Card card) boolean
+        +restoreDecks(Map~Integer, List~Card~~ decks) void
         -ensureTierSlotsPresent() void
-        +removeAvailableNoble(final Noble noble) boolean
+        +removeAvailableNoble(Noble noble) boolean
         -initializeGemBank() void
         -initializeCardDecks() void
         -initializeAvailableCards() void
         -initializeNobles() void
-        -getBaseGemCountForPlayers(final int playerCount) int
+        -getBaseGemCountForPlayers(int playerCount) int
         +toString() String
     }
 
@@ -30,7 +30,7 @@ classDiagram
         -int tier
         -int points
         -Gem bonusGem
-        +Card(final int id, final int tier, final int points, final Gem bonusGem, final Map~Gem, Integer~ cost)
+        +Card(int id, int tier, int points, Gem bonusGem, Map~Gem, Integer~ cost)
         +getId() int
         +getTier() int
         +getPoints() int
@@ -40,7 +40,7 @@ classDiagram
     }
 
     class ComputerPlayer {
-        +ComputerPlayer(final String name)
+        +ComputerPlayer(String name)
     }
 
     ComputerPlayer --|> Player
@@ -64,7 +64,7 @@ classDiagram
         +getCurrentState() GameState
         +getWinningPoints() int
         +getMaxTokens() int
-        +addRecentMove(final String entry) void
+        +addRecentMove(String entry) void
         +getRecentMoves() List~String~
         +getWinner() Player
         +isFinalRound() boolean
@@ -134,10 +134,10 @@ classDiagram
         -Integer cardId
         -boolean isReservedCard
         -Integer deckTier
-        +Move(final MoveType moveType)
-        +Move(final MoveType moveType, final Map~Gem, Integer~ selectedGems)
-        +Move(final MoveType moveType, final Integer cardId, final boolean isReservedCard)
-        +reserveFromDeck(final int tier) Move$
+        +Move(MoveType moveType)
+        +Move(MoveType moveType, Map~Gem, Integer~ selectedGems)
+        +Move(MoveType moveType, Integer cardId, boolean isReservedCard)
+        +reserveFromDeck(int tier) Move$
         +getMoveType() MoveType
         +getCardId() Integer
         +isReservedCard() boolean
@@ -164,10 +164,10 @@ classDiagram
     class Noble {
         -int id
         -int points
-        +Noble(final int id, final int points, final Map~Gem, Integer~ requirements)
+        +Noble(int id, int points, Map~Gem, Integer~ requirements)
         +getId() int
         +getPoints() int
-        +requirementsMet(final Map~Gem, Integer~ playerGemCounts) boolean
+        +requirementsMet(Map~Gem, Integer~ playerGemCounts) boolean
         +toString() String
     }
 
@@ -176,22 +176,22 @@ classDiagram
         -List~Card~ purchasedCards
         -List~Card~ reservedCards
         -List~Noble~ nobles
-        +Player(final String name)
+        +Player(String name)
         -ensureTokenEntries() void
         +getName() String
-        +getTokenCount(final Gem gem) int
+        +getTokenCount(Gem gem) int
         +getTotalTokenCount() int
         +getPurchasedCards() List~Card~
         +getReservedCards() List~Card~
         +getNobles() List~Noble~
         +getTotalPoints() int
-        +addTokens(final Gem gem, final int quantity) void
-        +removeTokens(final Gem gem, final int quantity) void
-        +addPurchasedCard(final Card card) void
-        +addReservedCard(final Card card) void
-        +removeReservedCard(final Card card) boolean
-        +addNoble(final Noble noble) void
-        +canReserveCard(final int maxReserved) boolean
+        +addTokens(Gem gem, int quantity) void
+        +removeTokens(Gem gem, int quantity) void
+        +addPurchasedCard(Card card) void
+        +addReservedCard(Card card) void
+        +removeReservedCard(Card card) boolean
+        +addNoble(Noble noble) void
+        +canReserveCard(int maxReserved) boolean
         +toString() String
     }
 

@@ -4,14 +4,14 @@ classDiagram
         -IConfigProvider configProvider
         -List~Card~ allCards
         -List~Noble~ allNobles
-        +CsvCardParser(final IConfigProvider configProvider)
-        +loadCards(final int tier) List~Card~
+        +CsvCardParser(IConfigProvider configProvider)
+        +loadCards(int tier) List~Card~
         +loadNobles() List~Noble~
         -loadData() void
-        -validateHeader(final String headerLine) void
-        -parseCsvRow(final String line, final int lineNumber) void
-        -parseCardRow(final String[] parts, final int lineNumber) Card
-        -parseNobleRow(final String[] parts, final int lineNumber) Noble
-        -getTargetCardCount(final int tier) int
+        -validateHeader(String headerLine) void
+        -parseCsvRow(String line, int lineNumber) void
+        -parseCardRow(String[] parts, int lineNumber) Card
+        -parseNobleRow(String[] parts, int lineNumber) Noble
+        -getTargetCardCount(int tier) int
     }
 

@@ -13,55 +13,55 @@ classDiagram
         -GameRenderer renderer
         -MoveValidator moveValidator
         -Player currentPlayer
-        +ConsoleView(final IConfigProvider config)
-        +displayGameState(final Game game) void
-        +displayPlayerTurn(final Player player) void
-        +displayMessage(final String message) String
-        +displayNotification(final String message) void
-        +displayError(final String errorMessage) String
+        +ConsoleView(IConfigProvider config)
+        +displayGameState(Game game) void
+        +displayPlayerTurn(Player player) void
+        +displayMessage(String message) String
+        +displayNotification(String message) void
+        +displayError(String errorMessage) String
         +waitForEnter() String
-        +promptForCommand(final Player player, final Game game) String
-        +promptForMove(final Player player, final Game game, final List~MenuOption~ options) Move
-        +promptForTokenDiscard(final Player player, final int excessCount) Move
-        +displayWinner(final Player winner, final Map~String, Integer~ finalScores) void
+        +promptForCommand(Player player, Game game) String
+        +promptForMove(Player player, Game game, List~MenuOption~ options) Move
+        +promptForTokenDiscard(Player player, int excessCount) Move
+        +displayWinner(Player winner, Map~String, Integer~ finalScores) void
         +clearDisplay() void
-        +displayAvailableMoves(final List~MenuOption~ options, final Game game) void
-        +promptForNobleChoice(final Player player, final List~Noble~ nobles) Noble
-        +promptForPlayerName(final int playerNumber, final int totalPlayers) String
+        +displayAvailableMoves(List~MenuOption~ options, Game game) void
+        +promptForNobleChoice(Player player, List~Noble~ nobles) Noble
+        +promptForPlayerName(int playerNumber, int totalPlayers) String
         +promptForPlayerCount() int
         +displayWelcomeMessage() void
         +close() void
-        -promptTakeThree(final MenuOption option) Move
-        -promptTakeTwo(final MenuOption option) Move
-        -promptReserveVisible(final MenuOption option) Move
-        -promptReserveDeck(final MenuOption option) Move
-        -promptBuyVisible(final MenuOption option) Move
-        -promptBuyReserved(final MenuOption option) Move
-        -displayReservedCardDetails(final Player player) void
+        -promptTakeThree(MenuOption option) Move
+        -promptTakeTwo(MenuOption option) Move
+        -promptReserveVisible(MenuOption option) Move
+        -promptReserveDeck(MenuOption option) Move
+        -promptBuyVisible(MenuOption option) Move
+        -promptBuyReserved(MenuOption option) Move
+        -displayReservedCardDetails(Player player) void
     }
 
     ConsoleView ..|> IGameView
     class GameRenderer {
         -MoveValidator moveValidator
-        +GameRenderer(final IConfigProvider config)
+        +GameRenderer(IConfigProvider config)
         +clearDisplay() void
-        +displayGameState(final Game game) void
-        +renderToString(final Game game) String
-        -combineSideBySideRaw(final List~String~ left, final List~String~ right) String
-        -combineSideBySide(final List~String~ left, final List~String~ right) List~String~
-        -renderCardTiersList(final Board board, final Player currentPlayer) List~List~String~~
+        +displayGameState(Game game) void
+        +renderToString(Game game) String
+        -combineSideBySideRaw(List~String~ left, List~String~ right) String
+        -combineSideBySide(List~String~ left, List~String~ right) List~String~
+        -renderCardTiersList(Board board, Player currentPlayer) List~List~String~~
         -renderNoblesHorizontal(Board board) List~String~
         -renderRecentMovesBox(List~String~ moves) List~String~
         -renderPlayersTrackBoxes(List~Player~ players, Player currentPlayer, int maxTokens) List~String~
         -renderMenuBox(List~String~ menu) List~String~
         -renderBankVertical(Board board) List~String~
-        +displayPlayerTokens(final Player player) void
-        +setMenuLines(final List~String~ menuLines) void
-        +buildMenuLines(final List~MenuOption~ options, final int winningPoints) List~String~
-        -formatGemCounts(final Map~Gem, Integer~ counts, final boolean includeZero) String
-        -formatRequirementsLines(final Map~Gem, Integer~ requirements, final int contentWidth) List~String~
-        -frameLine(final String content, final String color, final int contentWidth) String
-        -colorBorder(final String line, final String color) String
+        +displayPlayerTokens(Player player) void
+        +setMenuLines(List~String~ menuLines) void
+        +buildMenuLines(List~MenuOption~ options, int winningPoints) List~String~
+        -formatGemCounts(Map~Gem, Integer~ counts, boolean includeZero) String
+        -formatRequirementsLines(Map~Gem, Integer~ requirements, int contentWidth) List~String~
+        -frameLine(String content, String color, int contentWidth) String
+        -colorBorder(String line, String color) String
     }
 
     class IGameView {
@@ -74,27 +74,27 @@ classDiagram
         -List~String~ predefinedPlayerNames
         -List~Player~ playerOrder
         -Player activePlayer
-        +NetworkGameView(final List~RemoteView~ playerViews, final int playerCount)
-        -initPlayerOrder(final Game game) void
-        -viewForPlayer(final Player player) RemoteView
-        -broadcast(final Consumer~RemoteView~ action) void
-        +displayGameState(final Game game) void
-        +displayPlayerTurn(final Player player) void
-        +displayMessage(final String message) String
-        +displayNotification(final String message) void
-        +displayError(final String errorMessage) String
-        +displayWinner(final Player winner, final Map~String, Integer~ finalScores) void
-        +displayAvailableMoves(final List~MenuOption~ options, final Game game) void
+        +NetworkGameView(List~RemoteView~ playerViews, int playerCount)
+        -initPlayerOrder(Game game) void
+        -viewForPlayer(Player player) RemoteView
+        -broadcast(Consumer~RemoteView~ action) void
+        +displayGameState(Game game) void
+        +displayPlayerTurn(Player player) void
+        +displayMessage(String message) String
+        +displayNotification(String message) void
+        +displayError(String errorMessage) String
+        +displayWinner(Player winner, Map~String, Integer~ finalScores) void
+        +displayAvailableMoves(List~MenuOption~ options, Game game) void
         +displayWelcomeMessage() void
         +clearDisplay() void
         +close() void
         +waitForEnter() String
-        +promptForCommand(final Player player, final Game game) String
-        +promptForMove(final Player player, final Game game, final List~MenuOption~ options) Move
-        +promptForTokenDiscard(final Player player, final int excessCount) Move
-        +promptForNobleChoice(final Player player, final List~Noble~ nobles) Noble
+        +promptForCommand(Player player, Game game) String
+        +promptForMove(Player player, Game game, List~MenuOption~ options) Move
+        +promptForTokenDiscard(Player player, int excessCount) Move
+        +promptForNobleChoice(Player player, List~Noble~ nobles) Noble
         +promptForPlayerCount() int
-        +promptForPlayerName(final int playerNumber, final int totalPlayers) String
+        +promptForPlayerName(int playerNumber, int totalPlayers) String
     }
 
     NetworkGameView ..|> IGameView
@@ -103,32 +103,32 @@ classDiagram
         -NetworkMessageHandler messageHandler
         -GameRenderer renderer
         -MoveValidator moveValidator
-        +displayGameState(final Game game) void
-        +displayPlayerTurn(final Player player) void
-        +displayMessage(final String message) String
-        +displayError(final String errorMessage) String
-        +displayNotification(final String message) void
-        +promptForCommand(final Player player, final Game game) String
-        +promptForMove(final Player player, final Game game, final List~MenuOption~ options) Move
-        -buildMoveFromOption(final MenuOption option) Move
-        -isBackToMenuInput(final String input) boolean
-        -parseId(final String input) int
-        -send(final String message) void
-        -sendErrorLine(final String errorMessage) void
-        -waitForResponse(final int timeoutMs) String
-        +promptForTokenDiscard(final Player player, final int excessCount) Move
-        -parseDiscardMove(final String rawResponse) Move
-        +displayWinner(final Player winner, final Map~String, Integer~ finalScores) void
+        +displayGameState(Game game) void
+        +displayPlayerTurn(Player player) void
+        +displayMessage(String message) String
+        +displayError(String errorMessage) String
+        +displayNotification(String message) void
+        +promptForCommand(Player player, Game game) String
+        +promptForMove(Player player, Game game, List~MenuOption~ options) Move
+        -buildMoveFromOption(MenuOption option) Move
+        -isBackToMenuInput(String input) boolean
+        -parseId(String input) int
+        -send(String message) void
+        -sendErrorLine(String errorMessage) void
+        -waitForResponse(int timeoutMs) String
+        +promptForTokenDiscard(Player player, int excessCount) Move
+        -parseDiscardMove(String rawResponse) Move
+        +displayWinner(Player winner, Map~String, Integer~ finalScores) void
         +clearDisplay() void
-        +displayAvailableMoves(final List~MenuOption~ options, final Game game) void
-        +promptForNobleChoice(final Player player, final List~Noble~ nobles) Noble
-        +promptForPlayerName(final int playerNumber, final int totalPlayers) String
+        +displayAvailableMoves(List~MenuOption~ options, Game game) void
+        +promptForNobleChoice(Player player, List~Noble~ nobles) Noble
+        +promptForPlayerName(int playerNumber, int totalPlayers) String
         +promptForPlayerCount() int
         +displayWelcomeMessage() void
         +waitForEnter() String
         +close() void
-        -createDefaultDiscardMove(final Player player, final int excessCount) Move
-        -sendReservedCardDetails(final Player player) void
+        -createDefaultDiscardMove(Player player, int excessCount) Move
+        -sendReservedCardDetails(Player player) void
     }
 
     RemoteView ..|> IGameView
