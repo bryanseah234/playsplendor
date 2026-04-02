@@ -1,0 +1,66 @@
+@startuml splendor_exception
+skinparam backgroundColor #FFFFFF
+skinparam linetype ortho
+skinparam rankdir LR
+skinparam shadowing false
+skinparam defaultFontSize 11
+skinparam classAttributeIconSize 0
+skinparam padding 4
+
+title Splendor — Exception Hierarchy (com.splendor.exception)
+
+class "Exception" as Exception <<Java>> #LightGray
+
+class SplendorException {
+  +SplendorException(message: String)
+  +SplendorException(messageFormat: String, args: Object...)
+  +SplendorException(message: String, cause: Throwable)
+}
+class GameStateException {
+  +GameStateException(message: String)
+  +GameStateException(messageFormat: String, args: Object...)
+}
+class InsufficientTokensException {
+  +InsufficientTokensException(message: String)
+  +InsufficientTokensException(messageFormat: String, args: Object...)
+}
+class InvalidMoveException {
+  +InvalidMoveException(message: String)
+  +InvalidMoveException(messageFormat: String, args: Object...)
+}
+class InvalidPlayerActionException {
+  +InvalidPlayerActionException(message: String)
+  +InvalidPlayerActionException(messageFormat: String, args: Object...)
+}
+class NetworkException {
+  +NetworkException(message: String)
+  +NetworkException(message: String, cause: Throwable)
+}
+class ConfigException {
+  +ConfigException(message: String)
+  +ConfigException(message: String, cause: Throwable)
+}
+class DataLoadException {
+  -serialVersionUID: long
+  +DataLoadException(message: String)
+  +DataLoadException(message: String, cause: Throwable)
+}
+
+Exception <|-- SplendorException
+Exception <|-- ConfigException
+Exception <|-- DataLoadExion
+SplendorException <|-- GameStateException
+SplendorException <|-- InsufficientTokensException
+SplendorException <|-- InvalidMoveException
+SplendorException <|-- InvalidPlayerActionException
+SplendorException <|-- NetworkException
+
+note bottom of ConfigException
+  extends Exception directly
+  (NOT SplendorException)
+end note
+note bottom of DataLoadException
+  extends Exception directly
+  (NOT SplendorException)
+end note
+@enduml

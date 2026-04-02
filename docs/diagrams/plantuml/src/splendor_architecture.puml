@@ -1,0 +1,507 @@
+@startuml splendor_architecture
+skinparam backgroundColor #FFFFFF
+skinparam linetype ortho
+skinparam rankdir LR
+skinparam shadowing false
+skinparam defaultFontSize 9
+skinparam classAttributeIconSize 0
+skinparam padding 2
+skinparam packageStyle rectangle
+skinparam nodesep 40
+skinparam ranksep 60
+
+title Splendor — Full Architecture
+
+package "Entry Point" #LightYellow {
+  class Main {
+    +{static} SERVER_MODE_FLAG: String
+    +Main()
+    +{static} main(args: String[]): void
+  }
+}
+
+package "com.splendor.config" #LightBlue {
+  interface IConfigProvider {
+    +loadConfiguration(): void
+    +getStringProperty(key: String, defaultValue: String): String
+    +getIntProperty(key: String, defaultValue: int): int
+  }
+  class FileConfigProvider {
+    +FileConfigProvider()
+    +loadConfiguration(): void
+    +getStringProperty(key: String, defaultValue: String): String
+    +getIntProperty(key: String, defaultValue: int): int
+  }
+  class ConfigValidator {
+    +{static} validateAll(configProvider: IConfigProvider): void
+  }
+  class ConfigKeys {
+    +{static} WINNING_POINTS: String
+    +{static} MAX_TOKENS: String
+    +{static} SETUP_2P_GEMS: String
+    +{static} SETUP_3P_GEMS: String
+    +{static} SETUP_4P_GEMS: String
+    +{static} MAX_RESERVED_CARDS: String
+    +{static} FILE_CARDS_DATA: String
+    +{static} TIER1_CARD_COUNT: String
+    +{static} TIER2_CARD_COUNT: String
+    +{static} TIER3_CARD_COUNT: String
+  }
+  IConfigProvider <|.. FileConfigProvider
+}
+
+package "com.splendor.exception" #MistyRose {
+  class SplendorException {
+    +SplendorException(message: String)
+    +SplendorException(messageFormat: String, args: Object...)
+    +SplendorException(message: String, cause: Throwable)
+  }
+  class GameStateException {
+    +GameStateException(message: String)
+    +GameStateException(messageFormat: String, args: Object...)
+  }
+  class InsufficientTokensException {
+    +InsufficientTokensException(message: String)
+    +InsufficientTokensException(messageFormat: String, args: Object...)
+  }
+  class InvalidMoveException {
+    +InvalidMoveException(message: String)
+    +InvalidMoveException(messageFormat: String, args: Object...)
+  }
+  class InvalidPlayerActionException {
+    +InvalidPlayerActionException(message: String)
+    +InvalidPlayerActionException(messageFormat: String, args: Object...)
+  }
+  class NetworkException {
+    +NetworkException(message: String)
+    +NetworkException(message: String, cause: Throwable)
+  }
+  class ConfigException {
+    +ConfigException(message: String)
+    +ConfigException(message: String, cause: Throwable)
+  }
+  class DataLoadException {
+    +DataLoadException(message: String)
+    +DataLoadException(message: String, cause: Throwable)
+  }
+  SplendorException <|-- GameStateException
+  SplendorException <|-- InsufficientTokensException
+  SplendorException <|-- InvalidMoveException
+  SplendorException <|-- InvalidPlayerActionException
+  SplendorException <|-- NetworkException
+}
+
+package "com.splendor.model" #LightGreen {
+  enum Gem {
+    WHITE / BLUE / GREEN / RED / BLACK / GOLD
+    --
+    +getShortCode(): String
+    +getLabel(): String
+    +{static} displayOrder(): List<Gem>
+    +{static} displayOrderNoGold(): List<Gem>
+    +{static} parseGem(input: String): Gem
+    +{static} parseGemSelection(input: String): List<Gem>
+  }
+  enum MoveType {
+    TAKE_THREE_DIFFERENT / TAKE_TWO_SAME
+    RESERVE_CARD / BUY_CARD
+    DISCARD_TOKENS / EXIT_GAME
+    --
+    +getDisplayName(): String
+  }
+  enum GameState {
+    ONGOING / FINAL_ROUND / FINISHED
+    --
+    +getDisplayName(): String
+  }
+  enum MenuAction {
+    TAKE_THREE / TAKE_TWO
+    RESERVE_VISIBLE / RESERVE_DECK
+    BUY_VISIBLE / BUY_RESERVED / EXIT_GAME
+  }
+  class Card {
+    +Card(id, tier, points, bonusGem, cost)
+    +getId(): int
+    +getTier(): int
+    +getPoints(): int
+    +getBonusGem(): Gem
+    +getCost(): Map<Gem,Integer>
+    +providesDiscount(): boolean
+  }
+  class Noble {
+    +Noble(id, points, requirements)
+    +getId(): int
+    +getPoints(): int
+    +getRequirements(): Map<Gem,Integer>
+    +requirementsMet(playerGemCounts): boolean
+  }
+  class Player {
+    +Player(name: String)
+    +getName(): String
+    +getTokens(): Map<Gem,Integer>
+    +getTokenCount(gem): int
+    +getTotalTokenCount(): int
+    +getPurchasedCards(): List<Card>
+    +getReservedCards(): List<Card>
+    +getNobles(): List<Noble>
+    +getTotalPoints(): int
+    +getGemDiscounts(): Map<Gem,Integer>
+    +addTokens(gem, quantity): void
+    +removeTokens(gem, quantity): void
+    +addPurchasedCard(card): void
+    +addReservedCard(card): void
+    +removeReservedCard(card): boolean
+    +addNoble(noble): void
+    +canReserveCard(maxReserved): boolean
+  }
+  class ComputerPlayer {
+    +ComputerPlayer(name: String)
+  }
+  class Move {
+    +Move(moveType: MoveType)
+    +Move(moveType, selectedGems)
+    +Move(moveType, cardId, isReservedCard)
+    +Move(moveType, selectedGems, cardId, isReservedCard, deckTier)
+    +{static} reserveFromDeck(tier: int): Move
+    +getMoveType(): MoveType
+    +getSelectedGems(): Map<Gem,Integer>
+    +getCardId(): Integer
+    +isReservedCard(): boolean
+    +getDeckTier(): Integer
+    +hasCardSelection(): boolean
+    +hasDeckSelection(): boolean
+    +hasGemSelection(): boolean
+  }
+  class Board {
+    +Board(maxPlayers: int, config: IConfigProvider)
+    +getGemBank(): Map<Gem,Integer>
+    +getGemCount(gem): int
+    +getAvailableCards(): Map<Integer,List<Card>>
+    +getAvailableCards(tier): List<Card>
+    +getDeckSize(tier): int
+    +getAvailableNobles(): List<Noble>
+    +removeGems(gems): void
+    +addGems(gems): void
+    +drawCard(tier): Card
+    +drawBlindCard(tier): Card
+    +removeAvailableCard(tier, card): boolean
+    +copyDecks(): Map<Integer,List<Card>>
+    +restoreDecks(decks): void
+    +removeAvailableNoble(noble): boolean
+  }
+  class Game {
+    +Game(players, winningPoints, maxTokens, config)
+    +saveUndoState(): void
+    +undo(): boolean
+    +getPlayers(): List<Player>
+    +getCurrentPlayer(): Player
+    +getBoard(): Board
+    +getCurrentState(): GameState
+    +getWinningPoints(): int
+    +getMaxTokens(): int
+    +addRecentMove(entry): void
+    +getRecentMoves(): List<String>
+    +getWinner(): Player
+    +isFinalRound(): boolean
+    +isGameFinished(): boolean
+    +advanceToNextPlayer(): void
+    +hasPlayerReachedWinningScore(): boolean
+  }
+  class MenuOption {
+    +MenuOption(number, action, available, label, detail, reason)
+    +getNumber(): int
+    +getAction(): MenuAction
+    +isAvailable(): boolean
+    +getLabel(): String
+    +getDetail(): String
+    +getReason(): String
+  }
+  Player <|-- ComputerPlayer
+  Game *-- Board
+  Game *-- Player
+  Game --> GameState
+  Move --> MoveType
+  MenuOption --> MenuAction
+  Card --> Gem
+}
+
+package "com.splendor.model.validator" #PaleGreen {
+  class GameRuleValidator {
+    +GameRuleValidator()
+    +validateGameStart(playerCount, winningPoints, maxTokens): void
+    +validateNobleAssignment(game, player, noble): void
+  }
+  class MoveValidator {
+    +MoveValidator(configProvider: IConfigProvider)
+    +validateMove(move, player, game): void
+    +getRuleExplanation(move, player, game): ValidationResult
+    +canPlayerAffordCard(player, card): boolean
+    +getMaxReservedCards(): int
+  }
+  class ValidationResult {
+    +ValidationResult(valid: boolean, message: String)
+    +isValid(): boolean
+    +getMessage(): String
+    +{static} ok(): ValidationResult
+    +{static} fail(reason: String): ValidationResult
+  }
+  MoveValidator ..> ValidationResult
+}
+
+package "com.splendor.controller" #LightCoral {
+  class GameController {
+    +GameController(gameView: IGameView, configProvider: IConfigProvider)
+    +initializeGame(): void
+    +startGame(): void
+    +getGame(): Game
+    +getPlayers(): List<Player>
+  }
+  class TurnController {
+    +TurnController(game: Game, gameView: IGameView)
+    +executeMove(move: Move, player: Player): void
+  }
+  class PlayerController {
+    +PlayerController(game, gameView, moveValidator)
+    +checkNobleVisits(player: Player): void
+    +executeTokenDiscard(player, discardMove): void
+  }
+  class BotStrategy {
+    +{static} chooseBotMove(player, game, moveValidator): Move
+    +{static} chooseBotDiscard(player, excessCount, game): Move
+  }
+  class MenuBuilder {
+    +{static} buildMenuOptions(player, game, moveValidator): List<MenuOption>
+    +{static} formatColoredGemList(gems): String
+    +{static} formatIdList(ids, maxCount): String
+    +{static} getAvailableDifferentGems(board): List<Gem>
+    +{static} getAvailableTwoSameGems(board): List<Gem>
+    +{static} hasVisibleCards(board): boolean
+    +{static} hasAnyDeckCards(board): boolean
+    +{static} getAffordableVisibleIds(player, board, validator): List<Integer>
+    +{static} getAffordableReservedIds(player, validator): List<Integer>
+    +{static} getVisibleCardIds(board): List<Integer>
+    +{static} getReservedCardIds(player): List<Integer>
+  }
+}
+
+package "com.splendor.view" #LightCyan {
+  interface IGameView {
+    +displayGameState(game): void
+    +displayPlayerTurn(player): void
+    +displayMessage(message): String
+    +displayNotification(message): void
+    +displayError(errorMessage): String
+    +promptForCommand(player, game): String
+    +promptForMove(player, game, options): Move
+    +promptForTokenDiscard(player, excessCount): Move
+    +displayWinner(winner, finalScores): void
+    +clearDisplay(): void
+    +displayAvailableMoves(options, game): void
+    +promptForNobleChoice(player, nobles): Noble
+    +promptForPlayerName(playerNumber, totalPlayers): String
+    +promptForPlayerCount(): int
+    +displayWelcomeMessage(): void
+    +waitForEnter(): String
+    +close(): void
+  }
+  class ConsoleView {
+    +ConsoleView(config: IConfigProvider)
+    +displayGameState(game): void
+    +displayPlayerTurn(player): void
+    +displayMessage(message): String
+    +displayNotification(message): void
+    +displayError(errorMessage): String
+    +waitForEnter(): String
+    +promptForCommand(player, game): String
+    +promptForMove(player, game, options): Move
+    +promptForTokenDiscard(player, excessCount): Move
+    +displayWinner(winner, finalScores): void
+    +clearDisplay(): void
+    +displayAvailableMoves(options, game): void
+    +promptForNobleChoice(player, nobles): Noble
+    +promptForPlayerName(playerNumber, totalPlayers): String
+    +promptForPlayerCount(): int
+    +displayWelcomeMessage(): void
+    +close(): void
+  }
+  class GameRenderer {
+    +GameRenderer(config: IConfigProvider)
+    +clearDisplay(): void
+    +displayGameState(game): void
+    +renderToString(game): String
+    +displayPlayerTokens(player): void
+    +setMenuLines(menuLines): void
+    +buildMenuLines(options, winningPoints): List<String>
+  }
+  class CardRenderer {
+    +{static} formatCardAscii(card: Card): String
+    +{static} formatCardAscii(card: Card, affordable: boolean): String
+  }
+  class NetworkGameView {
+    +NetworkGameView(playerViews, playerCount)
+    +NetworkGameView(playerViews, playerCount, predefinedPlayerNames)
+    +displayGameState(game): void
+    +displayPlayerTurn(player): void
+    +displayMessage(message): String
+    +displayNotification(message): void
+    +displayError(errorMessage): String
+    +displayWinner(winner, finalScores): void
+    +displayAvailableMoves(options, game): void
+    +displayWelcomeMessage(): void
+    +clearDisplay(): void
+    +close(): void
+    +waitForEnter(): String
+    +promptForCommand(player, game): String
+    +promptForMove(player, game, options): Move
+    +promptForTokenDiscard(player, excessCount): Move
+    +promptForNobleChoice(player, nobles): Noble
+    +promptForPlayerCount(): int
+    +promptForPlayerName(playerNumber, totalPlayers): String
+  }
+  class RemoteView {
+    +RemoteView(clientId, messageHandler, config)
+    +displayGameState(game): void
+    +displayPlayerTurn(player): void
+    +displayMessage(message): String
+    +displayError(errorMessage): String
+    +displayNotification(message): void
+    +promptForCommand(player, game): String
+    +promptForMove(player, game, options): Move
+    +promptForTokenDiscard(player, excessCount): Move
+    +displayWinner(winner, finalScores): void
+    +clearDisplay(): void
+    +displayAvailableMoves(options, game): void
+    +promptForNobleChoice(player, nobles): Noble
+    +promptForPlayerName(playerNumber, totalPlayers): String
+    +promptForPlayerCount(): int
+    +displayWelcomeMessage(): void
+    +waitForEnter(): String
+    +close(): void
+  }
+  class Colors {
+    +{static} RESET: String
+    +{static} RED: String
+    +{static} GREEN: String
+    +{static} BLUE: String
+    +{static} WHITE: String
+    +{static} BLACK: String
+    +{static} GOLD: String
+    +{static} CYAN: String
+    +{static} PURPLE: String
+    +{static} GRAY: String
+    +{static} DIM: String
+    +Colors()
+    +{static} colorize(text, colorCode): String
+    +{static} getGemColor(gem): String
+  }
+  IGameView <|.. ConsoleView
+  IGameView <|.. NetworkGameView
+  IGameView <|.. RemoteView
+  NetworkGameView *-- RemoteView
+  ConsoleView --> GameRenderer
+  RemoteView --> GameRenderer
+  GameRenderer --> CardRenderer
+}
+
+package "com.splendor.network" #Lavender {
+  interface NetworkMessageHandler {
+    +sendToClient(clientId, message): void
+    +waitForClientResponse(clientId, timeoutMs): String
+  }
+  class ServerSocketHandler {
+    +ServerSocketHandler()
+    +startServer(): void
+    +waitForAtLeastClients(targetClients, timeoutMs): boolean
+    +getConnectedClientIds(): List<String>
+    +isClientConnected(clientId): boolean
+    +broadcastToAllClients(message): void
+    +sendToClient(clientId, message): void
+    +waitForClientResponse(clientId, timeoutMs): String
+    +stopServer(): void
+    +getConnectedClientCount(): int
+    +getActualPort(): int
+    +setGameStarted(started): void
+  }
+  class ClientHandler {
+    +ClientHandler(clientSocket, serverHandler)
+    +handleClient(): void
+    +sendMessage(message): void
+    +disconnect(): void
+    +getClientId(): String
+  }
+  NetworkMessageHandler <|.. ServerSocketHandler
+  ServerSocketHandler *-- ClientHandler
+}
+
+package "com.splendor.data" #Wheat {
+  class CardLoader {
+    +{static} loadCards(tier: int): List<Card>
+    +{static} loadNobles(): List<Noble>
+  }
+  class CsvCardParser {
+    +CsvCardParser(configProvider: IConfigProvider)
+    +loadCards(tier: int): List<Card>
+    +loadNobles(): List<Noble>
+  }
+  CardLoader ..> CsvCardParser
+}
+
+package "com.splendor.util" #LightGray {
+  class AnsiUtils {
+    +{static} stripAnsi(str): String
+    +{static} padRightAnsi(s, visibleWidth): String
+    +{static} truncateAnsi(s, maxVisible): String
+    +{static} combineHorizontal(blocks, gap): List<String>
+  }
+  class GameLogger {
+    +{static} LOG_FORMAT: String
+    +{static} LOG_LEVEL_INFO: String
+    +{static} LOG_LEVEL_ERROR: String
+    +{static} LOG_LEVEL_DEBUG: String
+    +{static} LOG_LEVEL_WARN: String
+    +{static} setDebugEnabled(enabled): void
+    +{static} info(message): void
+    +{static} error(message): void
+    +{static} error(message, exception): void
+    +{static} debug(message): void
+    +{static} warn(message): void
+  }
+  class InputResolver {
+    +InputResolver()
+    +promptForInt(prompt, minValue, maxValue): int
+    +promptForInt(prompt, minValue, maxValue, onInvalid): int
+    +promptForString(prompt, minLength, maxLength): String
+    +close(): void
+  }
+  class MoveFormatter {
+    +{static} formatMoveEntry(player, move): String
+    +{static} formatGemCounts(counts): String
+  }
+}
+
+' Cross-package
+Main --> IConfigProvider : uses
+Main --> GameController : creates
+Main --> ServerSocketHandler : creates (server mode)
+GameController --> IGameView : uses
+GameController --> Game : manages
+GameController --> MoveValidator : uses
+GameController --> GameRuleValidator : uses
+GameController ..> TurnController : creates
+GameController ..> PlayerController : creates
+GameController ..> BotStrategy : uses
+GameController ..> MenuBuilder : uses
+TurnController --> Game
+TurnController --> IGameView
+PlayerController --> Game
+PlayerController --> IGameView
+PlayerController --> GameRuleValidator
+PlayerController --> MoveValidator
+RemoteView --> NetworkMessageHandler
+Board ..> CardLoader : uses
+ConfigValidator ..> CardLoader : uses
+ConsoleView --> InputResolver
+GameRenderer --> Colors
+CardRenderer --> Colors
+MoveFormatter --> Colors
+@enduml

@@ -1,0 +1,461 @@
+---
+title: Splendor — Full Architecture
+---
+classDiagram
+  direction LR
+
+  class Main {
+    +SERVER_MODE_FLAG$ String
+    +Main()
+    +main(args String[])$ void
+  }
+  class IConfigProvider {
+    <<interface>>
+    +loadConfiguration() void
+    +getStringProperty(key String, defaultValue String) String
+    +getIntProperty(key String, defaultValue int) int
+  }
+  class FileConfigProvider {
+    +FileConfigProvider()
+    +loadConfiguration() void
+    +getStringProperty(key String, defaultValue String) String
+    +getIntProperty(key String, defaultValue int) int
+  }
+  class ConfigValidator {
+    +validateAll(configProvider IConfigProvider)$ void
+  }
+  class ConfigKeys {
+    +WINNING_POINTS$ String
+    +MAX_TOKENS$ String
+    +SETUP_2P_GEMS$ String
+    +SETUP_3P_GEMS$ String
+    +SETUP_4P_GEMS$ String
+    +MAX_RESERVED_CARDS$ String
+    +FILE_CARDS_DATA$ String
+    +TIER1_CARD_COUNT$ String
+    +TIER2_CARD_COUNT$ String
+    +TIER3_CARD_COUNT$ String
+  }
+  class SplendorException {
+    +SplendorException(message String)
+    +SplendorException(messageFormat String, args Object...)
+    +SplendorException(message String, cause Throwable)
+  }
+  class GameStateException {
+    +GameStateException(message String)
+    +GameStateException(messageFormat String, args Object...)
+  }
+  class InsufficientTokensException {
+    +InsufficientTokensException(message String)
+    +InsufficientTokensException(messageFormat String, args Object...)
+  }
+  class InvalidMoveException {
+    +InvalidMoveException(message String)
+    +InvalidMoveException(messageFormat String, args Object...)
+  }
+  class InvalidPlayerActionException {
+    +InvalidPlayerActionException(message String)
+    +InvalidPlayerActionException(messageFormat String, args Object...)
+  }
+  class NetworkException {
+    +NetworkException(message String)
+    +NetworkException(message String, cause Throwable)
+  }
+  class ConfigException {
+    +ConfigException(message String)
+    +ConfigException(message String, cause Throwable)
+  }
+  class DataLoadException {
+    +DataLoadException(message String)
+    +DataLoadException(message String, cause Throwable)
+  }
+  class Gem {
+    <<enumeration>>
+    WHITE BLUE GREEN RED BLACK GOLD
+    +getShortCode() String
+    +getLabel() String
+    +displayOrder()$ List~Gem~
+    +displayOrderNoGold()$ List~Gem~
+    +parseGem(input String)$ Gem
+    +parseGemSelection(input String)$ List~Gem~
+  }
+  class MoveType {
+    <<enumeration>>
+    TAKE_THREE_DIFFERENT TAKE_TWO_SAME
+    RESERVE_CARD BUY_CARD DISCARD_TOKENS EXIT_GAME
+    +getDisplayName() String
+  }
+  class GameState {
+    <<enumeration>>
+    ONGOING FINAL_ROUND FINISHED
+    +getDisplayName() String
+  }
+  class MenuAction {
+    <<enumeration>>
+    TAKE_THREE TAKE_TWO RESERVE_VISIBLE
+    RESERVE_DECK BUY_VISIBLE BUY_RESERVED EXIT_GAME
+  }
+  class Card {
+    +Card(id int, tier int, points int, bonusGem Gem, cost Map)
+    +getId() int
+    +getTier() int
+    +getPoints() int
+    +getBonusGem() Gem
+    +getCost() Map~Gem_Integer~
+    +providesDiscount() boolean
+  }
+  class Noble {
+    +Noble(id int, points int, requirements Map)
+    +getId() int
+    +getPoints() int
+    +getRequirements() Map~Gem_Integer~
+    +requirementsMet(playerGemCounts Map) boolean
+  }
+  class Player {
+    +Player(name String)
+    +getName() String
+    +getTokens() Map~Gem_Integer~
+    +getTokenCount(gem Gem) int
+    +getTotalTokenCount() int
+    +getPurchasedCards() List~Card~
+    +getReservedCards() List~Card~
+    +getNobles() List~Noble~
+    +getTotalPoints() int
+    +getGemDiscounts() Map~Gem_Integer~
+    +addTokens(gem Gem, quantity int) void
+    +removeTokens(gem Gem, quantity int) void
+    +addPurchasedCard(card Card) void
+    +addReservedCard(card Card) void
+    +removeReservedCard(card Card) boolean
+    +addNoble(noble Noble) void
+    +canReserveCard(maxReserved int) boolean
+  }
+  class ComputerPlayer {
+    +ComputerPlayer(name String)
+  }
+  class Move {
+    +Move(moveType MoveType)
+    +Move(moveType MoveType, selectedGems Map)
+    +Move(moveType MoveType, cardId Integer, isReservedCard boolean)
+    +Move(moveType MoveType, selectedGems Map, cardId Integer, isReservedCard boolean, deckTier Integer)
+    +reserveFromDeck(tier int)$ Move
+    +getMoveType() MoveType
+    +getSelectedGems() Map~Gem_Integer~
+    +getCardId() Integer
+    +isReservedCard() boolean
+    +getDeckTier() Integer
+    +hasCardSelection() boolean
+    +hasDeckSelection() boolean
+    +hasGemSelection() boolean
+  }
+  class Board {
+    +Board(maxPlayers int, config IConfigProvider)
+    +getGemBank() Map~Gem_Integer~
+    +getGemCount(gem Gem) int
+    +getAvailableCards() Map~Integer_List~
+    +getAvailableCards(tier int) List~Card~
+    +getDeckSize(tier int) int
+    +getAvailableNobles() List~Noble~
+    +removeGems(gems Map) void
+    +addGems(gems Map) void
+    +drawCard(tier int) Card
+    +drawBlindCard(tier int) Card
+    +removeAvailableCard(tier int, card Card) boolean
+    +copyDecks() Map~Integer_List~
+    +restoreDecks(decks Map) void
+    +removeAvailableNoble(noble Noble) boolean
+  }
+  class Game {
+    +Game(players List, winningPoints int, maxTokens int, config IConfigProvider)
+    +saveUndoState() void
+    +undo() boolean
+    +getPlayers() List~Player~
+    +getCurrentPlayer() Player
+    +getBoard() Board
+    +getCurrentState() GameState
+    +getWinningPoints() int
+    +getMaxTokens() int
+    +addRecentMove(entry String) void
+    +getRecentMoves() List~String~
+    +getWinner() Player
+    +isFinalRound() boolean
+    +isGameFinished() boolean
+    +advanceToNextPlayer() void
+    +hasPlayerReachedWinningScore() boolean
+  }
+  class MenuOption {
+    +MenuOption(number int, action MenuAction, available boolean, label String, detail String, reason String)
+    +getNumber() int
+    +getAction() MenuAction
+    +isAvailable() boolean
+    +getLabel() String
+    +getDetail() String
+    +getReason() String
+  }
+  class GameRuleValidator {
+    +GameRuleValidator()
+    +validateGameStart(playerCount int, winningPoints int, maxTokens int) void
+    +validateNobleAssignment(game Game, player Player, noble Noble) void
+  }
+  class MoveValidator {
+    +MoveValidator(configProvider IConfigProvider)
+    +validateMove(move Move, player Player, game Game) void
+    +getRuleExplanation(move Move, player Player, game Game) ValidationResult
+    +canPlayerAffordCard(player Player, card Card) boolean
+    +getMaxReservedCards() int
+  }
+  class ValidationResult {
+    +ValidationResult(valid boolean, message String)
+    +isValid() boolean
+    +getMessage() String
+    +ok()$ ValidationResult
+    +fail(reason String)$ ValidationResult
+  }
+  class GameController {
+    +GameController(gameView IGameView, configProvider IConfigProvider)
+    +initializeGame() void
+    +startGame() void
+    +getGame() Game
+    +getPlayers() List~Player~
+  }
+  class TurnController {
+    +TurnController(game Game, gameView IGameView)
+    +executeMove(move Move, player Player) void
+  }
+  class PlayerController {
+    +PlayerController(game Game, gameView IGameView, moveValidator MoveValidator)
+    +checkNobleVisits(player Player) void
+    +executeTokenDiscard(player Player, discardMove Move) void
+  }
+  class BotStrategy {
+    +chooseBotMove(player Player, game Game, moveValidator MoveValidator)$ Move
+    +chooseBotDiscard(player Player, excessCount int, game Game)$ Move
+  }
+  class MenuBuilder {
+    +buildMenuOptions(player Player, game Game, moveValidator MoveValidator)$ List~MenuOption~
+    +formatColoredGemList(gems List)$ String
+    +formatIdList(ids List, maxCount int)$ String
+    +getAvailableDifferentGems(board Board)$ List~Gem~
+    +getAvailableTwoSameGems(board Board)$ List~Gem~
+    +hasVisibleCards(board Board)$ boolean
+    +hasAnyDeckCards(board Board)$ boolean
+    +getAffordableVisibleIds(player Player, board Board, moveValidator MoveValidator)$ List~Integer~
+    +getAffordableReservedIds(player Player, moveValidator MoveValidator)$ List~Integer~
+    +getVisibleCardIds(board Board)$ List~Integer~
+    +getReservedCardIds(player Player)$ List~Integer~
+  }
+  class IGameView {
+    <<interface>>
+    +displayGameState(game Game) void
+    +displayPlayerTurn(player Player) void
+    +displayMessage(message String) String
+    +displayNotification(message String) void
+    +displayError(errorMessage String) String
+    +promptForCommand(player Player, game Game) String
+    +promptForMove(player Player, game Game, options List) Move
+    +promptForTokenDiscard(player Player, excessCount int) Move
+    +displayWinner(winner Player, finalScores Map) void
+    +clearDisplay() void
+    +displayAvailableMoves(options List, game Game) void
+    +promptForNobleChoice(player Player, nobles List) Noble
+    +promptForPlayerName(playerNumber int, totalPlayers int) String
+    +promptForPlayerCount() int
+    +displayWelcomeMessage() void
+    +waitForEnter() String
+    +close() void
+  }
+  class ConsoleView {
+    +ConsoleView(config IConfigProvider)
+    +displayGameState(game Game) void
+    +displayPlayerTurn(player Player) void
+    +displayMessage(message String) String
+    +displayNotification(message String) void
+    +displayError(errorMessage String) String
+    +waitForEnter() String
+    +promptForCommand(player Player, game Game) String
+    +promptForMove(player Player, game Game, options List) Move
+    +promptForTokenDiscard(player Player, excessCount int) Move
+    +displayWinner(winner Player, finalScores Map) void
+    +clearDisplay() void
+    +displayAvailableMoves(options List, game Game) void
+    +promptForNobleChoice(player Player, nobles List) Noble
+    +promptForPlayerName(playerNumber int, totalPlayers int) String
+    +promptForPlayerCount() int
+    +displayWelcomeMessage() void
+    +close() void
+  }
+  class GameRenderer {
+    +GameRenderer(config IConfigProvider)
+    +clearDisplay() void
+    +displayGameState(game Game) void
+    +renderToString(game Game) String
+    +displayPlayerTokens(player Player) void
+    +setMenuLines(menuLines List) void
+    +buildMenuLines(options List, winningPoints int) List~String~
+  }
+  class CardRenderer {
+    +formatCardAscii(card Card)$ String
+    +formatCardAscii(card Card, affordable boolean)$ String
+  }
+  class NetworkGameView {
+    +NetworkGameView(playerViews List, playerCount int)
+    +NetworkGameView(playerViews List, playerCount int, predefinedPlayerNames List)
+    +displayGameState(game Game) void
+    +displayPlayerTurn(player Player) void
+    +displayMessage(message String) String
+    +displayNotification(message String) void
+    +displayError(errorMessage String) String
+    +displayWinner(winner Player, finalScores Map) void
+    +displayAvailableMoves(options List, game Game) void
+    +displayWelcomeMessage() void
+    +clearDisplay() void
+    +close() void
+    +waitForEnter() String
+    +promptForCommand(player Player, game Game) String
+    +promptForMove(player Player, game Game, options List) Move
+    +promptForTokenDiscard(player Player, excessCount int) Move
+    +promptForNobleChoice(player Player, nobles List) Noble
+    +promptForPlayerCount() int
+    +promptForPlayerName(playerNumber int, totalPlayers int) String
+  }
+  class RemoteView {
+    +RemoteView(clientId String, messageHandler NetworkMessageHandler, config IConfigProvider)
+    +displayGameState(game Game) void
+    +displayPlayerTurn(player Player) void
+    +displayMessage(message String) String
+    +displayError(errorMessage String) String
+    +displayNotification(message String) void
+    +promptForCommand(player Player, game Game) String
+    +promptForMove(player Player, game Game, options List) Move
+    +promptForTokenDiscard(player Player, excessCount int) Move
+    +displayWinner(winner Player, finalScores Map) void
+    +clearDisplay() void
+    +displayAvailableMoves(options List, game Game) void
+    +promptForNobleChoice(player Player, nobles List) Noble
+    +promptForPlayerName(playerNumber int, totalPlayers int) String
+    +promptForPlayerCount() int
+    +displayWelcomeMessage() void
+    +waitForEnter() String
+    +close() void
+  }
+  class Colors {
+    +RESET$ String
+    +RED$ String
+    +GREEN$ String
+    +BLUE$ String
+    +WHITE$ String
+    +BLACK$ String
+    +GOLD$ String
+    +CYAN$ String
+    +PURPLE$ String
+    +GRAY$ String
+    +DIM$ String
+    +Colors()
+    +colorize(text String, colorCode String)$ String
+    +getGemColor(gem Gem)$ String
+  }
+  class NetworkMessageHandler {
+    <<interface>>
+    +sendToClient(clientId String, message String) void
+    +waitForClientResponse(clientId String, timeoutMs int) String
+  }
+  class ServerSocketHandler {
+    +ServerSocketHandler()
+    +startServer() void
+    +waitForAtLeastClients(targetClients int, timeoutMs long) boolean
+    +getConnectedClientIds() List~String~
+    +isClientConnected(clientId String) boolean
+    +broadcastToAllClients(message String) void
+    +sendToClient(clientId String, message String) void
+    +waitForClientResponse(clientId String, timeoutMs int) String
+    +stopServer() void
+    +getConnectedClientCount() int
+    +getActualPort() int
+    +setGameStarted(started boolean) void
+  }
+  class ClientHandler {
+    +ClientHandler(clientSocket Socket, serverHandler ServerSocketHandler)
+    +handleClient() void
+    +sendMessage(message String) void
+    +disconnect() void
+    +getClientId() String
+  }
+  class CardLoader {
+    +loadCards(tier int)$ List~Card~
+    +loadNobles()$ List~Noble~
+  }
+  class CsvCardParser {
+    +CsvCardParser(configProvider IConfigProvider)
+    +loadCards(tier int) List~Card~
+    +loadNobles() List~Noble~
+  }
+  class AnsiUtils {
+    +stripAnsi(str String)$ String
+    +padRightAnsi(s String, visibleWidth int)$ String
+    +truncateAnsi(s String, maxVisible int)$ String
+    +combineHorizontal(blocks List, gap int)$ List~String~
+  }
+  class GameLogger {
+    +LOG_FORMAT$ String
+    +LOG_LEVEL_INFO$ String
+    +LOG_LEVEL_ERROR$ String
+    +LOG_LEVEL_DEBUG$ String
+    +LOG_LEVEL_WARN$ String
+    +setDebugEnabled(enabled boolean)$ void
+    +info(message String)$ void
+    +error(message String)$ void
+    +error(message String, exception Throwable)$ void
+    +debug(message String)$ void
+    +warn(message String)$ void
+  }
+  class InputResolver {
+    +InputResolver()
+    +promptForInt(prompt String, minValue int, maxValue int) int
+    +promptForInt(prompt String, minValue int, maxValue int, onInvalid Runnable) int
+    +promptForString(prompt String, minLength int, maxLength int) String
+    +close() void
+  }
+  class MoveFormatter {
+    +formatMoveEntry(player Player, move Move)$ String
+    +formatGemCounts(counts Map)$ String
+  }
+
+  IConfigProvider <|.. FileConfigProvider
+  SplendorException <|-- GameStateException
+  SplendorException <|-- InsufficientTokensException
+  SplendorException <|-- InvalidMoveException
+  SplendorException <|-- InvalidPlayerActionException
+  SplendorException <|-- NetworkException
+  Player <|-- ComputerPlayer
+  Game *-- Board
+  Game *-- Player
+  Game --> GameState
+  Move --> MoveType
+  MenuOption --> MenuAction
+  Card --> Gem
+  MoveValidator ..> ValidationResult
+  NetworkMessageHandler <|.. ServerSocketHandler
+  ServerSocketHandler *-- ClientHandler
+  IGameView <|.. ConsoleView
+  IGameView <|.. NetworkGameView
+  IGameView <|.. RemoteView
+  NetworkGameView *-- RemoteView
+  ConsoleView --> GameRenderer
+  RemoteView --> GameRenderer
+  GameRenderer --> CardRenderer
+  CardLoader ..> CsvCardParser
+  Main --> GameController
+  Main --> IConfigProvider
+  GameController --> IGameView
+  GameController --> Game
+  GameController --> MoveValidator
+  GameController --> GameRuleValidator
+  GameController ..> TurnController
+  GameController ..> PlayerController
+  GameController ..> BotStrategy
+  GameController ..> MenuBuilder
+  TurnController --> Game
+  PlayerController --> Game
+  PlayerController --> GameRuleValidator
+  RemoteView --> NetworkMessageHandler
+  Board ..> CardLoader
