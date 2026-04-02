@@ -82,6 +82,18 @@ package "com.splendor.config" {
 ' ─────────────────────────────────────────────
 package "com.splendor.exception" as excpkg {
 
+
+    class NetworkException {
+        + NetworkException(message : String)
+        + NetworkException(message : String, cause : Throwable)
+    }
+
+    class DataLoadException {
+        + DataLoadException(message : String)
+        + DataLoadException(message : String, cause : Throwable)
+    }
+
+
     class SplendorException {
         + SplendorException(message : String)
         + SplendorException(message : String, cause : Throwable)
@@ -113,6 +125,8 @@ package "com.splendor.exception" as excpkg {
     }
 
     SplendorException --|> Exception
+    DataLoadException --|> SplendorException
+    NetworkException --|> SplendorException
     GameStateException --|> SplendorException
     InsufficientTokensException --|> SplendorException
     InvalidMoveException --|> SplendorException
@@ -358,21 +372,6 @@ package "com.splendor.model" {
         + getGameStateSummary() : Map<String, Object>
         + toString() : String
     }
-
-    class BotStrategy <<final>> {
-        - BotStrategy()
-        + {static} chooseBotMove(player : Player, game : Game) : Move
-        + {static} chooseBotDiscard(player : Player, excessCount : int, game : Game) : Move
-        - {static} getWeightedBonusImportance(player : Player, board : Board) : Map<Gem, Double>
-        - {static} getBestAffordableCardForNoble(player : Player, board : Board, bonusImportance : Map<Gem, Double>) : Integer
-        - {static} getBestAffordableReservedForNoble(player : Player, bonusImportance : Map<Gem, Double>) : Integer
-        - {static} getBestAffordableVisibleId(player : Player, board : Board) : Integer
-        - {static} takeGemsTowardNoble(player : Player, board : Board, bonusImportance : Map<Gem, Double>) : Move
-        - {static} getAffordableReservedIds(player : Player) : List<Integer>
-        - {static} getAvailableDifferentGems(board : Board) : List<Gem>
-        - {static} getAvailableTwoSameGems(board : Board) : List<Gem>
-    }
-
     ComputerPlayer --|> Player
     Game *-- Board
     Game *-- "many" Player
@@ -401,6 +400,14 @@ package "com.splendor.model" {
 '  PACKAGE: com.splendor.data
 ' ─────────────────────────────────────────────
 package "com.splendor.data" {
+
+
+    class CardLoader {
+        + {static} loadCards(tier : int) : List<Card>
+        + {static} loadNobles() : List<Noble>
+        - {static} createCard(id : int, tier : int, points : int, bonusGem : Gem, cost : Map<Gem, Integer>) : Card
+    }
+
     class CsvCardParser {
         - configProvider : IConfigProvider
         - allCards : List<Card>
@@ -485,6 +492,22 @@ package "com.splendor.model.validator" {
 '  PACKAGE: com.splendor.controller
 ' ─────────────────────────────────────────────
 package "com.splendor.controller" {
+
+
+    class BotStrategy <<final>> {
+        - BotStrategy()
+        + {static} chooseBotMove(player : Player, game : Game) : Move
+        + {static} chooseBotDiscard(player : Player, excessCount : int, game : Game) : Move
+        - {static} getWeightedBonusImportance(player : Player, board : Board) : Map<Gem, Double>
+        - {static} getBestAffordableCardForNoble(player : Player, board : Board, bonusImportance : Map<Gem, Double>) : Integer
+        - {static} getBestAffordableReservedForNoble(player : Player, bonusImportance : Map<Gem, Double>) : Integer
+        - {static} getBestAffordableVisibleId(player : Player, board : Board) : Integer
+        - {static} takeGemsTowardNoble(player : Player, board : Board, bonusImportance : Map<Gem, Double>) : Move
+        - {static} getAffordableReservedIds(player : Player) : List<Integer>
+        - {static} getAvailableDifferentGems(board : Board) : List<Gem>
+        - {static} getAvailableTwoSameGems(board : Board) : List<Gem>
+    }
+
 
     class GameController {
         - gameView : IGameView
@@ -613,38 +636,10 @@ package "com.splendor.controller" {
 ' ─────────────────────────────────────────────
 package "com.splendor.network" {
 
-    class NetworkException {
-        + NetworkException(message : String)
-        + NetworkException(message : String, cause : Throwable)
-    }
 
-    class NetworkProtocol <<final>> {
-        + {static} MOVE_COMMAND : String
-        + {static} QUERY_COMMAND : String
-        + {static} DISCONNECT_COMMAND : String
-        + {static} SUCCESS_RESPONSE : String
-        + {static} ERROR_RESPONSE : String
-        + {static} STATE_RESPONSE : String
-        + {static} ACTION_TAKE_3 : String
-        + {static} ACTION_TAKE_2 : String
-        + {static} ACTION_BUY : String
-        + {static} ACTION_RESERVE : String
-        + {static} ACTION_DISCARD : String
-        + {static} QUERY_STATE : String
-        + {static} QUERY_PLAYERS : String
-        + {static} QUERY_BOARD : String
-        + {static} QUERY_MOVES : String
-        + {static} MESSAGE_DELIMITER : String
-        + {static} FIELD_DELIMITER : String
-        + {static} MAX_MESSAGE_LENGTH : int
-        + {static} MAX_COMMAND_PARTS : int
-        - NetworkProtocol()
-        + {static} isValidMessage(message : String) : boolean
-        + {static} createMessage(command : String, parameters : String...) : String
-        + {static} createSuccessResponse(data : String) : String
-        + {static} createErrorResponse(errorMessage : String) : String
-        + {static} parseMessage(message : String) : String[]
-        + {static} getCommandType(message : String) : String
+    interface NetworkMessageHandler {
+        + sendToClient(clientId : String, message : String) : void
+        + waitForClientResponse(clientId : String, timeoutMs : int) : String
     }
 
     class ClientHandler {
@@ -703,53 +698,18 @@ package "com.splendor.network" {
         + getActualPort() : int
         - closeSocket(socket : Socket) : void
     }
-
-    NetworkException --|> SplendorException
     ServerSocketHandler *-- "many" ClientHandler
     ClientHandler --> ServerSocketHandler
     ClientHandler --> IConfigProvider
-    ClientHandler --> NetworkProtocol
     ClientHandler --> GameLogger
     ServerSocketHandler --> IConfigProvider
     ServerSocketHandler --> GameLogger
-    ServerSocketHandler --> Constants
 }
 
 ' ─────────────────────────────────────────────
 '  PACKAGE: com.splendor.util
 ' ─────────────────────────────────────────────
 package "com.splendor.util" {
-
-    class Constants <<final>> {
-        + {static} SERVER_MODE_FLAG : String
-        + {static} DEFAULT_SERVER_PORT : int
-        + {static} MAX_CLIENT_CONNECTIONS : int
-        + {static} CONNECTION_TIMEOUT_MS : int
-        + {static} MIN_PLAYERS : int
-        + {static} MAX_PLAYERS : int
-        + {static} DEFAULT_WINNING_POINTS : int
-        + {static} DEFAULT_MAX_TOKENS : int
-        + {static} MAX_RESERVED_CARDS : int
-        + {static} MIN_CARD_TIER : int
-        + {static} MAX_CARD_TIER : int
-        + {static} CARDS_PER_TIER_DISPLAYED : int
-        + {static} GOLD_TOKENS_PER_PLAYER_COUNT : int
-        + {static} MIN_GEMS_FOR_TWO_SAME_ACTION : int
-        + {static} MAX_GEMS_PER_TURN : int
-        + {static} MIN_PLAYER_NAME_LENGTH : int
-        + {static} MAX_PLAYER_NAME_LENGTH : int
-        + {static} MAX_INPUT_RETRIES : int
-        + {static} PROTOCOL_DELIMITER : String
-        + {static} PROTOCOL_SUCCESS : String
-        + {static} PROTOCOL_ERROR : String
-        + {static} PROTOCOL_MOVE : String
-        + {static} LOG_FORMAT : String
-        + {static} LOG_LEVEL_INFO : String
-        + {static} LOG_LEVEL_ERROR : String
-        + {static} LOG_LEVEL_DEBUG : String
-        - Constants()
-    }
-
     class GameLogger {
         - {static} TIMESTAMP_FORMAT : DateTimeFormatter
         - {static} debugEnabled : boolean
@@ -773,21 +733,6 @@ package "com.splendor.util" {
         + {static} truncateAnsi(s : String, maxVisible : int) : String
         + {static} combineHorizontal(blocks : List<List<String>>, gap : int) : List<String>
     }
-
-    class CardLoader {
-        + {static} loadCards(tier : int) : List<Card>
-        + {static} loadNobles() : List<Noble>
-        - {static} createCard(id : int, tier : int, points : int, bonusGem : Gem, cost : Map<Gem, Integer>) : Card
-    }
-
-    class GemParser <<final>> {
-        - GemParser()
-        + {static} parseGem(token : String) : Gem
-        + {static} parseGemCode(code : char) : Gem
-        + {static} parseGemSelection(input : String) : List<Gem>
-        + {static} parseGemSequence(input : String) : List<Gem>
-    }
-
     class InputResolver {
         - scanner : Scanner
         + InputResolver()
@@ -808,32 +753,11 @@ package "com.splendor.util" {
         + {static} formatGemCounts(counts : Map<Gem, Integer>) : String
         + {static} gemLabel(gem : Gem) : String
     }
-
-    class MoveParser <<final>> {
-        - MoveParser()
-        + {static} parseMoveFromResponse(response : String) : Move
-        + {static} parseTakeThreeMove(gemCodes : String) : Move
-        + {static} parseTakeTwoMove(gemCode : String) : Move
-        + {static} parseBuyMove(param : String) : Move
-        + {static} parseReserveMove(param : String) : Move
-        + {static} parseDiscardMoveFromResponse(response : String) : Move
-        + {static} createDefaultMove() : Move
-    }
-
-    CardLoader --> Card
-    CardLoader --> Noble
-    CardLoader --> Gem
-    GemParser --> Gem
     MoveFormatter --> Player
     MoveFormatter --> Move
     MoveFormatter --> Gem
     MoveFormatter --> MoveType
     MoveFormatter --> Colors
-    MoveParser --> Move
-    MoveParser --> Gem
-    MoveParser --> GemParser
-    MoveParser --> MoveType
-    GameLogger --> Constants
 }
 
 ' ─────────────────────────────────────────────
@@ -1021,12 +945,6 @@ package "com.splendor.view" {
         - createDefaultDiscardMove(player : Player, excessCount : int) : Move
         - sendReservedCardDetails(player : Player) : void
     }
-
-    interface NetworkMessageHandler {
-        + sendToClient(clientId : String, message : String) : void
-        + waitForClientResponse(clientId : String, timeoutMs : int) : String
-    }
-
     ConsoleView ..|> IGameView
     NetworkGameView ..|> IGameView
     RemoteView ..|> IGameView
@@ -1041,7 +959,6 @@ package "com.splendor.view" {
     ConsoleView --> Gem
     ConsoleView --> MenuOption
     ConsoleView --> MoveType
-    ConsoleView --> GemParser
     ConsoleView --> Colors
     RemoteView --> GameRenderer
     RemoteView --> NetworkMessageHandler
@@ -1054,8 +971,6 @@ package "com.splendor.view" {
     RemoteView --> MoveType
     RemoteView --> Card
     RemoteView --> GameLogger
-    RemoteView --> GemParser
-    RemoteView --> MoveParser
     RemoteView --> Colors
     GameRenderer --> Board
     GameRenderer --> Player
@@ -1092,7 +1007,6 @@ Main --> ConsoleView
 Main --> FileConfigProvider
 Main --> NetworkGameView
 Main --> RemoteView
-Main --> Constants
 Board --> CardLoader
 BotStrategy --> MoveValidator
 

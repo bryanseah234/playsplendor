@@ -1,4 +1,5 @@
 @startuml splendor_auto_relationships
+left to right direction
 !define ENTITY_COLOR #E1F5FE
 !define INTERFACE_COLOR #E8F5E8
 

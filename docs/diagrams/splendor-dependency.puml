@@ -18,11 +18,14 @@ package "com.splendor.config" {
   interface IConfigProvider
   class FileConfigProvider
   class ConfigKeys
+  class ConfigValidator
   class ConfigException
 }
 
 package "com.splendor.exception" as excpkg {
   class SplendorException
+  class DataLoadException
+  class NetworkException
   class GameStateException
   class InsufficientTokensException
   class InvalidMoveException
@@ -34,6 +37,7 @@ package "com.splendor.controller" {
   class TurnController
   class PlayerController
   class MenuBuilder
+  class BotStrategy
 }
 
 package "com.splendor.model" {
@@ -49,11 +53,11 @@ package "com.splendor.model" {
   enum MoveType
   enum MenuAction
   class MenuOption
-  class BotStrategy
 }
 
 package "com.splendor.data" {
   class CsvCardParser
+  class CardLoader
 }
 
 package "com.splendor.model.validator" {
@@ -69,26 +73,20 @@ package "com.splendor.view" {
   class ConsoleView
   class NetworkGameView
   class RemoteView
-  interface NetworkMessageHandler
   class GameRenderer
 }
 
 package "com.splendor.network" {
   class ServerSocketHandler
   class ClientHandler
-  class NetworkProtocol
-  class NetworkException
+  interface NetworkMessageHandler
 }
 
 package "com.splendor.util" {
-  class Constants
   class GameLogger
   class AnsiUtils
-  class CardLoader
-  class GemParser
   class InputResolver
   class MoveFormatter
-  class MoveParser
 }
 
 ' ── Config ──────────────────────────────────────
@@ -207,12 +205,8 @@ NetworkGameView --> Noble
 NetworkGameView --> MenuOption
 
 ' ── Network ─────────────────────────────────────
-ServerSocketHandler --> IConfigProvider
-ServerSocketHandler --> GameLogger
-ServerSocketHandler --> Constants
 ClientHandler --> ServerSocketHandler
 ClientHandler --> IConfigProvider
-ClientHandler --> NetworkProtocol
 ClientHandler --> GameLogger
 
 ' ── Data ────────────────────────────────────────
@@ -224,20 +218,11 @@ CsvCardParser --> ConfigKeys
 CsvCardParser --> DataLoadException
 
 ' ── Util ────────────────────────────────────────
-CardLoader --> Card
-CardLoader --> Noble
-CardLoader --> Gem
-GemParser --> Gem
 MoveFormatter --> Player
 MoveFormatter --> Move
 MoveFormatter --> Gem
 MoveFormatter --> MoveType
 MoveFormatter --> Colors
-MoveParser --> Move
-MoveParser --> Gem
-MoveParser --> GemParser
-MoveParser --> MoveType
-GameLogger --> Constants
 
 ' ── App entry ───────────────────────────────────
 Main --> GameController
@@ -248,7 +233,6 @@ Main --> ConsoleView
 Main --> FileConfigProvider
 Main --> NetworkGameView
 Main --> RemoteView
-Main --> Constants
 
 ' ── Exception package usage ─────────────────────
 GameController ..> excpkg : <<throws>>
