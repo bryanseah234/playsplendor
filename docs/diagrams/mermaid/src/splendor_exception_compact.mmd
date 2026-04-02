@@ -1,0 +1,21 @@
+%%{init: {"theme": "default"}}%%
+classDiagram
+  direction LR
+  class Exception
+  class SplendorException
+  class GameStateException
+  class InsufficientTokensException
+  class InvalidMoveException
+  class InvalidPlayerActionException
+  class NetworkException
+  class ConfigException
+  class DataLoadException
+
+  Exception <|-- SplendorException
+  Exception <|-- ConfigException
+  Exception <|-- DataLoadException
+  SplendorException <|-- GameStateException
+  SplendorException <|-- InsufficientTokensException
+  SplendorException <|-- InvalidMoveException
+  SplendorException <|-- InvalidPlayerActionException
+  SplendorException <|-- NetworkException

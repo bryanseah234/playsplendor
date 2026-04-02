@@ -1,7 +1,4 @@
 %%{init: {"theme": "default", "classDiagram": {"nodeSpacing": 20, "rankSpacing": 30}}}%%
----
-title: Splendor — View Package (com.splendor.view)
----
 classDiagram
   direction LR
 
@@ -47,7 +44,6 @@ classDiagram
   }
   class NetworkGameView {
     +NetworkGameView(playerViews List, playerCount int)
-    +NetworkGameView(playerViews List, playerCount int, predefinedPlayerNames List)
     +displayGameState(game Game) void
     +displayPlayerTurn(player Player) void
     +displayMessage(message String) String

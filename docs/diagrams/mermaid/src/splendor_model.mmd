@@ -1,7 +1,4 @@
 %%{init: {"theme": "default", "classDiagram": {"nodeSpacing": 20, "rankSpacing": 30}}}%%
----
-title: Splendor — Model Layer (com.splendor.model)
----
 classDiagram
   direction LR
 
@@ -52,7 +49,6 @@ classDiagram
   }
   class Player {
     +Player(name String)
-    +Player(name String, tokens Map, purchasedCards List, reservedCards List, nobles List)
     +getName() String
     +getTokens() Map~Gem_Integer~
     +getTokenCount(gem Gem) int
@@ -78,7 +74,6 @@ classDiagram
     +Move(moveType MoveType)
     +Move(moveType MoveType, selectedGems Map)
     +Move(moveType MoveType, cardId Integer, isReservedCard boolean)
-    +Move(moveType MoveType, selectedGems Map, cardId Integer, isReservedCard boolean, deckTier Integer)
     +reserveFromDeck(tier int)$ Move
     +getMoveType() MoveType
     +getSelectedGems() Map~Gem_Integer~
@@ -94,7 +89,6 @@ classDiagram
     +Board(maxPlayers int, config IConfigProvider)
     +getGemBank() Map~Gem_Integer~
     +getGemCount(gem Gem) int
-    +getAvailableCards() Map~Integer_List~
     +getAvailableCards(tier int) List~Card~
     +getDeckSize(tier int) int
     +getAvailableNobles() List~Noble~
@@ -103,8 +97,6 @@ classDiagram
     +drawCard(tier int) Card
     +drawBlindCard(tier int) Card
     +removeAvailableCard(tier int, card Card) boolean
-    +copyDecks() Map~Integer_List~
-    +restoreDecks(decks Map) void
     +removeAvailableNoble(noble Noble) boolean
     +toString() String
   }

@@ -1,0 +1,13 @@
+%%{init: {"theme": "default"}}%%
+classDiagram
+  direction LR
+  class GameController
+  class TurnController
+  class PlayerController
+  class BotStrategy
+  class MenuBuilder
+
+  GameController ..> TurnController
+  GameController ..> PlayerController
+  GameController ..> BotStrategy
+  GameController ..> MenuBuilder
