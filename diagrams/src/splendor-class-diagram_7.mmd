@@ -1,43 +1,17 @@
 classDiagram
-    class IConfigProvider {
-        <<interface>>
-        +loadConfiguration() void
-        +getStringProperty(key, default) String
-        +getIntProperty(key, default) int
-        +getBooleanProperty(key, default) boolean
-        +hasProperty(key) boolean
-    }
-    
+    direction LR
     class FileConfigProvider {
-        -CONFIG_FILE_PATH: String
-        -properties: Properties
+        -Properties properties
         +FileConfigProvider()
         +loadConfiguration() void
-        +getStringProperty(key, default) String
-        +getIntProperty(key, default) int
-        +getBooleanProperty(key, default) boolean
-        +hasProperty(key) boolean
-        -validateRequiredProperties() void
+        +getStringProperty(final String key, final String defaultValue) String
+        +getIntProperty(final String key, final int defaultValue) int
+        +getBooleanProperty(final String key, final boolean defaultValue) boolean
+        +hasProperty(final String key) boolean
     }
-    
-    class ConfigKeys {
-        <<final>>
-        +WINNING_POINTS: String
-        +MAX_TOKENS: String
-        +SETUP_2P_GEMS: String
-        +SETUP_3P_GEMS: String
-        +SETUP_4P_GEMS: String
-        +SETUP_NOBLES_ADD: String
-        +SERVER_PORT: String
-        +MAX_CLIENTS: String
-        +CONNECTION_TIMEOUT: String
+
+    FileConfigProvider ..|> IConfigProvider
+    class IConfigProvider {
+        <<interface>>
     }
-    
-    class ConfigException {
-        +ConfigException(message)
-        +ConfigException(message, cause)
-    }
-    
-    IConfigProvider <|.. FileConfigProvider
-    FileConfigProvider --> ConfigKeys
-    FileConfigProvider --> ConfigException
+

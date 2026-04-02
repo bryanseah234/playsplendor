@@ -1,55 +1,17 @@
 classDiagram
-    class CardDataProvider {
-        <<interface>>
-        +loadCards(tier) List~Card~
-        +loadNobles() List~Noble~
-    }
-    
-    class CardLoader {
-        <<final>>
-        -instance: CardDataProvider
-        -configProvider: IConfigProvider
-        +loadCards(tier) List~Card~
-        +loadNobles() List~Noble~
-        +setCustomProvider(provider) void
-        +resetToDefault() void
-        +validateConfiguration() void
-        +getConfigProvider() IConfigProvider
-    }
-    
+    direction LR
     class CsvCardParser {
-        -configProvider: IConfigProvider
-        +loadCards(tier) List~Card~
+        -IConfigProvider configProvider
+        -List~Card~ allCards
+        -List~Noble~ allNobles
+        +CsvCardParser(final IConfigProvider configProvider)
+        +loadCards(final int tier) List~Card~
         +loadNobles() List~Noble~
-        -parseCardLine(line) Card
-        -parseNobleLine(line) Noble
-        -parseGemCost(costStr) Map~Gem, Integer~
+        -loadData() void
+        -validateHeader(final String headerLine) void
+        -parseCsvRow(final String line, final int lineNumber) void
+        -parseCardRow(final String[] parts, final int lineNumber) Card
+        -parseNobleRow(final String[] parts, final int lineNumber) Noble
+        -getTargetCardCount(final int tier) int
     }
-    
-    class CustomCardDeckProvider {
-        -customCards: Map~Integer, List~Card~~
-        -customNobles: List~Noble~
-        +CustomCardDeckProvider()
-        +CustomCardDeckProvider(cards, nobles)
-        +addCard(card) CustomCardDeckProvider
-        +addNoble(noble) CustomCardDeckProvider
-        +loadCards(tier) List~Card~
-        +loadNobles() List~Noble~
-        +getCardCount(tier) int
-        +getTotalCardCount() int
-        +getNobleCount() int
-        +clear() CustomCardDeckProvider
-    }
-    
-    class DataLoadException {
-        +DataLoadException(message)
-        +DataLoadException(message, cause)
-    }
-    
-    CardDataProvider <|.. CsvCardParser
-    CardDataProvider <|.. CustomCardDeckProvider
-    CardLoader --> CardDataProvider
-    CardLoader --> IConfigProvider
-    CsvCardParser --> IConfigProvider
-    CustomCardDeckProvider --> Card
-    CustomCardDeckProvider --> Noble
+

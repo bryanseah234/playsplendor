@@ -24,7 +24,7 @@ while ((match = mermaidRegex.exec(content)) !== null) {
     
     try {
         console.log(`Rendering ${srcFile}...`);
-        execSync(`mmdc -i "${srcFile}" -o "${pngFile}" -t default -b white`, { stdio: 'inherit' });
+        execSync(`mmdc -i "${srcFile}" -o "${pngFile}" -t default -b white -s 3 --width 1920 --height 1080`, { stdio: 'inherit' });
         console.log(`Rendered ${pngFile}`);
     } catch (e) {
         console.error(`Failed to render ${srcFile}`);

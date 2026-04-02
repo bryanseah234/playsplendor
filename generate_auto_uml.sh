@@ -17,8 +17,13 @@ resolve_graphviz_dot() {
         return 0
     fi
 
-    for candidate in /usr/bin/dot /usr/local/bin/dot /opt/homebrew/bin/dot /opt/local/bin/dot; do
-        if [ -x "$candidate" ]; then
+    if command -v dot.exe >/dev/null 2>&1; then
+        command -v dot.exe
+        return 0
+    fi
+
+    for candidate in /usr/bin/dot /usr/local/bin/dot /opt/homebrew/bin/dot /opt/local/bin/dot "C:/ProgramData/chocolatey/bin/dot.exe" "C:/Program Files/Graphviz/bin/dot.exe" "C:/Program Files (x86)/Graphviz/bin/dot.exe"; do
+        if [ -x "$candidate" ] || [ -f "$candidate" ]; then
             echo "$candidate"
             return 0
         fi
@@ -41,6 +46,7 @@ generate_class_diagram() {
     # Start PlantUML diagram
     cat > "$output_file" << EOF
 @startuml $title
+left to right direction
 !define ENTITY_COLOR #E1F5FE
 !define INTERFACE_COLOR #E8F5E8
 !define ENUM_COLOR #FFF3E0
@@ -135,6 +141,7 @@ done
 echo "Generating relationships diagram..."
 cat > "$OUTPUT_DIR/splendor_auto_relationships.puml" << 'EOF'
 @startuml splendor_auto_relationships
+left to right direction
 !define ENTITY_COLOR #E1F5FE
 !define INTERFACE_COLOR #E8F5E8
 

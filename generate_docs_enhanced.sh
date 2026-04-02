@@ -87,10 +87,10 @@ if [ -f "$DIAGRAMS_DIR/plantuml.jar" ]; then
             filename=$(basename "$puml_file" .puml)
             print_status "Processing $filename.puml..."
             
-            java -jar "$DIAGRAMS_DIR/plantuml.jar" -SbackgroundColor=#FFFFFF "$puml_file"
+            java -jar "$DIAGRAMS_DIR/plantuml.jar" -SbackgroundColor=#FFFFFF -o "auto_generated" "$puml_file"
             
             if [ $? -eq 0 ]; then
-                print_success "Generated $filename.png"
+                print_success "Generated $filename.png in auto_generated directory"
             else
                 print_error "Failed to generate $filename.png"
             fi

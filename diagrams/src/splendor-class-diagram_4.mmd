@@ -1,95 +1,137 @@
 classDiagram
+    direction LR
+    class Colors {
+        +Colors()
+        +colorize(String text, String colorCode) String$
+        +getGemColor(Gem gem) String$
+        -detectAnsiSupport() boolean$
+    }
+
+    class ConsoleView {
+        -Scanner scanner
+        -InputResolver inputResolver
+        -GameRenderer renderer
+        -MoveValidator moveValidator
+        -Player currentPlayer
+        +ConsoleView(final IConfigProvider config)
+        +displayGameState(final Game game) void
+        +displayPlayerTurn(final Player player) void
+        +displayMessage(final String message) String
+        +displayNotification(final String message) void
+        +displayError(final String errorMessage) String
+        +waitForEnter() String
+        +promptForCommand(final Player player, final Game game) String
+        +promptForMove(final Player player, final Game game, final List<MenuOption> options) Move
+        +promptForTokenDiscard(final Player player, final int excessCount) Move
+        +displayWinner(final Player winner, final Map<String, Integer> finalScores) void
+        +clearDisplay() void
+        +displayAvailableMoves(final List<MenuOption> options, final Game game) void
+        +promptForNobleChoice(final Player player, final List<Noble> nobles) Noble
+        +promptForPlayerName(final int playerNumber, final int totalPlayers) String
+        +promptForPlayerCount() int
+        +displayWelcomeMessage() void
+        +close() void
+        -promptTakeThree(final MenuOption option) Move
+        -promptTakeTwo(final MenuOption option) Move
+        -promptReserveVisible(final MenuOption option) Move
+        -promptReserveDeck(final MenuOption option) Move
+        -promptBuyVisible(final MenuOption option) Move
+        -promptBuyReserved(final MenuOption option) Move
+        -displayReservedCardDetails(final Player player) void
+    }
+
+    ConsoleView ..|> IGameView
+    class GameRenderer {
+        -MoveValidator moveValidator
+        +GameRenderer(final IConfigProvider config)
+        +clearDisplay() void
+        +displayGameState(final Game game) void
+        +renderToString(final Game game) String
+        -combineSideBySideRaw(final List<String> left, final List<String> right) String
+        -combineSideBySide(final List<String> left, final List<String> right) List~String~
+        -renderCardTiersList(final Board board, final Player currentPlayer) List~List~String~~
+        -renderNoblesHorizontal(Board board) List~String~
+        -renderRecentMovesBox(List<String> moves) List~String~
+        -renderPlayersTrackBoxes(List<Player> players, Player currentPlayer, int maxTokens) List~String~
+        -renderMenuBox(List<String> menu) List~String~
+        -renderBankVertical(Board board) List~String~
+        +displayPlayerTokens(final Player player) void
+        +setMenuLines(final List<String> menuLines) void
+        +buildMenuLines(final List<MenuOption> options, final int winningPoints) List~String~
+        -formatGemCounts(final Map<Gem, Integer> counts, final boolean includeZero) String
+        -formatRequirementsLines(final Map<Gem, Integer> requirements, final int contentWidth) List~String~
+        -frameLine(final String content, final String color, final int contentWidth) String
+        -colorBorder(final String line, final String color) String
+    }
+
     class IGameView {
         <<interface>>
-        +displayGameState(game) void
-        +displayPlayerTurn(player) void
-        +displayMessage(message) String
-        +displayNotification(message) void
-        +displayError(errorMessage) String
-        +promptForCommand(player, game) String
-        +promptForMove(player, game, options) Move
-        +promptForTokenDiscard(player, excessCount) Move
-        +displayWinner(winner, scores) void
+    }
+
+    class NetworkGameView {
+        -List~RemoteView~ playerViews
+        -int playerCount
+        -List~String~ predefinedPlayerNames
+        -List~Player~ playerOrder
+        -Player activePlayer
+        +NetworkGameView(final List<RemoteView> playerViews, final int playerCount)
+        -initPlayerOrder(final Game game) void
+        -viewForPlayer(final Player player) RemoteView
+        -broadcast(final Consumer<RemoteView> action) void
+        +displayGameState(final Game game) void
+        +displayPlayerTurn(final Player player) void
+        +displayMessage(final String message) String
+        +displayNotification(final String message) void
+        +displayError(final String errorMessage) String
+        +displayWinner(final Player winner, final Map<String, Integer> finalScores) void
+        +displayAvailableMoves(final List<MenuOption> options, final Game game) void
+        +displayWelcomeMessage() void
         +clearDisplay() void
-        +displayAvailableMoves(options, game) void
-        +promptForNobleChoice(player, nobles) Noble
-        +promptForPlayerName(number, total) String
+        +close() void
+        +waitForEnter() String
+        +promptForCommand(final Player player, final Game game) String
+        +promptForMove(final Player player, final Game game, final List<MenuOption> options) Move
+        +promptForTokenDiscard(final Player player, final int excessCount) Move
+        +promptForNobleChoice(final Player player, final List<Noble> nobles) Noble
+        +promptForPlayerCount() int
+        +promptForPlayerName(final int playerNumber, final int totalPlayers) String
+    }
+
+    NetworkGameView ..|> IGameView
+    class RemoteView {
+        -String clientId
+        -NetworkMessageHandler messageHandler
+        -GameRenderer renderer
+        -MoveValidator moveValidator
+        +displayGameState(final Game game) void
+        +displayPlayerTurn(final Player player) void
+        +displayMessage(final String message) String
+        +displayError(final String errorMessage) String
+        +displayNotification(final String message) void
+        +promptForCommand(final Player player, final Game game) String
+        +promptForMove(final Player player, final Game game, final List<MenuOption> options) Move
+        -buildMoveFromOption(final MenuOption option) Move
+        -isBackToMenuInput(final String input) boolean
+        -parseId(final String input) int
+        -send(final String message) void
+        -sendErrorLine(final String errorMessage) void
+        -waitForResponse(final int timeoutMs) String
+        +promptForTokenDiscard(final Player player, final int excessCount) Move
+        -parseDiscardMove(final String rawResponse) Move
+        +displayWinner(final Player winner, final Map<String, Integer> finalScores) void
+        +clearDisplay() void
+        +displayAvailableMoves(final List<MenuOption> options, final Game game) void
+        +promptForNobleChoice(final Player player, final List<Noble> nobles) Noble
+        +promptForPlayerName(final int playerNumber, final int totalPlayers) String
         +promptForPlayerCount() int
         +displayWelcomeMessage() void
         +waitForEnter() String
         +close() void
+        -createDefaultDiscardMove(final Player player, final int excessCount) Move
+        -sendReservedCardDetails(final Player player) void
     }
-    
-    class ConsoleView {
-        -inputResolver: InputResolver
-        -gameRenderer: GameRenderer
-        +displayGameState(game) void
-        +promptForMove(player, game, options) Move
-        +displayWinner(winner, scores) void
-    }
-    
-    class RemoteView {
-        -clientId: String
-        -messageHandler: NetworkMessageHandler
-        -gameLogger: GameLogger
-        -gemParser: GemParser
-        +promptForMove(player, game, options) Move
-        +displayGameState(game) void
-    }
-    
-    class NetworkGameView {
-        -playerViews: List~RemoteView~
-        -playerCount: int
-        +displayGameState(game) void
-        +promptForMove(player, game, options) Move
-    }
-    
-    class Colors {
-        <<utility>>
-        +RESET: String
-        +RED: String
-        +GREEN: String
-        +BLUE: String
-        +WHITE: String
-        +BLACK: String
-        +GOLD: String
-        +CYAN: String
-        +PURPLE: String
-        +GRAY: String
-        +DIM: String
-        +colorize(text, color) String
-        +getGemColor(gem) String
-    }
-    
-    class CardRenderer {
-        +renderCard(card, affordable) String
-        +renderCardBack() String
-        +renderNoble(noble) String
-    }
-    
-    class GameRenderer {
-        +renderFullBoard(game) List~String~
-        +renderPlayerInfo(player) List~String~
-        +renderGemBank(board) List~String~
-    }
-    
-    class NetworkMessageHandler {
-        <<interface>>
-        +sendToClient(clientId, message) void
-        +waitForClientResponse(clientId, timeoutMs) String
-    }
-    
-    IGameView <|.. ConsoleView
-    IGameView <|.. RemoteView
-    IGameView <|.. NetworkGameView
-    ConsoleView --> InputResolver
+
+    RemoteView ..|> IGameView
     ConsoleView --> GameRenderer
-    RemoteView --> NetworkMessageHandler
-    RemoteView --> GameLogger
-    RemoteView --> GemParser
     NetworkGameView --> RemoteView
-    CardRenderer --> Colors
-    CardRenderer --> Card
-    GameRenderer --> Board
-    GameRenderer --> Player
-    GameRenderer --> Colors
+    RemoteView --> GameRenderer

@@ -1,34 +1,49 @@
 classDiagram
-    class ServerSocketHandler {
-        -serverPort: int
-        -gameLogger: GameLogger
-        -configProvider: IConfigProvider
-        +ServerSocketHandler(port, config)
-        +startServer() void
-        +waitForClients(count, timeoutMs) boolean
-        +sendToClient(clientId, message) void
-        +pollClientResponse(clientId, timeoutMs) String
-        +getConnectedClientIds() List~String~
-        +getActualPort() int
-        +markGameStarted() void
-    }
-    
+    direction LR
     class ClientHandler {
-        -clientId: String
-        -gameLogger: GameLogger
-        -socket: Socket
-        +ClientHandler(clientId, socket)
-        +sendMessage(message) void
-        +receiveMessage(timeoutMs) String
-        +close() void
+        -String clientId
+        -Socket clientSocket
+        -ServerSocketHandler serverHandler
+        -BufferedReader inputReader
+        -PrintWriter outputWriter
+        +ClientHandler(final Socket clientSocket, final ServerSocketHandler serverHandler)
+        +handleClient() void
+        -initializeStreams() void
+        -processClientMessages() void
+        -processMessage(final String message) void
+        -sendError(final String errorMessage) void
+        +sendMessage(final String message) void
+        +disconnect() void
+        -cleanup() void
+        +getClientId() String
     }
-    
-    class NetworkException {
-        +NetworkException(message)
-        +NetworkException(message, cause)
+
+    class NetworkMessageHandler {
+        <<interface>>
     }
-    
+
+    class ServerSocketHandler {
+        -ServerSocket serverSocket
+        -ExecutorService clientExecutor
+        -List~ClientHandler~ connectedClients
+        +ServerSocketHandler()
+        +startServer() void
+        -acceptClientConnections() void
+        -handleClientConnection(final Socket clientSocket) void
+        +waitForAtLeastClients(final int targetClients, final long timeoutMs) boolean
+        +getConnectedClientIds() List~String~
+        +isClientConnected(final String clientId) boolean
+        -removeClient(final ClientHandler clientHandler) void
+        +broadcastToAllClients(final String message) void
+        +sendToClient(final String clientId, final String message) void
+        +waitForClientResponse(final String clientId, final int timeoutMs) String
+        +stopServer() void
+        +getConnectedClientCount() int
+        +getActualPort() int
+        +setGameStarted(final boolean started) void
+        -closeSocket(final Socket socket) void
+    }
+
+    ServerSocketHandler ..|> NetworkMessageHandler
+    ClientHandler --> ServerSocketHandler
     ServerSocketHandler --> ClientHandler
-    ServerSocketHandler --> IConfigProvider
-    ServerSocketHandler --> GameLogger
-    ClientHandler --> GameLogger
