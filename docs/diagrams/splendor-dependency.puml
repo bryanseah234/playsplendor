@@ -52,6 +52,10 @@ package "com.splendor.model" {
   class BotStrategy
 }
 
+package "com.splendor.data" {
+  class CsvCardParser
+}
+
 package "com.splendor.model.validator" {
   class MoveValidator
   class GameRuleValidator
@@ -132,6 +136,7 @@ GameController --> GameRuleValidator
 GameController --> TurnController
 GameController --> PlayerController
 GameController --> MenuBuilder
+GameController --> CsvCardParser
 GameController --> Board
 GameController --> Card
 GameController --> ComputerPlayer
@@ -209,6 +214,14 @@ ClientHandler --> ServerSocketHandler
 ClientHandler --> IConfigProvider
 ClientHandler --> NetworkProtocol
 ClientHandler --> GameLogger
+
+' ── Data ────────────────────────────────────────
+CsvCardParser --> IConfigProvider
+CsvCardParser --> Card
+CsvCardParser --> Noble
+CsvCardParser --> Gem
+CsvCardParser --> ConfigKeys
+CsvCardParser --> DataLoadException
 
 ' ── Util ────────────────────────────────────────
 CardLoader --> Card

@@ -54,6 +54,10 @@ package "com.splendor.config" {
         - validateRequiredProperties() : void
     }
 
+    class ConfigValidator {
+        + {static} validateAll(configProvider : IConfigProvider) : void
+    }
+
     class ConfigKeys <<final>> {
         + {static} WINNING_POINTS : String
         + {static} MAX_TOKENS : String
@@ -394,6 +398,33 @@ package "com.splendor.model" {
 }
 
 ' ─────────────────────────────────────────────
+'  PACKAGE: com.splendor.data
+' ─────────────────────────────────────────────
+package "com.splendor.data" {
+    class CsvCardParser {
+        - configProvider : IConfigProvider
+        - allCards : List<Card>
+        - allNobles : List<Noble>
+        + CsvCardParser(configProvider : IConfigProvider)
+        + loadCards(tier : int) : List<Card>
+        + loadNobles() : List<Noble>
+        - loadData() : void
+        - validateHeader(headerLine : String) : void
+        - parseCsvRow(line : String, lineNumber : int) : void
+        - parseCardRow(parts : String[], lineNumber : int) : Card
+        - parseNobleRow(parts : String[], lineNumber : int) : Noble
+        - getTargetCardCount(tier : int) : int
+    }
+}
+
+CsvCardParser --> IConfigProvider
+CsvCardParser --> Card
+CsvCardParser --> Noble
+CsvCardParser --> Gem
+CsvCardParser --> ConfigKeys
+CsvCardParser --> DataLoadException
+
+' ─────────────────────────────────────────────
 '  PACKAGE: com.splendor.model.validator
 ' ─────────────────────────────────────────────
 package "com.splendor.model.validator" {
@@ -541,6 +572,7 @@ package "com.splendor.controller" {
     GameController --> TurnController
     GameController --> PlayerController
     GameController --> MenuBuilder
+    GameController --> CsvCardParser
     GameController --> Board
     GameController --> Card
     GameController --> ComputerPlayer

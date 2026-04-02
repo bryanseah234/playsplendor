@@ -52,6 +52,10 @@ package "com.splendor.model" {
   class BotStrategy
 }
 
+package "com.splendor.data" {
+  class CsvCardParser
+}
+
 package "com.splendor.model.validator" {
   class MoveValidator
   class GameRuleValidator
