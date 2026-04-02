@@ -3,6 +3,10 @@ package com.splendor.model;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Represents the gem types in Splendor.
+ * Five collectible colors (White, Blue, Green, Red, Black) plus Gold (wildcard).
+ */
 public enum Gem {
     WHITE("W", "White"),
     BLUE("B", "Blue"),

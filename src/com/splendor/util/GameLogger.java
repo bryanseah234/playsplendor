@@ -33,12 +33,17 @@ import java.time.format.DateTimeFormatter;
  * <p>This class is thread-safe and designed to be used throughout the application
  * without instantiation.
  * 
- * @see Constants#LOG_FORMAT For the log message format template
- * @see Constants#LOG_LEVEL_INFO For standard log level identifiers
+ * @see GameLogger#LOG_FORMAT For the log message format template
+ * @see GameLogger#LOG_LEVEL_INFO For standard log level identifiers
  */
 public class GameLogger {
     
-    private static final DateTimeFormatter TIMESTAMP_FORMAT = 
+    @Override
+	public String toString() {
+		return "GameLogger []";
+	}
+
+	private static final DateTimeFormatter TIMESTAMP_FORMAT = 
         DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     
     private static boolean debugEnabled = false;
@@ -121,5 +126,7 @@ public class GameLogger {
                                                     timestamp, level, message);
         System.out.println(formattedMessage);
     }
+
+	public GameLogger() {}
     
 }

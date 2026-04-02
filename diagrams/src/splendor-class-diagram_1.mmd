@@ -87,13 +87,13 @@ flowchart TB
     GameController --> MoveValidator
     GameController --> GameRuleValidator
     
-    IConfigProvider <|.. FileConfigProvider
-    IGameView <|.. ConsoleView
-    IGameView <|.. RemoteView
-    IGameView <|.. NetworkGameView
+    FileConfigProvider -.implements.-> IConfigProvider
+    ConsoleView -.implements.-> IGameView
+    RemoteView -.implements.-> IGameView
+    NetworkGameView -.implements.-> IGameView
     
-    CardDataProvider <|.. CsvCardParser
-    CardDataProvider <|.. CustomCardDeckProvider
+    CsvCardParser -.implements.-> CardDataProvider
+    CustomCardDeckProvider -.implements.-> CardDataProvider
     CardLoader --> CardDataProvider
     
     Game --> Board
@@ -106,7 +106,7 @@ flowchart TB
     Player --> Noble
     Player --> Gem
     Move --> MoveType
-    ComputerPlayer --|> Player
+    ComputerPlayer -.extends.-> Player
     
     GameRuleValidator --> GameState
     MoveValidator --> Move
@@ -114,10 +114,10 @@ flowchart TB
     ServerSocketHandler --> NetworkMessageHandler
     ClientHandler --> NetworkMessageHandler
     
-    GameStateException --|> SplendorException
-    InsufficientTokensException --|> SplendorException
-    InvalidMoveException --|> SplendorException
-    InvalidPlayerActionException --|> SplendorException
-    NetworkException --|> SplendorException
-    ConfigException --|> Exception
-    DataLoadException --|> Exception
+    GameStateException -.extends.-> SplendorException
+    InsufficientTokensException -.extends.-> SplendorException
+    InvalidMoveException -.extends.-> SplendorException
+    InvalidPlayerActionException -.extends.-> SplendorException
+    NetworkException -.extends.-> SplendorException
+    ConfigException -.extends.-> Exception
+    DataLoadException -.extends.-> Exception

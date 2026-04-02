@@ -1,18 +1,16 @@
 package com.splendor.model;
 
-import static org.junit.jupiter.api.Assertions.*;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import com.splendor.config.IConfigProvider;
 import com.splendor.controller.BotStrategy;
 import com.splendor.model.validator.MoveValidator;
 import com.splendor.test.TestConfigProvider;
-import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 class BotStrategyTest {
 
@@ -38,7 +36,7 @@ class BotStrategyTest {
                 board.drawBlindCard(tier);
             }
         }
-        board.setAvailableCards(Map.of(1, List.of(), 2, List.of(), 3, List.of()));
+        clearAvailableCards(board);
         
         // Make sure taking gems is not an option
         Map<Gem, Integer> allGems = new HashMap<>(board.getGemBank());
@@ -74,5 +72,13 @@ class BotStrategyTest {
         assertEquals(MoveType.RESERVE_CARD, move.getMoveType());
         assertTrue(move.hasDeckSelection());
         assertEquals(3, move.getDeckTier());
+    }
+
+    private static void clearAvailableCards(final Board board) {
+        for (int tier = 1; tier <= 3; tier++) {
+            for (Card card : new java.util.ArrayList<>(board.getAvailableCards(tier))) {
+                board.removeAvailableCard(tier, card);
+            }
+        }
     }
 }

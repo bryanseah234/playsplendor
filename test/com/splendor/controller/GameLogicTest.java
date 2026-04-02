@@ -1,11 +1,15 @@
 package com.splendor.controller;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import com.splendor.config.IConfigProvider;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import com.splendor.exception.SplendorException;
-import com.splendor.model.Board;
 import com.splendor.model.Card;
+import com.splendor.model.Board;
 import com.splendor.model.Game;
 import com.splendor.model.Gem;
 import com.splendor.model.MenuOption;
@@ -15,10 +19,6 @@ import com.splendor.model.Noble;
 import com.splendor.model.Player;
 import com.splendor.model.validator.MoveValidator;
 import com.splendor.view.IGameView;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class GameLogicTest {
@@ -29,7 +29,7 @@ class GameLogicTest {
     @Test
     void takeThreeDifferentAvailableWhenThreeOrMoreColorsHaveTokens() {
         Board board = new Board(2, configProvider);
-        board.setGemBank(gems(1, 1, 1, 0, 0, 5));
+        setGemBank(board, gems(1, 1, 1, 0, 0, 5));
 
         assertTrue(canTakeThreeDifferent(board));
     }
@@ -37,7 +37,7 @@ class GameLogicTest {
     @Test
     void takeThreeDifferentUnavailableWhenOnlyTwoColorsHaveTokens() {
         Board board = new Board(2, configProvider);
-        board.setGemBank(gems(2, 2, 0, 0, 0, 5));
+        setGemBank(board, gems(2, 2, 0, 0, 0, 5));
 
         assertFalse(canTakeThreeDifferent(board));
     }
@@ -45,7 +45,7 @@ class GameLogicTest {
     @Test
     void takeTwoSameAvailableWhenAtLeastOneGemHasFourOrMore() {
         Board board = new Board(2, configProvider);
-        board.setGemBank(gems(4, 0, 0, 0, 0, 5));
+        setGemBank(board, gems(4, 0, 0, 0, 0, 5));
 
         assertTrue(canTakeTwoSame(board));
     }
@@ -53,7 +53,7 @@ class GameLogicTest {
     @Test
     void takeTwoSameUnavailableWhenAllGemsAreThreeOrFewer() {
         Board board = new Board(2, configProvider);
-        board.setGemBank(gems(3, 3, 3, 3, 3, 5));
+        setGemBank(board, gems(3, 3, 3, 3, 3, 5));
 
         assertFalse(canTakeTwoSame(board));
     }
@@ -81,7 +81,7 @@ class GameLogicTest {
     void reserveVisibleUnavailableWhenNoVisibleCardsOnBoard() {
         Game game = game(2);
         Player player = game.getPlayers().get(0);
-        game.getBoard().setAvailableCards(emptyAvailableCards());
+        setAvailableCards(game.getBoard(), emptyAvailableCards());
 
         assertFalse(canReserveVisible(player, game.getBoard()));
     }
@@ -100,7 +100,7 @@ class GameLogicTest {
         Game game = game(2);
         Player player = game.getPlayers().get(0);
         Card affordable = card(7101, 1, 0, Gem.WHITE, Map.of(Gem.RED, 1));
-        game.getBoard().setAvailableCards(availableCardsWithTierOne(affordable));
+        setAvailableCards(game.getBoard(), availableCardsWithTierOne(affordable));
         player.addTokens(Gem.RED, 1);
 
         assertTrue(canBuyVisible(player, game.getBoard()));
@@ -111,7 +111,7 @@ class GameLogicTest {
         Game game = game(2);
         Player player = game.getPlayers().get(0);
         Card card = card(7102, 1, 0, Gem.WHITE, Map.of(Gem.RED, 1));
-        game.getBoard().setAvailableCards(availableCardsWithTierOne(card));
+        setAvailableCards(game.getBoard(), availableCardsWithTierOne(card));
 
         assertFalse(canBuyVisible(player, game.getBoard()));
     }
@@ -161,7 +161,7 @@ class GameLogicTest {
 
         Card target = card(7301, 1, 0, Gem.WHITE, Map.of(Gem.RED, 1));
         Card replacement = card(7303, 1, 0, Gem.GREEN, Map.of());
-        game.getBoard().setAvailableCards(availableCardsWithTierOne(target));
+        setAvailableCards(game.getBoard(), availableCardsWithTierOne(target));
         game.getBoard().restoreDecks(decksWithTierOne(replacement));
         int bankRedBefore = game.getBoard().getGemCount(Gem.RED);
 
@@ -181,7 +181,7 @@ class GameLogicTest {
         TurnController turnController = new TurnController(game, new StubView());
 
         Card target = card(7401, 1, 0, Gem.WHITE, Map.of(Gem.RED, 1));
-        game.getBoard().setAvailableCards(availableCardsWithTierOne(target));
+        setAvailableCards(game.getBoard(), availableCardsWithTierOne(target));
         int goldBefore = game.getBoard().getGemCount(Gem.GOLD);
 
         turnController.executeMove(new Move(MoveType.RESERVE_CARD, target.getId(), false), player);
@@ -196,9 +196,13 @@ class GameLogicTest {
         Game game = game(2);
         Player player = game.getCurrentPlayer();
         PlayerController playerController = new PlayerController(game, new StubView(), moveValidator);
-        Noble noble = new Noble(7501, 3, Map.of(Gem.RED, 1));
-        game.getBoard().setAvailableNobles(new ArrayList<>(List.of(noble)));
-        player.addPurchasedCard(card(7502, 1, 0, Gem.RED, Map.of()));
+        Noble noble = game.getBoard().getAvailableNobles().get(0);
+        int idSeed = 7502;
+        for (Map.Entry<Gem, Integer> requirement : noble.getRequirements().entrySet()) {
+            for (int i = 0; i < requirement.getValue(); i++) {
+                player.addPurchasedCard(card(idSeed++, 1, 0, requirement.getKey(), Map.of()));
+            }
+        }
 
         playerController.checkNobleVisits(player);
 
@@ -288,6 +292,49 @@ class GameLogicTest {
         return new Game(players, 15, 10, configProvider);
     }
 
+    private static void setGemBank(Board board, Map<Gem, Integer> targetCounts) {
+        for (Gem gem : Gem.values()) {
+            int current = board.getGemCount(gem);
+            int target = targetCounts.getOrDefault(gem, 0);
+            if (current > target) {
+                board.removeGems(singleGem(gem, current - target));
+            } else if (target > current) {
+                board.addGems(singleGem(gem, target - current));
+            }
+        }
+    }
+
+    private static void setAvailableCards(Board board, Map<Integer, List<Card>> targetAvailable) {
+        clearAvailableCards(board);
+        Map<Integer, List<Card>> decks = emptyDecks();
+        for (int tier = 1; tier <= 3; tier++) {
+            List<Card> tierCards = targetAvailable.getOrDefault(tier, List.of());
+            decks.put(tier, new ArrayList<>(tierCards));
+        }
+        board.restoreDecks(decks);
+        for (int tier = 1; tier <= 3; tier++) {
+            List<Card> tierCards = targetAvailable.getOrDefault(tier, List.of());
+            for (int i = 0; i < tierCards.size(); i++) {
+                board.drawCard(tier);
+            }
+        }
+    }
+
+    private static void clearAvailableCards(Board board) {
+        for (int tier = 1; tier <= 3; tier++) {
+            List<Card> snapshot = new ArrayList<>(board.getAvailableCards(tier));
+            for (Card card : snapshot) {
+                board.removeAvailableCard(tier, card);
+            }
+        }
+    }
+
+    private static Map<Gem, Integer> singleGem(Gem gem, int count) {
+        Map<Gem, Integer> map = new HashMap<>();
+        map.put(gem, count);
+        return map;
+    }
+
     private static Card card(int id, int tier, int points, Gem bonusGem, Map<Gem, Integer> cost) {
         return new Card(id, tier, points, bonusGem, new HashMap<>(cost));
     }
@@ -327,7 +374,7 @@ class GameLogicTest {
 
     private static Map<Integer, List<Card>> decksWithTierOne(Card... cards) {
         Map<Integer, List<Card>> decks = emptyDecks();
-        decks.put(1, new ArrayList<>(List.of(cards)));
+        decks.put(1, new ArrayList<>(java.util.Arrays.asList(cards)));
         return decks;
     }
 

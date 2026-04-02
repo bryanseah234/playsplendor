@@ -1,14 +1,16 @@
 package com.splendor.model;
 
-import static org.junit.jupiter.api.Assertions.*;
-import org.junit.jupiter.api.Test;
-
-import com.splendor.config.IConfigProvider;
-import com.splendor.test.TestConfigProvider;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.splendor.config.IConfigProvider;
+import com.splendor.test.TestConfigProvider;
+import org.junit.jupiter.api.Test;
 
 class GameFlowTest {
 
@@ -186,38 +188,4 @@ class GameFlowTest {
     private static Card card(int id, int tier, int points, Gem bonusGem, Map<Gem, Integer> cost) {
         return new Card(id, tier, points, bonusGem, new HashMap<>(cost));
     }
-
-    @Override
-    public String toString() {
-        return "GameFlowTest [configProvider=" + configProvider + ", getClass()=" + getClass() + ", hashCode()="
-                + hashCode() + ", toString()=" + super.toString() + "]";
-    }
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((configProvider == null) ? 0 : configProvider.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		GameFlowTest other = (GameFlowTest) obj;
-		if (configProvider == null) {
-			if (other.configProvider != null)
-				return false;
-		} else if (!configProvider.equals(other.configProvider))
-			return false;
-		return true;
-	}
-
-	public GameFlowTest() {
-	}
 }

@@ -5,13 +5,21 @@ on:
     branches: [ main, develop ]
     paths:
       - 'src/**/*.java'
+      - 'diagrams/src/**/*.mmd'
       - 'docs/diagrams/*.puml'
+      - 'test/ci/**'
+      - 'render_diagrams.js'
+      - 'generate_docs_enhanced.*'
       - '.github/workflows/documentation.yml'
   pull_request:
     branches: [ main ]
     paths:
       - 'src/**/*.java'
+      - 'diagrams/src/**/*.mmd'
       - 'docs/diagrams/*.puml'
+      - 'test/ci/**'
+      - 'render_diagrams.js'
+      - 'generate_docs_enhanced.*'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -43,6 +51,16 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install Node dependencies
+      run: npm ci
+      shell: bash
     
     - name: Cache PlantUML
       id: cache-plantuml
@@ -63,16 +81,22 @@ jobs:
       if: runner.os != 'Windows'
       run: |
         chmod +x generate_docs_enhanced.sh
+        chmod +x test/ci/docs_guard.sh
+        node render_diagrams.js
         ./generate_docs_enhanced.sh
+        bash test/ci/docs_guard.sh
       shell: bash
     
     - name: Generate Documentation (Windows)
       if: runner.os == 'Windows'
       run: |
+        node render_diagrams.js
         .\generate_docs_enhanced.bat
+        call test\ci\docs_guard.bat
       shell: cmd
     
-    - name: Validate Documentation
+    - name: Validate Documentation (Linux/Mac)
+      if: runner.os != 'Windows'
       run: |
         # Check if Javadoc was generated
         if [ ! -f docs/javadoc/index.html ]; then
@@ -93,6 +117,20 @@ jobs:
         
         echo "✅ Documentation validation complete"
       shell: bash
+
+    - name: Validate Documentation (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        if not exist docs\javadoc\index.html (
+          echo ❌ Javadoc generation failed
+          exit /b 1
+        )
+        if not exist docs\index.html (
+          echo ❌ Documentation index not generated
+          exit /b 1
+        )
+        echo ✅ Documentation validation complete
+      shell: cmd
     
     - name: Check for Documentation Changes
       id: doc-changes

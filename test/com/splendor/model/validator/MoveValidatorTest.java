@@ -1,20 +1,25 @@
 package com.splendor.model.validator;
 
-import com.splendor.exception.InsufficientTokensException;
-import com.splendor.exception.InvalidMoveException;
-import com.splendor.model.*;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
-
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import com.splendor.exception.InsufficientTokensException;
+import com.splendor.exception.InvalidMoveException;
+import com.splendor.exception.SplendorException;
+import com.splendor.model.Board;
+import com.splendor.model.Card;
+import com.splendor.model.Game;
+import com.splendor.model.Gem;
+import com.splendor.model.Move;
+import com.splendor.model.MoveType;
+import com.splendor.model.Player;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 class MoveValidatorTest {
 
@@ -115,7 +120,7 @@ class MoveValidatorTest {
     @Test
     void validateReserveCard_validReserveVisibleCardWhenUnderLimit() {
         Card card = createCard(9001, 1, Gem.WHITE, gems(Gem.BLUE, 1));
-        game.getBoard().addAvailableCard(1, card);
+        setVisibleCards(1, card);
         Move move = new Move(MoveType.RESERVE_CARD, card.getId(), false);
 
         assertDoesNotThrow(() -> validator.validateMove(move, currentPlayer, game));
@@ -174,7 +179,7 @@ class MoveValidatorTest {
     @Test
     void validateBuyCard_validExactTokensForCost() {
         Card card = createCard(9201, 1, Gem.BLUE, gems(Gem.WHITE, 2, Gem.RED, 1));
-        game.getBoard().addAvailableCard(1, card);
+        setVisibleCards(1, card);
         giveTokens(currentPlayer, gems(Gem.WHITE, 2, Gem.RED, 1));
         Move move = new Move(MoveType.BUY_CARD, card.getId(), false);
 
@@ -184,7 +189,7 @@ class MoveValidatorTest {
     @Test
     void validateBuyCard_validUsingGoldForShortage() {
         Card card = createCard(9202, 1, Gem.GREEN, gems(Gem.WHITE, 2, Gem.RED, 1));
-        game.getBoard().addAvailableCard(1, card);
+        setVisibleCards(1, card);
         giveTokens(currentPlayer, gems(Gem.WHITE, 1, Gem.RED, 1, Gem.GOLD, 1));
         Move move = new Move(MoveType.BUY_CARD, card.getId(), false);
 
@@ -197,7 +202,7 @@ class MoveValidatorTest {
         currentPlayer.addPurchasedCard(discountCard);
 
         Card target = createCard(9204, 1, Gem.RED, gems(Gem.WHITE, 1));
-        game.getBoard().addAvailableCard(1, target);
+        setVisibleCards(1, target);
         Move move = new Move(MoveType.BUY_CARD, target.getId(), false);
 
         assertDoesNotThrow(() -> validator.validateMove(move, currentPlayer, game));
@@ -206,7 +211,7 @@ class MoveValidatorTest {
     @Test
     void validateBuyCard_invalidCannotAffordCard() {
         Card card = createCard(9205, 1, Gem.BLACK, gems(Gem.BLUE, 3));
-        game.getBoard().addAvailableCard(1, card);
+        setVisibleCards(1, card);
         giveTokens(currentPlayer, gems(Gem.BLUE, 1));
         Move move = new Move(MoveType.BUY_CARD, card.getId(), false);
 
@@ -330,6 +335,24 @@ class MoveValidatorTest {
 
     private Card createCard(int id, int tier, Gem bonusGem, Map<Gem, Integer> cost) {
         return new Card(id, tier, 0, bonusGem, cost);
+    }
+
+    private void setVisibleCards(int tier, Card... cards) {
+        Board board = game.getBoard();
+        for (Card existing : new ArrayList<>(board.getAvailableCards(tier))) {
+            board.removeAvailableCard(tier, existing);
+        }
+
+        Map<Integer, List<Card>> decks = new java.util.HashMap<>();
+        decks.put(1, new ArrayList<>());
+        decks.put(2, new ArrayList<>());
+        decks.put(3, new ArrayList<>());
+        decks.put(tier, new ArrayList<>(java.util.Arrays.asList(cards)));
+        board.restoreDecks(decks);
+
+        for (int i = 0; i < cards.length; i++) {
+            board.drawCard(tier);
+        }
     }
 
     private Map<Gem, Integer> gems(Object... entries) {

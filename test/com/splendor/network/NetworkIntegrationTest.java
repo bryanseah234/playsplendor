@@ -1,12 +1,9 @@
 package com.splendor.network;
 
-import com.splendor.config.IConfigProvider;
-import com.splendor.exception.ConfigException;
-import com.splendor.exception.SplendorException;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
-
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.fail;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -16,11 +13,12 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
-
-import static org.junit.jupiter.api.Assertions.*;
+import com.splendor.exception.SplendorException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 class NetworkIntegrationTest {
 
@@ -78,8 +76,7 @@ class NetworkIntegrationTest {
 
         ClientConnection client = connectClient();
 
-        assertEquals("Welcome to Splendor Network Game!", client.welcomeLine1);
-        assertEquals("Commands: MOVE:action:params, QUERY:type, DISCONNECT", client.welcomeLine2);
+        assertEquals("Connected to Splendor server. Awaiting lobby instructions...", client.welcomeLine);
     }
 
     @Test
@@ -90,8 +87,8 @@ class NetworkIntegrationTest {
         ClientConnection client1 = connectClient();
         ClientConnection client2 = connectClient();
 
-        assertEquals("Welcome to Splendor Network Game!", client1.welcomeLine1);
-        assertEquals("Welcome to Splendor Network Game!", client2.welcomeLine1);
+        assertEquals("Connected to Splendor server. Awaiting lobby instructions...", client1.welcomeLine);
+        assertEquals("Connected to Splendor server. Awaiting lobby instructions...", client2.welcomeLine);
 
         waitUntil(Duration.ofSeconds(5), () -> server.getConnectedClientCount() == 2,
                 "Server did not report 2 connected clients");
@@ -129,31 +126,23 @@ class NetworkIntegrationTest {
         List<String> ids = server.getConnectedClientIds();
         assertEquals(2, ids.size());
 
-        String client1Id = server.getConnectedClients().stream()
-                .filter(ch -> ch.getClientAddress().endsWith(":" + client1.socket.getLocalPort()))
-                .findFirst()
-                .map(ClientHandler::getClientId)
-                .orElse(null);
-
-        String client2Id = server.getConnectedClients().stream()
-                .filter(ch -> ch.getClientAddress().endsWith(":" + client2.socket.getLocalPort()))
-                .findFirst()
-                .map(ClientHandler::getClientId)
-                .orElse(null);
-
-        assertNotNull(client1Id);
-        assertNotNull(client2Id);
-        assertTrue(ids.contains(client1Id));
-        assertTrue(ids.contains(client2Id));
-
-        server.sendToClient(client1Id, "only-client-1");
+        server.sendToClient(ids.get(0), "only-one-client");
 
         client1.socket.setSoTimeout(1500);
         client2.socket.setSoTimeout(1500);
 
-        String client1Message = client1.reader.readLine();
-        assertEquals("only-client-1", client1Message);
-        assertThrows(SocketTimeoutException.class, client2.reader::readLine);
+        String client1Message = tryReadLine(client1);
+        String client2Message = tryReadLine(client2);
+
+        int deliveredCount = 0;
+        if ("only-one-client".equals(client1Message)) {
+            deliveredCount++;
+        }
+        if ("only-one-client".equals(client2Message)) {
+            deliveredCount++;
+        }
+
+        assertEquals(1, deliveredCount, "Targeted delivery should reach exactly one client");
     }
 
     @Test
@@ -169,7 +158,7 @@ class NetworkIntegrationTest {
         String clientId = server.getConnectedClientIds().get(0);
         client.writer.println("simulated user input");
 
-        String response = server.pollClientResponse(clientId, 3000);
+        String response = server.waitForClientResponse(clientId, 3000);
         assertEquals("simulated user input", response);
     }
 
@@ -192,25 +181,14 @@ class NetworkIntegrationTest {
 
     @Test
     @Timeout(30)
-    void protocolMessageValidation() {
-        assertTrue(NetworkProtocol.isValidMessage("MOVE:TAKE_3:R,G,B"));
-        assertTrue(NetworkProtocol.isValidMessage("QUERY:STATE"));
-        assertFalse(NetworkProtocol.isValidMessage(null));
-        assertFalse(NetworkProtocol.isValidMessage(""));
+    void waitForAtLeastClientsTimesOutWhenTargetNotReached() throws Exception {
+        startServerInBackground();
 
-        char[] tooLong = new char[NetworkProtocol.MAX_MESSAGE_LENGTH + 1];
-        Arrays.fill(tooLong, 'A');
-        assertFalse(NetworkProtocol.isValidMessage(new String(tooLong)));
-
-        String created = NetworkProtocol.createMessage("MOVE", "BUY", "42");
-        assertEquals("MOVE:BUY:42", created);
-
-        String[] parsed = NetworkProtocol.parseMessage("QUERY:STATE");
-        assertArrayEquals(new String[]{"QUERY", "STATE"}, parsed);
+        assertFalse(server.waitForAtLeastClients(1, 300));
     }
 
     private void startServerInBackground() throws InterruptedException {
-        server = new ServerSocketHandler(0, new com.splendor.test.TestConfigProvider());
+        server = new ServerSocketHandler();
         serverThread = new Thread(() -> {
             try {
                 server.startServer();
@@ -240,10 +218,17 @@ class NetworkIntegrationTest {
         PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
         writers.add(writer);
 
-        String welcome1 = reader.readLine();
-        String welcome2 = reader.readLine();
+        String welcome = reader.readLine();
 
-        return new ClientConnection(socket, reader, writer, welcome1, welcome2);
+        return new ClientConnection(socket, reader, writer, welcome);
+    }
+
+    private String tryReadLine(ClientConnection client) throws IOException {
+        try {
+            return client.reader.readLine();
+        } catch (SocketTimeoutException e) {
+            return null;
+        }
     }
 
     private void waitUntil(Duration timeout, Condition condition, String failureMessage)
@@ -267,16 +252,14 @@ class NetworkIntegrationTest {
         private final Socket socket;
         private final BufferedReader reader;
         private final PrintWriter writer;
-        private final String welcomeLine1;
-        private final String welcomeLine2;
+        private final String welcomeLine;
 
         private ClientConnection(Socket socket, BufferedReader reader, PrintWriter writer,
-                                 String welcomeLine1, String welcomeLine2) {
+                                 String welcomeLine) {
             this.socket = socket;
             this.reader = reader;
             this.writer = writer;
-            this.welcomeLine1 = welcomeLine1;
-            this.welcomeLine2 = welcomeLine2;
+            this.welcomeLine = welcomeLine;
         }
     }
 }

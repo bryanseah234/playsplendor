@@ -8,6 +8,7 @@ javac -d classes -sourcepath src \
 src/com/splendor/*.java \
 src/com/splendor/config/*.java \
 src/com/splendor/controller/*.java \
+src/com/splendor/data/*.java \
 src/com/splendor/exception/*.java \
 src/com/splendor/model/*.java \
 src/com/splendor/model/validator/*.java \

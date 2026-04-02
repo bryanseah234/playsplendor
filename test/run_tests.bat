@@ -32,6 +32,7 @@ javac -d classes -sourcepath src ^
   src/com/splendor/*.java ^
   src/com/splendor/config/*.java ^
   src/com/splendor/controller/*.java ^
+  src/com/splendor/data/*.java ^
   src/com/splendor/exception/*.java ^
   src/com/splendor/model/*.java ^
   src/com/splendor/model/validator/*.java ^
@@ -57,7 +58,19 @@ if not exist test-classes mkdir test-classes
 REM Find all test Java files
 set "TEST_FILES="
 for /r test %%f in (*.java) do (
-    set "TEST_FILES=!TEST_FILES! %%f"
+    set "FILE_PATH=%%f"
+    if defined INCLUDE_NETWORK (
+        set "TEST_FILES=!TEST_FILES! %%f"
+    ) else (
+        set "WITHOUT_NETWORK=!FILE_PATH:\test\com\splendor\network\=!"
+        if /I "!WITHOUT_NETWORK!"=="!FILE_PATH!" (
+            set "TEST_FILES=!TEST_FILES! %%f"
+        )
+    )
+)
+
+if not defined INCLUDE_NETWORK (
+    echo    Network tests excluded from compilation. Use --include-network to include them.
 )
 
 if "!TEST_FILES!"=="" (

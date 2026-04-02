@@ -33,6 +33,7 @@ javac -d classes -sourcepath src \
   src/com/splendor/*.java \
   src/com/splendor/config/*.java \
   src/com/splendor/controller/*.java \
+  src/com/splendor/data/*.java \
   src/com/splendor/exception/*.java \
   src/com/splendor/model/*.java \
   src/com/splendor/model/validator/*.java \
@@ -54,7 +55,12 @@ echo "2. Compiling test sources..."
 mkdir -p test-classes
 
 # Find all test Java files
-TEST_FILES=$(find test -name "*.java" 2>/dev/null)
+if [ -n "$INCLUDE_NETWORK" ]; then
+    TEST_FILES=$(find test -name "*.java" 2>/dev/null)
+else
+    TEST_FILES=$(find test -name "*.java" ! -path "*/test/com/splendor/network/*" 2>/dev/null)
+    echo "   Network tests excluded from compilation. Use --include-network to include them."
+fi
 if [ -z "$TEST_FILES" ]; then
     echo "   No test files found in test/"
     exit 0

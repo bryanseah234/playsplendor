@@ -71,13 +71,14 @@ echo   - Re-run setup_requirements.bat after installing system packages
 exit /b 1
 
 :check
+set "LABEL=%~2"
 where %~1 >nul 2>nul
 if errorlevel 1 (
-  echo ❌ %~2: missing
+  echo ❌ !LABEL!: missing
   set MISSING=1
 ) else (
   for /f "delims=" %%i in ('where %~1') do (
-    echo ✅ %~2: %%i
+    echo ✅ !LABEL!: %%i
     goto :eof
   )
 )

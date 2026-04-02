@@ -62,7 +62,7 @@
         {
             "label": "Validate Documentation",
             "type": "shell",
-            "command": "cd ${workspaceFolder} && find . -name '*.java' -exec javadoc -Xdoclint:all -Xdoclint:-missing {} \;",
+            "command": "cd ${workspaceFolder} && find . -name '*.java' -exec javadoc -Xdoclint:all -Xdoclint:-missing {} ;",
             "windows": {
                 "command": "cd ${workspaceFolder} && for /r %%f in (*.java) do javadoc -Xdoclint:all -Xdoclint:-missing %%f"
             },
