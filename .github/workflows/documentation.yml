@@ -1,278 +1,278 @@
 name: DocumentationUpdate
 
-on:
-  push:
-    branches: [ main, develop ]
-    paths:
-      - 'src/**/*.java'
-      - 'docs/diagrams/mermaid/src/**/*.mmd'
-      - 'docs/diagrams/*.puml'
-      - 'test/ci/**'
-      - 'render_diagrams.js'
-      - 'generate_docs_enhanced.*'
-      - '.github/workflows/documentation.yml'
-  pull_request:
-    branches: [ main ]
-    paths:
-      - 'src/**/*.java'
-      - 'docs/diagrams/mermaid/src/**/*.mmd'
-      - 'docs/diagrams/*.puml'
-      - 'test/ci/**'
-      - 'render_diagrams.js'
-      - 'generate_docs_enhanced.*'
+# on:
+#   push:
+#     branches: [ main, develop ]
+#     paths:
+#       - 'src/**/*.java'
+#       - 'docs/diagrams/mermaid/src/**/*.mmd'
+#       - 'docs/diagrams/*.puml'
+#       - 'test/ci/**'
+#       - 'render_diagrams.js'
+#       - 'generate_docs_enhanced.*'
+#       - '.github/workflows/documentation.yml'
+#   pull_request:
+#     branches: [ main ]
+#     paths:
+#       - 'src/**/*.java'
+#       - 'docs/diagrams/mermaid/src/**/*.mmd'
+#       - 'docs/diagrams/*.puml'
+#       - 'test/ci/**'
+#       - 'render_diagrams.js'
+#       - 'generate_docs_enhanced.*'
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+# concurrency:
+#   group: ${{ github.workflow }}-${{ github.ref }}
+#   cancel-in-progress: true
 
-permissions:
-  contents: write
-  pull-requests: write
-  issues: write
+# permissions:
+#   contents: write
+#   pull-requests: write
+#   issues: write
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+# env:
+#   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
-jobs:
-  UpdateDocumentation:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
+# jobs:
+#   UpdateDocumentation:
+#     runs-on: ${{ matrix.os }}
+#     strategy:
+#       matrix:
+#         os: [ubuntu-latest, windows-latest]
     
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+#     steps:
+#     - name: Checkout code
+#       uses: actions/checkout@v4
+#       with:
+#         fetch-depth: 0
     
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
+#     - name: Set up JDK 17
+#       uses: actions/setup-java@v4
+#       with:
+#         java-version: '17'
+#         distribution: 'temurin'
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'npm'
+#     - name: Set up Node.js
+#       uses: actions/setup-node@v4
+#       with:
+#         node-version: '20'
+#         cache: 'npm'
 
-    - name: Install Node dependencies
-      run: npm ci
-      shell: bash
+#     - name: Install Node dependencies
+#       run: npm ci
+#       shell: bash
     
-    - name: Cache PlantUML
-      id: cache-plantuml
-      uses: actions/cache@v4
-      with:
-        path: docs/diagrams/plantuml.jar
-        key: ${{ runner.os }}-plantuml-${{ hashFiles('docs/diagrams/plantuml.jar') }}
+#     - name: Cache PlantUML
+#       id: cache-plantuml
+#       uses: actions/cache@v4
+#       with:
+#         path: docs/diagrams/plantuml.jar
+#         key: ${{ runner.os }}-plantuml-${{ hashFiles('docs/diagrams/plantuml.jar') }}
     
-    - name: Download PlantUML (if not cached)
-      if: steps.cache-plantuml.outputs.cache-hit != 'true'
-      run: |
-        if [ ! -f docs/diagrams/plantuml.jar ]; then
-          curl -L -o docs/diagrams/plantuml.jar https://github.com/plantuml/plantuml/releases/download/v1.2023.13/plantuml-1.2023.13.jar
-        fi
-      shell: bash
+#     - name: Download PlantUML (if not cached)
+#       if: steps.cache-plantuml.outputs.cache-hit != 'true'
+#       run: |
+#         if [ ! -f docs/diagrams/plantuml.jar ]; then
+#           curl -L -o docs/diagrams/plantuml.jar https://github.com/plantuml/plantuml/releases/download/v1.2023.13/plantuml-1.2023.13.jar
+#         fi
+#       shell: bash
     
-    - name: Generate Documentation (Linux/Mac)
-      if: runner.os != 'Windows'
-      run: |
-        chmod +x generate_docs_enhanced.sh
-        chmod +x test/ci/docs_guard.sh
-        node render_diagrams.js
-        ./generate_docs_enhanced.sh
-        bash test/ci/docs_guard.sh
-      shell: bash
+#     - name: Generate Documentation (Linux/Mac)
+#       if: runner.os != 'Windows'
+#       run: |
+#         chmod +x generate_docs_enhanced.sh
+#         chmod +x test/ci/docs_guard.sh
+#         node render_diagrams.js
+#         ./generate_docs_enhanced.sh
+#         bash test/ci/docs_guard.sh
+#       shell: bash
     
-    - name: Generate Documentation (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        node render_diagrams.js
-        .\generate_docs_enhanced.bat
-        call test\ci\docs_guard.bat
-      shell: cmd
+#     - name: Generate Documentation (Windows)
+#       if: runner.os == 'Windows'
+#       run: |
+#         node render_diagrams.js
+#         .\generate_docs_enhanced.bat
+#         call test\ci\docs_guard.bat
+#       shell: cmd
     
-    - name: Validate Documentation (Linux/Mac)
-      if: runner.os != 'Windows'
-      run: |
-        # Check if Javadoc was generated
-        if [ ! -f docs/javadoc/index.html ]; then
-          echo "❌ Javadoc generation failed"
-          exit 1
-        fi
+#     - name: Validate Documentation (Linux/Mac)
+#       if: runner.os != 'Windows'
+#       run: |
+#         # Check if Javadoc was generated
+#         if [ ! -f docs/javadoc/index.html ]; then
+#           echo "❌ Javadoc generation failed"
+#           exit 1
+#         fi
         
-        # Check if diagrams were generated
-        if [ ! -f docs/diagrams/splendor.png ]; then
-          echo "⚠️  Main UML diagram not found"
-        fi
+#         # Check if diagrams were generated
+#         if [ ! -f docs/diagrams/splendor.png ]; then
+#           echo "⚠️  Main UML diagram not found"
+#         fi
         
-        # Check documentation index
-        if [ ! -f docs/index.html ]; then
-          echo "❌ Documentation index not generated"
-          exit 1
-        fi
+#         # Check documentation index
+#         if [ ! -f docs/index.html ]; then
+#           echo "❌ Documentation index not generated"
+#           exit 1
+#         fi
         
-        echo "✅ Documentation validation complete"
-      shell: bash
+#         echo "✅ Documentation validation complete"
+#       shell: bash
 
-    - name: Validate Documentation (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        if not exist docs\javadoc\index.html (
-          echo ❌ Javadoc generation failed
-          exit /b 1
-        )
-        if not exist docs\index.html (
-          echo ❌ Documentation index not generated
-          exit /b 1
-        )
-        echo ✅ Documentation validation complete
-      shell: cmd
+#     - name: Validate Documentation (Windows)
+#       if: runner.os == 'Windows'
+#       run: |
+#         if not exist docs\javadoc\index.html (
+#           echo ❌ Javadoc generation failed
+#           exit /b 1
+#         )
+#         if not exist docs\index.html (
+#           echo ❌ Documentation index not generated
+#           exit /b 1
+#         )
+#         echo ✅ Documentation validation complete
+#       shell: cmd
     
-    - name: Check for Documentation Changes
-      id: doc-changes
-      run: |
-        if [ -n "$(git status --porcelain docs/)" ]; then
-          echo "changes=true" >> $GITHUB_OUTPUT
-          echo "📋 Documentation changes detected:"
-          git status --porcelain docs/
-          git status --porcelain docs/ > git-status.txt
-        else
-          echo "changes=false" >> $GITHUB_OUTPUT
-          echo "✅ No documentation changes needed"
-          echo "No documentation changes detected." > git-status.txt
-        fi
-      shell: bash
+#     - name: Check for Documentation Changes
+#       id: doc-changes
+#       run: |
+#         if [ -n "$(git status --porcelain docs/)" ]; then
+#           echo "changes=true" >> $GITHUB_OUTPUT
+#           echo "📋 Documentation changes detected:"
+#           git status --porcelain docs/
+#           git status --porcelain docs/ > git-status.txt
+#         else
+#           echo "changes=false" >> $GITHUB_OUTPUT
+#           echo "✅ No documentation changes needed"
+#           echo "No documentation changes detected." > git-status.txt
+#         fi
+#       shell: bash
     
-    - name: Upload Documentation Artifacts
-      if: steps.doc-changes.outputs.changes == 'true'
-      uses: actions/upload-artifact@v4
-      with:
-        name: documentation-${{ matrix.os }}-${{ github.sha }}
-        path: docs/
-        retention-days: 30
+#     - name: Upload Documentation Artifacts
+#       if: steps.doc-changes.outputs.changes == 'true'
+#       uses: actions/upload-artifact@v4
+#       with:
+#         name: documentation-${{ matrix.os }}-${{ github.sha }}
+#         path: docs/
+#         retention-days: 30
     
-    - name: Comment on PR (if changes detected)
-      if: github.event_name == 'pull_request' && steps.doc-changes.outputs.changes == 'true' && github.event.pull_request.head.repo.fork == false
-      continue-on-error: true
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const os = '${{ matrix.os }}';
-          const comment = `📝 **Documentation Update Detected** (${os})
+#     - name: Comment on PR (if changes detected)
+#       if: github.event_name == 'pull_request' && steps.doc-changes.outputs.changes == 'true' && github.event.pull_request.head.repo.fork == false
+#       continue-on-error: true
+#       uses: actions/github-script@v7
+#       with:
+#         script: |
+#           const os = '${{ matrix.os }}';
+#           const comment = `📝 **Documentation Update Detected** (${os})
           
-          Documentation changes were automatically generated for this PR.
+#           Documentation changes were automatically generated for this PR.
           
-          ### Changes Found:
-          \`\`\`
-          ${require('fs').readFileSync('git-status.txt', 'utf8')}
-          \`\`\`
+#           ### Changes Found:
+#           \`\`\`
+#           ${require('fs').readFileSync('git-status.txt', 'utf8')}
+#           \`\`\`
           
-          ### Next Steps:
-          1. Review the generated documentation artifacts
-          2. Verify the changes are accurate
-          3. Commit the documentation updates if approved
+#           ### Next Steps:
+#           1. Review the generated documentation artifacts
+#           2. Verify the changes are accurate
+#           3. Commit the documentation updates if approved
           
-          📖 **View Documentation:** [Documentation Artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+#           📖 **View Documentation:** [Documentation Artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
           
-          ---
-          *This comment was automatically generated by the documentation workflow.*`;
+#           ---
+#           *This comment was automatically generated by the documentation workflow.*`;
           
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: comment
-          });
+#           github.rest.issues.createComment({
+#             issue_number: context.issue.number,
+#             owner: context.repo.owner,
+#             repo: context.repo.repo,
+#             body: comment
+#           });
     
-    - name: Prepare commit message
-      if: steps.doc-changes.outputs.changes == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
-      run: |
-        # Generate detailed commit message
-        echo "Detailed changes:" > commit-details.txt
-        git diff --name-only docs/ >> commit-details.txt
-        echo "" >> commit-details.txt
-        echo "Generated on: $(date)" >> commit-details.txt
-      shell: bash
+#     - name: Prepare commit message
+#       if: steps.doc-changes.outputs.changes == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+#       run: |
+#         # Generate detailed commit message
+#         echo "Detailed changes:" > commit-details.txt
+#         git diff --name-only docs/ >> commit-details.txt
+#         echo "" >> commit-details.txt
+#         echo "Generated on: $(date)" >> commit-details.txt
+#       shell: bash
     
-    - name: Commit Documentation Updates (Main Branch)
-      if: steps.doc-changes.outputs.changes == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action [Bot]"
-        git add docs/
+#     - name: Commit Documentation Updates (Main Branch)
+#       if: steps.doc-changes.outputs.changes == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+#       run: |
+#         git config --local user.email "action@github.com"
+#         git config --local user.name "GitHub Action [Bot]"
+#         git add docs/
         
-        # Check if there are changes to commit
-        if ! git diff --staged --quiet; then
-          git commit -m "docs: auto-update documentation from CI" -m "$(cat commit-details.txt)"
-          git push
-          echo "✅ Documentation committed and pushed"
-        else
-          echo "ℹ️  No changes to commit"
-        fi
-      shell: bash
+#         # Check if there are changes to commit
+#         if ! git diff --staged --quiet; then
+#           git commit -m "docs: auto-update documentation from CI" -m "$(cat commit-details.txt)"
+#           git push
+#           echo "✅ Documentation committed and pushed"
+#         else
+#           echo "ℹ️  No changes to commit"
+#         fi
+#       shell: bash
     
-    - name: Create Issue for Failed Documentation (Optional)
-      if: failure() && github.event_name == 'push' && github.ref == 'refs/heads/main'
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const title = '🚨 Documentation Generation Failed';
-          const body = `The automated documentation generation failed for commit ${{ github.sha }}.
+#     - name: Create Issue for Failed Documentation (Optional)
+#       if: failure() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+#       uses: actions/github-script@v7
+#       with:
+#         script: |
+#           const title = '🚨 Documentation Generation Failed';
+#           const body = `The automated documentation generation failed for commit ${{ github.sha }}.
           
-          ### Error Details:
-          - **Workflow:** ${{ github.workflow }}
-          - **Run:** ${{ github.run_id }}
-          - **Commit:** ${{ github.sha }}
-          - **Triggered by:** ${{ github.event_name }}
+#           ### Error Details:
+#           - **Workflow:** ${{ github.workflow }}
+#           - **Run:** ${{ github.run_id }}
+#           - **Commit:** ${{ github.sha }}
+#           - **Triggered by:** ${{ github.event_name }}
           
-          ### Possible Causes:
-          1. Java compilation errors
-          2. Missing Javadoc comments
-          3. PlantUML syntax errors
-          4. File permission issues
+#           ### Possible Causes:
+#           1. Java compilation errors
+#           2. Missing Javadoc comments
+#           3. PlantUML syntax errors
+#           4. File permission issues
           
-          ### Next Steps:
-          1. Check the [workflow logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
-          2. Fix any compilation errors
-          3. Ensure all public APIs are documented
-          4. Re-run the workflow
+#           ### Next Steps:
+#           1. Check the [workflow logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+#           2. Fix any compilation errors
+#           3. Ensure all public APIs are documented
+#           4. Re-run the workflow
           
-          ---
-          *This issue was automatically created by the documentation workflow.*`;
+#           ---
+#           *This issue was automatically created by the documentation workflow.*`;
           
-          github.rest.issues.create({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            title: title,
-            body: body,
-            labels: ['documentation', 'bug', 'automated']
-          });
+#           github.rest.issues.create({
+#             owner: context.repo.owner,
+#             repo: context.repo.repo,
+#             title: title,
+#             body: body,
+#             labels: ['documentation', 'bug', 'automated']
+#           });
 
-  # Job to deploy documentation to GitHub Pages (optional)
-  DeployDocumentation:
-    needs: UpdateDocumentation
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+#   # Job to deploy documentation to GitHub Pages (optional)
+#   DeployDocumentation:
+#     needs: UpdateDocumentation
+#     runs-on: ubuntu-latest
+#     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+#     steps:
+#     - name: Checkout code
+#       uses: actions/checkout@v4
     
-    - name: Download documentation artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: documentation-ubuntu-latest-${{ github.sha }}
-        path: docs/
+#     - name: Download documentation artifacts
+#       uses: actions/download-artifact@v4
+#       with:
+#         name: documentation-ubuntu-latest-${{ github.sha }}
+#         path: docs/
     
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v4
-      if: success()
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./docs
-        publish_branch: gh-pages
-        force_orphan: true
+#     - name: Deploy to GitHub Pages
+#       uses: peaceiris/actions-gh-pages@v4
+#       if: success()
+#       with:
+#         github_token: ${{ secrets.GITHUB_TOKEN }}
+#         publish_dir: ./docs
+#         publish_branch: gh-pages
+#         force_orphan: true
