@@ -1,9 +1,0 @@
-%%{init: {"theme": "default"}}%%
-classDiagram
-  direction LR
-  class NetworkMessageHandler { <<interface>> }
-  class ServerSocketHandler
-  class ClientHandler
-
-  NetworkMessageHandler <|.. ServerSocketHandler
-  ServerSocketHandler *-- ClientHandler
