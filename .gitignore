@@ -48,3 +48,28 @@ dist/
 Thumbs.db
 
 # docs/ intentionally NOT ignored — diagrams and javadoc are tracked
+# AI / editor dot directories (managed via sourcerepo)
+.*
+!.github/
+!.gitignore
+!.gitattributes
+!.gitmodules
+!.editorconfig
+!.nvmrc
+!.node-version
+!.python-version
+!.tool-versions
+!.prettierrc*
+!.eslintrc*
+!.stylelintrc*
+!.babelrc*
+!.browserslistrc
+!.dockerignore
+!.npmrc
+!.yarnrc
+!.yarnrc.yml
+!.env.example
+!.env.template
+!.env.sample
+!.sourcery.yml
+!.deepsource.toml
