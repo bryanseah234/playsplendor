@@ -484,9 +484,4 @@ This project was developed with the assistance of AI tools for code generation, 
 
 ## License
 
-This project is for educational purposes.
-
----
-
-**Last Updated:** April 1, 2026  
-**Documentation Status:** ✅ Complete with automated generation
+Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).

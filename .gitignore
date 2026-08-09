@@ -73,3 +73,7 @@ Thumbs.db
 !.env.sample
 !.sourcery.yml
 !.deepsource.toml
+.env.*
+.next/
+__pycache__/
+.pytest_cache/
